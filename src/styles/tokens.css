@@ -1,0 +1,98 @@
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+    --bg: #f6eee8;
+  --bg-elevated: #fbf6f2;
+  --surface: #fbf6f2;
+  --surface-2: #ede2da;
+  --surface-3: #e0d0c6;
+  --border: #dccbc0;
+  --border-strong: #b9a396;
+
+  --text: #2b1118;
+  --text-muted: #67525a;
+  --text-on-primary: #f8efe9;
+
+    --primary: #5a0f26;
+  --primary-hover: #430a1c;
+  --primary-soft: #ecd7d9;
+  --primary-text: #5a0f26;
+  --accent: #8a3a4e;
+
+    --velvet: #4a0c1f;
+  --velvet-deep: #35091a;
+  --on-velvet: #f4e9e2;
+  --on-velvet-muted: #d3bcb8;
+
+  --success: #2f6b4a;
+  --success-soft: #dfeee5;
+  --warning: #84560f;
+  --warning-soft: #f4e6c8;
+  --danger: #a3262f;
+  --danger-soft: #f6dcdc;
+  --info-soft: #e5e4ee;
+
+  --shadow-pop: 0 18px 48px rgba(58, 10, 26, 0.22);
+  --focus: #1f5fbf;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #150a0f;
+  --bg-elevated: #1f1118;
+  --surface: #1f1118;
+  --surface-2: #2a171f;
+  --surface-3: #3a212b;
+  --border: #3b2630;
+  --border-strong: #5a3c4a;
+
+  --text: #f3e8e0;
+  --text-muted: #bfaaa8;
+  --text-on-primary: #fbf1ea;
+
+  --primary: #8a2142;
+  --primary-hover: #a02850;
+  --primary-soft: #3d1b27;
+  --primary-text: #eab0bd;
+  --accent: #d596a6;
+
+  --velvet: #2a0814;
+  --velvet-deep: #0e0508;
+  --on-velvet: #f4e9e2;
+  --on-velvet-muted: #c9b2ae;
+
+  --success: #7fcf9f;
+  --success-soft: #1d3a2b;
+  --warning: #e9c477;
+  --warning-soft: #3b2e14;
+  --danger: #f09aa0;
+  --danger-soft: #431d22;
+  --info-soft: #232a3d;
+
+  --shadow-pop: 0 18px 48px rgba(0, 0, 0, 0.55);
+  --focus: #8fb8ff;
+}
+
+:root {
+  --font-display: 'Marcellus', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Hanken Grotesk Variable', 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    --r-control: 2px;   --r-panel: 4px;   --r-float: 8px; 
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+  --space-9: 112px;
+
+  --container: 1240px;
+  --header-h: 72px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 140ms var(--ease);
+  --t-med: 280ms var(--ease);
+}
