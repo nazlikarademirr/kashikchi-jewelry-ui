@@ -8,8 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
-import { isMockMode } from '@/services';
-import { DEMO_ACCOUNTS } from '@/services/mock/seed';
 import { v } from '@/utils/validation';
 
 export default function LoginPage() {
@@ -79,29 +77,6 @@ export default function LoginPage() {
       <p className="auth__foot">
         {t('auth.noAccount')} <Link to={ROUTES.register}>{t('auth.registerLink')}</Link>
       </p>
-      {isMockMode && (
-        <div className="demo-box">
-          <strong>{t('auth.demoTitle')}</strong>
-          <div style={{ marginTop: 8 }}>
-            <strong>Müşteriler:</strong>
-            <br />
-            <code>{DEMO_ACCOUNTS.user.email}</code> / <code>{DEMO_ACCOUNTS.user.password}</code>
-            <br />
-            <code>{DEMO_ACCOUNTS.user2.email}</code> / <code>{DEMO_ACCOUNTS.user2.password}</code>
-            <br />
-            <code>{DEMO_ACCOUNTS.user3.email}</code> / <code>{DEMO_ACCOUNTS.user3.password}</code>
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <strong>Yöneticiler:</strong>
-            <br />
-            <code>{DEMO_ACCOUNTS.admin.email}</code> / <code>{DEMO_ACCOUNTS.admin.password}</code>
-            <br />
-            <code>{DEMO_ACCOUNTS.admin2.email}</code> / <code>{DEMO_ACCOUNTS.admin2.password}</code>
-            <br />
-            <code>{DEMO_ACCOUNTS.admin3.email}</code> / <code>{DEMO_ACCOUNTS.admin3.password}</code>
-          </div>
-        </div>
-      )}
     </AuthShell>
   );
 }
