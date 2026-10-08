@@ -118,12 +118,12 @@
 .hero__copy h1 { color: var(--on-velvet); font-size: clamp(2.5rem, 5.4vw, 4.4rem); margin-bottom: var(--space-4); max-width: 14ch; }
 .hero__copy p { font-size: 1.15rem; color: var(--on-velvet-muted); max-width: 46ch; margin-bottom: var(--space-6); }
 .hero__cta { display: flex; gap: var(--space-3); flex-wrap: wrap; }
-.hero__gem { position: relative; width: min(420px, 76vw); aspect-ratio: 0.82; justify-self: center; }
-.hero__gem-frame, .hero__gem-echo { position: absolute; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
-.hero__gem-frame { inset: 14%; overflow: hidden; animation: gemReveal 1.4s var(--ease) 0.15s both; }
-.hero__gem-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 78% 50%; transform: rotate(45deg) scale(1.55); }
-.hero__gem-echo { inset: 6%; border: 1px solid rgba(244, 233, 226, 0.4); }
-@keyframes gemReveal { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(80% at 50% 50%); } }
+.hero__gem { position: relative; width: min(420px, 76vw); aspect-ratio: 500 / 660; justify-self: center; display: flex; align-items: center; justify-content: center; }
+.hero__gem-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.hero__gem-echo { stroke: rgba(244, 233, 226, 0.45); stroke-width: 1.5; vector-effect: non-scaling-stroke; transform-origin: 250px 330px; animation: gemEchoReveal 1.6s var(--ease) both; }
+.hero__gem-frame { transform-origin: 250px 330px; animation: gemReveal 1.4s var(--ease) 0.15s both; }
+@keyframes gemReveal { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes gemEchoReveal { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }
 @media (max-width: 860px) { .hero__inner { grid-template-columns: 1fr; min-height: 0; } .hero__gem { order: -1; width: min(300px, 70vw); } }
 
 .category-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-5); }

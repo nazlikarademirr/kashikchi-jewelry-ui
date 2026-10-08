@@ -111,7 +111,7 @@ export const tr = {
   },
 
   home: {
-    metaTitle: "Pırlanta ve mücevher",
+    metaTitle: "Pırlanta ve Mücevher",
     metaDescription:
       "Kashikchi Jewelery: sertifikalı pırlanta tektaş, tamtur ve beştaş yüzükler, kolyeler, bilezikler ve setler. Size özel, sipariş üzerine hazırlanır.",
     heroTitle: "Işıltının en zarif hali.",

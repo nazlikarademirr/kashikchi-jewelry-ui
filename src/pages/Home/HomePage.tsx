@@ -56,10 +56,29 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero__gem" aria-hidden="true">
-            <div className="hero__gem-echo" />
-            <div className="hero__gem-frame">
-              <img src="/images/hero.jpg" alt="" width={1800} height={1000} fetchPriority="high" />
-            </div>
+            <svg viewBox="0 0 500 660" className="hero__gem-svg" aria-hidden="true">
+              <defs>
+                <clipPath id="hero-gem-clip">
+                  <path d="M 86.16 362.95 A 199 199 0 1 1 413.84 362.95 L 257 590 Q 250 602 243 590 Z" />
+                </clipPath>
+              </defs>
+              <path
+                d="M 70.22 378.53 A 221 221 0 1 1 429.78 378.53 L 258 618 Q 250 630 242 618 Z"
+                className="hero__gem-echo"
+                fill="none"
+              />
+              <g clipPath="url(#hero-gem-clip)" className="hero__gem-frame">
+                <image
+                  href="/images/hero.jpg"
+                  xlinkHref="/images/hero.jpg"
+                  x="0"
+                  y="51"
+                  width="500"
+                  height="551"
+                  preserveAspectRatio="xMidYMid slice"
+                />
+              </g>
+            </svg>
           </div>
         </div>
       </section>
