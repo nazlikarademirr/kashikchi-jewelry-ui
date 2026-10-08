@@ -7,7 +7,7 @@ import { Icon } from '@/components/ui/Icon';
 
 export function Footer() {
   const { t } = useI18n();
-    return (
+  return (
     <footer className="site-footer">
       <div className="container">
         <div className="footer__grid">
@@ -58,7 +58,7 @@ export function Footer() {
           </div>
         </div>
         <div className="footer__bottom">
-          <span>© {new Date().getFullYear()} Kashikchi Jewelery. {t('footer.rights')}</span>
+          <span>© {new Date().getFullYear()} Kashikchi Jewelry. {t('footer.rights')}</span>
         </div>
       </div>
     </footer>

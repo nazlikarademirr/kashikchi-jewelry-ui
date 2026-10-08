@@ -20,7 +20,7 @@ export function Logo({ noLink }: { noLink?: boolean }) {
       </svg>
       <span className="brand__text">
         <span className="brand__name">KASHIKCHI</span>
-        <span className="brand__sub">JEWELERY</span>
+        <span className="brand__sub">JEWELRY</span>
       </span>
     </>
   );

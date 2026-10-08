@@ -212,8 +212,27 @@
 .demo-box code { background: var(--surface); padding: 1px 6px; border-radius: 2px; color: var(--text); }
 @media (max-width: 860px) { .auth { grid-template-columns: 1fr; } .auth__aside { display: none; } }
 
-.dash { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: var(--space-7); align-items: start; padding-block: var(--space-6) var(--space-8); }
-.dash__nav { position: sticky; top: calc(var(--header-h) + 20px); display: grid; gap: 2px; border-right: 1px solid var(--border); padding-right: var(--space-4); }
+.dash {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: var(--space-7);
+  align-items: start;
+  padding-block: var(--space-6) var(--space-8);
+  min-height: calc(100vh - var(--header-h));
+}
+.dash__nav {
+  position: sticky;
+  top: calc(var(--header-h) + var(--space-6));
+  align-self: start;
+  z-index: 50;
+  max-height: calc(100vh - var(--header-h) - var(--space-6) - 20px);
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+  border-right: 1px solid var(--border);
+  padding-right: var(--space-4);
+  scrollbar-width: thin;
+}
 .dash__nav-title { font-family: var(--font-display); font-size: 1.3rem; padding: 0 14px 10px; }
 .dash__link { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: 10px 14px; border-radius: var(--r-control); color: var(--text); text-decoration: none; font-size: 0.98rem; }
 .dash__link:hover { background: var(--surface-2); text-decoration: none; }

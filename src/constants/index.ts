@@ -1,6 +1,6 @@
 import type { OrderStatus } from '@/types';
 
-export const APP_NAME = 'Kashikchi Jewelery';
+export const APP_NAME = 'Kashikchi Jewelry';
 
 export const STORE_CONTACT = {
   address: 'Grand Bazaar, Kılıççılar Sk. Fatih / Istanbul',

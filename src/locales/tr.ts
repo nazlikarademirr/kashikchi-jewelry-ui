@@ -29,7 +29,7 @@ export const tr = {
   },
 
   header: {
-    homeAria: "Kashikchi Jewelery ana sayfa",
+    homeAria: "Kashikchi Jewelry Ana Sayfa",
     language: "Dil seçimi",
     langTr: "Türkçe",
     langEn: "English",
@@ -56,7 +56,7 @@ export const tr = {
     quickLinks: "Hızlı bağlantılar",
     legal: "Yasal Bilgiler",
     contact: "İletişim",
-    store: "Kashikchi Jewelery",
+    store: "Kashikchi Jewelry",
     address: "Kapalıçarşı, Kılıççılar Sk. Fatih / İstanbul",
     hoursWeekday: "Pazartesi - Cuma / 09.00 - 18.00",
     hoursWeekend: "Cumartesi / 09.00 - 13.00",
@@ -113,7 +113,7 @@ export const tr = {
   home: {
     metaTitle: "Pırlanta ve Mücevher",
     metaDescription:
-      "Kashikchi Jewelery: sertifikalı pırlanta tektaş, tamtur ve beştaş yüzükler, kolyeler, bilezikler ve setler. Size özel, sipariş üzerine hazırlanır.",
+      "Kashikchi Jewelry: sertifikalı pırlanta tektaş, tamtur ve beştaş yüzükler, kolyeler, bilezikler ve setler. Size özel, sipariş üzerine hazırlanır.",
     heroTitle: "Işıltının en zarif hali.",
     heroText:
       "Her parça sizin için özenle hazırlanır...",
@@ -147,7 +147,7 @@ export const tr = {
     emptyTitle: "Aramanıza uygun ürün yok",
     emptyText: "Aramayı kısaltın veya başka bir kategori seçin.",
     allTitle: "Tüm Ürünler",
-    allDescription: "Kashikchi Jewelery koleksiyonundaki tüm pırlanta ve mücevher parçaları.",
+    allDescription: "Kashikchi Jewelry koleksiyonundaki tüm pırlanta ve mücevher parçaları.",
     categoryDescription: "{name} koleksiyonu: sertifikalı pırlantayla, sipariş üzerine hazırlanır.",
     categoryNotFound: "Kategori bulunamadı",
     categoryNotFoundText: "Bu kategori kaldırılmış olabilir. Tüm ürünlere göz atabilirsiniz.",
@@ -165,7 +165,7 @@ export const tr = {
     imageN: "{name}, görsel {n} / {total}",
     showImage: "{n}. görseli göster",
     caratUnit: "ct",
-    metaFallback: "Sertifikalı pırlantayla hazırlanan Kashikchi Jewelery parçası.",
+    metaFallback: "Sertifikalı pırlantayla hazırlanan Kashikchi Jewelry parçası.",
     code: "Ürün Kodu",
     carat: "Karat",
     category: "Kategori",
@@ -269,7 +269,7 @@ export const tr = {
     notFoundTitle: "Belge bulunamadı",
     kvkk: {
       title: "KVKK aydınlatma metni",
-      intro: "Kashikchi Jewelery olarak kişisel verilerinizi 6698 sayılı Kanun kapsamında işliyoruz.",
+      intro: "Kashikchi Jewelry olarak kişisel verilerinizi 6698 sayılı Kanun kapsamında işliyoruz.",
       s1Title: "Hangi verileri topluyoruz",
       s1Text: "Ad, soyad, e-posta, telefon ve sipariş bilgileriniz. Şifreniz geri döndürülemeyecek biçimde saklanır.",
       s2Title: "Verileri neden işliyoruz",

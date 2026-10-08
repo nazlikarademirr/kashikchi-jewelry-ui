@@ -31,7 +31,7 @@ export const en: Dictionary = {
   },
 
   header: {
-    homeAria: "Kashikchi Jewelery home",
+    homeAria: "Kashikchi Jewelry Home",
     language: "Language",
     langTr: "Türkçe",
     langEn: "English",
@@ -58,7 +58,7 @@ export const en: Dictionary = {
     quickLinks: "Quick links",
     legal: "Legal",
     contact: "Contact",
-    store: "Kashikchi Jewelery store",
+    store: "Kashikchi Jewelry Store",
     address: "Grand Bazaar, Kılıççılar Sk. Fatih / Istanbul",
     hoursWeekday: "Monday - Friday (09:00 - 18:00)",
     hoursWeekend: "Saturday (09:00 - 13:00)",
@@ -115,7 +115,7 @@ export const en: Dictionary = {
   home: {
     metaTitle: "Diamonds and fine jewelry",
     metaDescription:
-      "Kashikchi Jewelery: certified diamond solitaire, full-eternity and five-stone rings, necklaces, bracelets and sets. Made to order, just for you.",
+      "Kashikchi Jewelry: certified diamond solitaire, full-eternity and five-stone rings, necklaces, bracelets and sets. Made to order, just for you.",
     heroTitle: "The most elegant form of radiance.",
     heroText:
       "Each piece is carefully prepared for you...",
@@ -149,7 +149,7 @@ export const en: Dictionary = {
     emptyTitle: "No products match your search",
     emptyText: "Shorten your search or pick another category.",
     allTitle: "All products",
-    allDescription: "Every diamond and fine jewelry piece in the Kashikchi Jewelery collection.",
+    allDescription: "Every diamond and fine jewelry piece in the Kashikchi Jewelry collection.",
     categoryDescription: "The {name} collection: made to order with certified diamonds.",
     categoryNotFound: "Category not found",
     categoryNotFoundText: "This category may have been removed. You can browse all products instead.",
@@ -167,7 +167,7 @@ export const en: Dictionary = {
     imageN: "{name}, image {n} of {total}",
     showImage: "Show image {n}",
     caratUnit: "ct",
-    metaFallback: "A Kashikchi Jewelery piece made with certified diamonds.",
+    metaFallback: "A Kashikchi Jewelry piece made with certified diamonds.",
     code: "Product code",
     carat: "Carat",
     category: "Category",
@@ -271,7 +271,7 @@ export const en: Dictionary = {
     notFoundTitle: "Document not found",
     kvkk: {
       title: "Personal data notice (KVKK)",
-      intro: "At Kashikchi Jewelery we process your personal data under Turkish Law No. 6698.",
+      intro: "At Kashikchi Jewelry we process your personal data under Turkish Law No. 6698.",
       s1Title: "What data we collect",
       s1Text: "Your name, email, phone and order details. Your password is stored in a way that can't be reversed.",
       s2Title: "Why we process it",
