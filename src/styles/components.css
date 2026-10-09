@@ -257,7 +257,7 @@
 .table__thumb { width: 52px; height: 64px; object-fit: cover; border-radius: var(--r-control); background: var(--surface-2); }
 .table__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 
-.pagination { display: flex; gap: var(--space-2); margin-top: var(--space-7); flex-wrap: wrap; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: var(--space-2); margin-top: var(--space-7); flex-wrap: wrap; }
 .pagination button { min-width: 42px; height: 42px; border-radius: var(--r-control); border: 1px solid var(--border-strong); background: transparent; }
 .pagination button:hover:not(:disabled) { border-color: var(--primary-text); color: var(--primary-text); }
 .pagination button[aria-current='page'] { background: var(--primary); color: var(--text-on-primary); border-color: var(--primary); }

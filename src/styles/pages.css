@@ -155,10 +155,11 @@
 .toolbar { display: flex; gap: var(--space-4); justify-content: space-between; align-items: end; flex-wrap: wrap; margin-bottom: var(--space-6); }
 .toolbar__filters { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: end; }
 .toolbar .field { min-width: 200px; }
-.chips { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
-.chip { padding: 8px 16px; border-radius: var(--r-control); border: 1px solid var(--border-strong); background: transparent; font-size: 0.94rem; color: var(--text); text-decoration: none; transition: background var(--t-fast), color var(--t-fast); }
+.chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--space-2); width: 100%; margin-bottom: var(--space-5); }
+.chip { display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px 12px; border-radius: var(--r-control); border: 1px solid var(--border-strong); background: transparent; font-size: 0.94rem; color: var(--text); text-decoration: none; white-space: nowrap; transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast); }
 .chip:hover { background: var(--primary-soft); color: var(--primary-text); text-decoration: none; }
 .chip.active { background: var(--primary); color: var(--text-on-primary); border-color: var(--primary); }
+@media (max-width: 640px) { .chips { grid-template-columns: repeat(2, 1fr); } }
 
 .product-detail { display: grid; grid-template-columns: minmax(0, 480px) 1fr; gap: clamp(32px, 5vw, 80px); align-items: stretch; }
 .product-info { display: flex; flex-direction: column; justify-content: space-between; }

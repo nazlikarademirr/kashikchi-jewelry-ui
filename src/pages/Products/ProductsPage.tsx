@@ -1,15 +1,12 @@
 import { ProductListing } from '@/components/ProductListing';
 import { Breadcrumb } from '@/components/ui/Misc';
 import { ROUTES } from '@/constants/routes';
-import { useCategories } from '@/contexts/CategoriesContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { LinkButton } from '@/components/ui/Button';
-import { Link } from 'react-router-dom';
 
 export default function ProductsPage() {
-  const { t, loc } = useI18n();
-  const { tree } = useCategories();
+  const { t } = useI18n();
   useDocumentMeta({ title: t('listing.allTitle'), description: t('listing.allDescription') });
   return (
     <>
@@ -21,13 +18,6 @@ export default function ProductsPage() {
         </div>
       </div>
       <div className="container section--tight section">
-        <div className="chips" role="list" aria-label={t('nav.categories')}>
-          {tree.map((c) => (
-            <Link key={c.id} className="chip" role="listitem" to={ROUTES.category(c.id)}>
-              {loc(c.name)}
-            </Link>
-          ))}
-        </div>
         <ProductListing />
         <noscript>
           <LinkButton to={ROUTES.home}>{t('common.backHome')}</LinkButton>

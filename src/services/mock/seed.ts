@@ -128,10 +128,10 @@ export function buildSeedCategories(): CategoryRecord[] {
     { id: ids.catNecklace, slug: 'kolye', name: lt('Kolye', 'Necklaces'), parentId: null, sortOrder: 2, imageKey: '/images/necklace-solitaire.jpg' },
     { id: ids.catEarrings, slug: 'kupe', name: lt('Küpe', 'Earrings'), parentId: null, sortOrder: 3, imageKey: '/images/hero_diamond.jpg' },
     { id: ids.catBracelet, slug: 'bileklik', name: lt('Bileklik', 'Bracelets'), parentId: null, sortOrder: 4, imageKey: '/images/bracelet-tennis.jpg' },
-    { id: ids.catWeddingBands, slug: 'alyans', name: lt('Alyans', 'Wedding Bands'), parentId: null, sortOrder: 5, imageKey: '/images/ring-eternity.jpg' },
-    { id: ids.catMen, slug: 'erkek', name: lt('Erkek', 'Men'), parentId: null, sortOrder: 6, imageKey: '/images/ring-five-stone.jpg' },
+    { id: ids.catWeddingBands, slug: 'alyans', name: lt('Alyans', 'Wedding Bands'), parentId: null, sortOrder: 5, imageKey: '/images/wedding-bands.jpg' },
+    { id: ids.catMen, slug: 'erkek', name: lt('Erkek', 'Men'), parentId: null, sortOrder: 6, imageKey: '/images/mens-jewelry.jpg' },
     { id: ids.catSets, slug: 'setler', name: lt('Setler', 'Sets'), parentId: null, sortOrder: 7, imageKey: '/images/set-bridal.jpg' },
-    { id: ids.catCollections, slug: 'koleksiyonlar', name: lt('Koleksiyonlar', 'Collections'), parentId: null, sortOrder: 8, imageKey: '/images/atelier_craft.jpg' },
+    { id: ids.catCollections, slug: 'koleksiyonlar', name: lt('Koleksiyonlar', 'Collections'), parentId: null, sortOrder: 8, imageKey: '/images/collections-showcase.jpg' },
 
     // Yüzük
     { id: '10000000-0000-4000-8000-000000010001', slug: 'alyans', name: lt('Alyans', 'Wedding Bands'), parentId: ids.catRing, sortOrder: 1 },

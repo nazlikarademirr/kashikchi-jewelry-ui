@@ -54,7 +54,6 @@ export const en: Dictionary = {
   },
 
   footer: {
-    about: "Diamond and fine jewelry from a workshop with three generations of craft. Designed for you.",
     quickLinks: "Quick links",
     legal: "Legal",
     contact: "Contact",

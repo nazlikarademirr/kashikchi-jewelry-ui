@@ -52,7 +52,6 @@ export const tr = {
   },
 
   footer: {
-    about: "Üç kuşaktır pırlanta ve mücevher işleyen atölyemizden, size özel tasarımlar.",
     quickLinks: "Hızlı bağlantılar",
     legal: "Yasal Bilgiler",
     contact: "İletişim",
@@ -147,7 +146,7 @@ export const tr = {
     emptyTitle: "Aramanıza uygun ürün yok",
     emptyText: "Aramayı kısaltın veya başka bir kategori seçin.",
     allTitle: "Tüm Ürünler",
-    allDescription: "Kashikchi Jewelry koleksiyonundaki tüm pırlanta ve mücevher parçaları.",
+    allDescription: "Kashikchi Jewelry koleksiyonundaki tüm ürünler.",
     categoryDescription: "{name} koleksiyonu: sertifikalı pırlantayla, sipariş üzerine hazırlanır.",
     categoryNotFound: "Kategori bulunamadı",
     categoryNotFoundText: "Bu kategori kaldırılmış olabilir. Tüm ürünlere göz atabilirsiniz.",

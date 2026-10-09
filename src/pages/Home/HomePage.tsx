@@ -13,16 +13,28 @@ import { mediaUrl } from '@/utils/media';
 const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
   '10000000-0000-4000-8000-000000000001': '/images/ring-solitaire.jpg',
   '10000000-0000-4000-8000-000000000002': '/images/necklace-solitaire.jpg',
-  '10000000-0000-4000-8000-000000000003': '/images/bracelet-tennis.jpg',
-  '10000000-0000-4000-8000-000000000004': '/images/set-bridal.jpg',
+  '10000000-0000-4000-8000-000000000003': '/images/hero_diamond.jpg',
+  '10000000-0000-4000-8000-000000000004': '/images/bracelet-tennis.jpg',
+  '10000000-0000-4000-8000-000000000005': '/images/wedding-bands.jpg',
+  '10000000-0000-4000-8000-000000000006': '/images/mens-jewelry.jpg',
+  '10000000-0000-4000-8000-000000000007': '/images/set-bridal.jpg',
+  '10000000-0000-4000-8000-000000000008': '/images/collections-showcase.jpg',
   yuzuk: '/images/ring-solitaire.jpg',
   ring: '/images/ring-solitaire.jpg',
   kolye: '/images/necklace-solitaire.jpg',
   necklace: '/images/necklace-solitaire.jpg',
+  kupe: '/images/hero_diamond.jpg',
+  earring: '/images/hero_diamond.jpg',
   bileklik: '/images/bracelet-tennis.jpg',
   bracelet: '/images/bracelet-tennis.jpg',
+  alyans: '/images/wedding-bands.jpg',
+  wedding: '/images/wedding-bands.jpg',
+  erkek: '/images/mens-jewelry.jpg',
+  men: '/images/mens-jewelry.jpg',
   setler: '/images/set-bridal.jpg',
   set: '/images/set-bridal.jpg',
+  koleksiyonlar: '/images/collections-showcase.jpg',
+  collection: '/images/collections-showcase.jpg',
 };
 
 function resolveCategoryImage(c: { id: string; imageKey?: string | null; name: { tr: string; en: string } }): string {
@@ -98,9 +110,6 @@ export default function HomePage() {
                       <img src={mediaUrl(imgPath)} alt={loc(c.name)} loading="lazy" width={600} height={800} />
                     </div>
                     <span className="category-tile__name">{loc(c.name)}</span>
-                    {c.children.length > 0 && (
-                      <span className="category-tile__subs">{c.children.map((s) => loc(s.name)).join(', ')}</span>
-                    )}
                   </Link>
                 );
               })}
