@@ -109,7 +109,6 @@ function ProductForm({ product }: { product: Product | null }) {
 
   const errors: Record<string, Validation> = {
     name: v.required(form.name),
-    description: v.required(form.description),
     code: v.code(form.code),
     category: form.category ? null : 'validation.categoryInvalid',
     carat: num(form.carat) !== '' ? v.positive(num(form.carat)) : null,
@@ -203,7 +202,7 @@ function ProductForm({ product }: { product: Product | null }) {
             error={err('code')}
           />
           <Input label={t('admin.form.nameTr')} required maxLength={160} value={form.name} onChange={onText('name')} error={err('name')} />
-          <Textarea label={t('admin.form.descTr')} required rows={4} maxLength={4000} value={form.description} onChange={onText('description')} error={err('description')} />
+          <Textarea label={t('admin.form.descTr')} rows={4} maxLength={4000} value={form.description} onChange={onText('description')} error={err('description')} />
         </div>
       </div>
 

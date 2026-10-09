@@ -63,8 +63,11 @@ describe('validation', () => {
   });
 
   it('ürün kodu biçimini doğrular', () => {
-    expect(v.code('kj-001')).toBe('validation.codeFormat');
+    expect(v.code('KJ 001')).toBeNull();
     expect(v.code('KJ-YZK-001')).toBeNull();
+    expect(v.code('PRL100')).toBeNull();
+    expect(v.code('K')).toBe('validation.codeFormat');
+    expect(v.code('KJ@001')).toBe('validation.codeFormat');
   });
 
   it('kontrol karakterlerini temizler ve uzunluğu sınırlar', () => {

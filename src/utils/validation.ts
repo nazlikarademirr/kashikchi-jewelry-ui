@@ -8,7 +8,7 @@ export type Validation = ValidationMessageKey | null;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_RE = /^\+?[0-9\s()-]{10,18}$/;
-const CODE_RE = /^[A-Z0-9][A-Z0-9-]{2,29}$/;
+const CODE_RE = /^[A-Za-z0-9ÇĞİÖŞÜçğıöşü][A-Za-z0-9ÇĞİÖŞÜçğıöşü\s-]{1,29}$/;
 
 export const v = {
   required: (value: string): Validation => (value.trim() ? null : 'validation.required'),

@@ -9,14 +9,18 @@ export function EmptyState({
   title,
   description,
   action,
+  className = '',
+  style,
 }: {
   icon?: IconName;
   title: string;
   description?: string;
   action?: ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
-    <div className="state" role="status">
+    <div className={`state ${className}`.trim()} style={style} role="status">
       <div className="state__icon">
         <Icon name={icon} />
       </div>

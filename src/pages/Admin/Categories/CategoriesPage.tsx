@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Skeleton } from '@/components/ui/State';
+import { EmptyState, Skeleton } from '@/components/ui/State';
 import { useCategories } from '@/contexts/CategoriesContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -476,14 +476,23 @@ export default function AdminCategoriesPage() {
       <div className="dash__head">
         <h1>{t('admin.nav.categories')}</h1>
         <Button onClick={() => openAddForm()}>
-          +&nbsp; Yeni Kategori Ekle
+          +&nbsp; {t('admin.categories.add') || 'Yeni Kategori Ekle'}
         </Button>
       </div>
 
-      <div className="card">
-        {categoriesList.length === 0 ? (
-          <p className="muted" style={{ padding: 'var(--space-4)' }}>No categories yet.</p>
-        ) : (
+      {categoriesList.length === 0 ? (
+        <EmptyState
+          icon="inbox"
+          title={t('admin.categories.emptyTitle') || 'Henüz kategori bulunmuyor.'}
+          description={t('admin.categories.emptyText') || 'İlk kategorinizi ekleyerek başlayabilirsiniz.'}
+          action={
+            <Button onClick={() => openAddForm()}>
+              +&nbsp; {t('admin.categories.add') || 'Yeni Kategori Ekle'}
+            </Button>
+          }
+        />
+      ) : (
+        <div className="card">
           <ul className="stack" style={{ listStyle: 'none', margin: 0, padding: 0, gap: 'var(--space-4)' }}>
             {categoriesList.map((cat, catIdx) => {
               const isCatOver = dragOverCat?.id === cat.id && draggedCatId !== cat.id;
@@ -763,8 +772,8 @@ export default function AdminCategoriesPage() {
               );
             })}
           </ul>
-        )}
-      </div>
+        </div>
+      )}
 
       <Modal
         open={formOpen}
