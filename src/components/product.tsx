@@ -101,7 +101,7 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
           <span className="product-card__meta">{product.code}</span>
           <h3 className="product-card__name">
             {name}
-            {Boolean(product.carat && product.carat > 0) && ` · ${carat(product.carat)} ct`}
+            {product.carat != null && product.carat > 0 ? ` · ${carat(product.carat)} ct` : null}
           </h3>
           <PriceTag product={product} />
         </div>

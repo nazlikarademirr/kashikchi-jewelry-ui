@@ -13,7 +13,7 @@ interface FieldProps {
   error?: string | null;
   hint?: string;
   required?: boolean;
-  /** Hata/ipucu satırı için her zaman yer ayırır; hata çıkınca/kaybolunca form kaymaz. */
+  /** Hata/ipucu satırı için her zaman yer ayırır; hata çıkınca/kaybolunca form kaymaz. Varsayılan true. */
   reserveMessageSpace?: boolean;
 }
 
@@ -23,7 +23,7 @@ function Field({
   error,
   hint,
   required,
-  reserveMessageSpace,
+  reserveMessageSpace = true,
   children,
 }: FieldProps & { id: string; children: (a11y: { id: string; 'aria-invalid': boolean; 'aria-describedby'?: string }) => ReactNode }) {
   const { t } = useI18n();
@@ -49,14 +49,16 @@ function Field({
           {hint}
         </span>
       ) : reserveMessageSpace ? (
-        <span className="field__error field__slot" aria-hidden="true" />
+        <span className="field__slot" aria-hidden="true">
+          &nbsp;
+        </span>
       ) : null}
     </div>
   );
 }
 
 export const Input = forwardRef<HTMLInputElement, FieldProps & InputHTMLAttributes<HTMLInputElement>>(function Input(
-  { label, error, hint, required, reserveMessageSpace, className, id, ...rest },
+  { label, error, hint, required, reserveMessageSpace = true, className, id, ...rest },
   ref,
 ) {
   const auto = useId();
@@ -69,11 +71,11 @@ export const Input = forwardRef<HTMLInputElement, FieldProps & InputHTMLAttribut
 });
 
 export const Textarea = forwardRef<HTMLTextAreaElement, FieldProps & TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  function Textarea({ label, error, hint, required, className, id, ...rest }, ref) {
+  function Textarea({ label, error, hint, required, reserveMessageSpace = true, className, id, ...rest }, ref) {
     const auto = useId();
     const fid = id ?? auto;
     return (
-      <Field id={fid} label={label} error={error} hint={hint} required={required}>
+      <Field id={fid} label={label} error={error} hint={hint} required={required} reserveMessageSpace={reserveMessageSpace}>
         {(a) => <textarea ref={ref} className={`textarea ${className ?? ''}`} required={required} {...a} {...rest} />}
       </Field>
     );
@@ -81,11 +83,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, FieldProps & TextareaHTM
 );
 
 export const Select = forwardRef<HTMLSelectElement, FieldProps & SelectHTMLAttributes<HTMLSelectElement>>(
-  function Select({ label, error, hint, required, className, id, children, ...rest }, ref) {
+  function Select({ label, error, hint, required, reserveMessageSpace = true, className, id, children, ...rest }, ref) {
     const auto = useId();
     const fid = id ?? auto;
     return (
-      <Field id={fid} label={label} error={error} hint={hint} required={required}>
+      <Field id={fid} label={label} error={error} hint={hint} required={required} reserveMessageSpace={reserveMessageSpace}>
         {(a) => (
           <select ref={ref} className={`select ${className ?? ''}`} required={required} {...a} {...rest}>
             {children}

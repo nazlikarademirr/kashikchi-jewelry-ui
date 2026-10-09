@@ -71,9 +71,9 @@
 .field { display: grid; gap: 6px; }
 .field__label { font-size: 0.9rem; font-weight: 600; }
 .field__label .req { color: var(--danger); margin-left: 3px; }
-.field__hint { font-size: 0.82rem; color: var(--text-muted); }
-.field__error { font-size: 0.86rem; color: var(--danger); font-weight: 500; }
-.field__slot { display: block; min-height: 1.3em; }
+.field__hint { font-size: 0.85rem; line-height: 1.35; color: var(--text-muted); display: block; margin: 0; }
+.field__error { font-size: 0.85rem; line-height: 1.35; color: var(--danger); font-weight: 500; display: block; margin: 0; }
+.field__slot { display: block; font-size: 0.85rem; line-height: 1.35; min-height: 1.35em; visibility: hidden; user-select: none; pointer-events: none; margin: 0; }
 
 .input, .textarea, .select {
   width: 100%;

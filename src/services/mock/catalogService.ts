@@ -42,7 +42,8 @@ function validateInput(db: MockDb, input: ProductInput, excludeId?: string): Rec
     if (r) e[key] = r;
   };
   set('name', v.required(input.name.tr));
-  set('description', v.required(input.description.tr));
+  // Description is optional
+  if (input.description.tr && input.description.tr.length > 4000) e.description = 'validation.maxLength';
   set('code', v.code(input.code));
   if (!e.code) {
     const code = input.code.trim().toUpperCase();
@@ -50,7 +51,7 @@ function validateInput(db: MockDb, input: ProductInput, excludeId?: string): Rec
   }
   set('stock', v.nonNegativeInt(input.stock));
   set('price', v.positive(input.price));
-  set('carat', v.positive(input.carat));
+  if (input.carat !== null && input.carat !== undefined) set('carat', v.positive(input.carat));
   set('discount', v.discount(input.discount));
 
   const cat = db.categories.find((c) => c.id === input.category && c.parentId === null);
@@ -121,7 +122,7 @@ export const mockProductService: ProductService = {
       newest: (a, b) => b.createdAt.localeCompare(a.createdAt),
       priceAsc: (a, b) => finalPrice(a) - finalPrice(b),
       priceDesc: (a, b) => finalPrice(b) - finalPrice(a),
-      caratDesc: (a, b) => b.carat - a.carat,
+      caratDesc: (a, b) => (b.carat ?? 0) - (a.carat ?? 0),
     };
     rows = [...rows].sort(sorters[query.sort ?? 'newest']);
 

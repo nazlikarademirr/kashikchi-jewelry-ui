@@ -53,7 +53,7 @@ export interface Product {
   stock: number;
     category: string;
     subCategory: string | null;
-  carat: number;
+  carat: number | null;
   price: number;
     discount: number;
   images: ProductImage[];
@@ -70,7 +70,7 @@ export interface ProductInput {
   stock: number;
   category: string;
   subCategory: string | null;
-  carat: number;
+  carat: number | null;
   price: number;
   discount: number;
     imageKeys: string[];

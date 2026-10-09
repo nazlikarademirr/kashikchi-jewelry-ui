@@ -32,7 +32,7 @@ export interface ProductRecord {
   stock: number;
   categoryId: string;
   subCategoryId: string | null;
-  carat: number;
+  carat: number | null;
   price: number;
   discount: number;
   imageKeys: string[];
