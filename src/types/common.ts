@@ -14,13 +14,18 @@ export class AppError extends Error {
   readonly code: string;
   readonly fieldErrors?: Record<string, string>;
   readonly status?: number;
+  readonly retryAfter?: number;
 
-  constructor(code: string, options: { fieldErrors?: Record<string, string>; status?: number } = {}) {
+  constructor(
+    code: string,
+    options: { fieldErrors?: Record<string, string>; status?: number; retryAfter?: number } = {},
+  ) {
     super(code);
     this.name = 'AppError';
     this.code = code;
     this.fieldErrors = options.fieldErrors;
     this.status = options.status;
+    this.retryAfter = options.retryAfter;
   }
 }
 

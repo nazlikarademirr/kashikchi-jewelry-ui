@@ -73,7 +73,7 @@ export default function AdminProductsPage() {
                 <th scope="col">{t('admin.products.colStock')}</th>
                 <th scope="col">{t('admin.products.colPrice')}</th>
                 <th scope="col">{t('admin.products.colStatus')}</th>
-                <th scope="col">
+                <th scope="col" style={{ textAlign: 'right' }}>
                   <span className="sr-only">{t('admin.products.colActions')}</span>
                 </th>
               </tr>
@@ -108,7 +108,7 @@ export default function AdminProductsPage() {
                       {p.isActive ? t('admin.products.active') : t('admin.products.inactive')}
                     </Badge>
                   </td>
-                  <td>
+                  <td style={{ textAlign: 'right' }}>
                     <div className="table__actions">
                       <LinkButton to={ROUTES.adminProductEdit(p.id)} variant="secondary" size="sm">
                         {t('admin.products.edit')}

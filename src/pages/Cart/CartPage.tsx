@@ -1,20 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { QuantityStepper } from '@/components/ImageGallery';
 import { PriceTag, StockBadge } from '@/components/product';
 import { Button, LinkButton } from '@/components/ui/Button';
-import { Textarea } from '@/components/ui/Input';
+import { Input, Textarea } from '@/components/ui/Input';
 import { ConfirmDialog } from '@/components/ui/Modal';
-import { EmptyState, Skeleton } from '@/components/ui/State';
+import { Alert, EmptyState, Skeleton } from '@/components/ui/State';
 import { INPUT_LIMITS, MAX_CART_QUANTITY } from '@/constants';
 import { ROUTES } from '@/constants/routes';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
+import { services } from '@/services';
 import type { CartItem } from '@/types';
 import { finalPrice } from '@/utils/format';
 import { mediaUrl } from '@/utils/media';
+import { v } from '@/utils/validation';
 
 function CartLine({ item }: { item: CartItem }) {
   const { t, loc, price, errorMessage } = useI18n();
@@ -135,9 +138,74 @@ function CartLine({ item }: { item: CartItem }) {
 }
 
 export default function CartPage() {
-  const { t, price } = useI18n();
-  const { items, loading, total, count } = useCart();
+  const { t, tDynamic, price, errorMessage } = useI18n();
+  const { user, updateProfile } = useAuth();
+  const { items, loading, total, count, reset } = useCart();
+  const toast = useToast();
+  const navigate = useNavigate();
+
+  const [fullName, setFullName] = useState(() => (user ? `${user.name} ${user.surname}`.trim() : ''));
+  const [email, setEmail] = useState(() => user?.email ?? '');
+  const [phone, setPhone] = useState(() => user?.phone ?? '');
+  const [orderNote, setOrderNote] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+
   useDocumentMeta({ title: t('cart.title'), noindex: true });
+
+  useEffect(() => {
+    if (user) {
+      setFullName((f) => f || `${user.name} ${user.surname}`.trim());
+      setEmail((e) => e || user.email || '');
+      setPhone((p) => p || user.phone || '');
+    }
+  }, [user]);
+
+  const nameError = fullName.trim() ? null : 'validation.required';
+  const emailError = email.trim() ? v.email(email) : null;
+  const phoneError = v.phone(phone);
+  const hasErrors = Boolean(nameError || emailError || phoneError);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setServerError(null);
+    if (hasErrors) return;
+    setBusy(true);
+    try {
+      const parts = fullName.trim().split(/\s+/);
+      const newName = parts[0] || (user?.name ?? '');
+      const newSurname = parts.slice(1).join(' ') || (user?.surname ?? '');
+      const newEmail = email.trim() || null;
+      const newPhone = phone.trim();
+
+      const profileChanged =
+        user &&
+        (newName !== user.name ||
+          newSurname !== user.surname ||
+          newEmail !== (user.email ?? null) ||
+          newPhone !== (user.phone ?? ''));
+
+      if (profileChanged && updateProfile) {
+        await updateProfile({
+          name: newName,
+          surname: newSurname,
+          email: newEmail,
+          phone: newPhone || null,
+        });
+      }
+
+      const order = await services.orders.create({ contactPhone: newPhone, customerNote: orderNote });
+      reset();
+      toast.success('checkout.success');
+      navigate(ROUTES.accountOrder(order.id), { replace: true, state: { justCreated: true } });
+    } catch (err) {
+      setServerError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <>
@@ -157,31 +225,81 @@ export default function CartPage() {
             action={<LinkButton to={ROUTES.products}>{t('cart.continueShopping')}</LinkButton>}
           />
         ) : (
-          <div className="checkout-layout">
-            <ul aria-label={t('cart.title')}>
-              {items.map((i) => (
-                <CartLine key={i.id} item={i} />
-              ))}
-            </ul>
-            <aside className="summary" aria-label={t('cart.summary')}>
-              <h2 style={{ fontSize: '1.5rem' }}>{t('cart.summary')}</h2>
-              <div className="summary__row">
-                <span>{t('cart.items', { n: count })}</span>
-                <span>{price(total)}</span>
+          <form onSubmit={submit} noValidate>
+            <div className="checkout-layout">
+              <div className="stack" style={{ gap: 'var(--space-6)' }}>
+                <ul aria-label={t('cart.title')}>
+                  {items.map((i) => (
+                    <CartLine key={i.id} item={i} />
+                  ))}
+                </ul>
+
+                <div className="card">
+                  <h2 className="card__title">{t('checkout.contact')}</h2>
+                  <div className="form-grid form-grid--2">
+                    <Input
+                      label={t('checkout.fullName')}
+                      required
+                      maxLength={INPUT_LIMITS.name + INPUT_LIMITS.surname}
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      error={submitted && nameError ? tDynamic(nameError) : null}
+                    />
+                    <Input
+                      label={t('auth.email')}
+                      type="email"
+                      maxLength={INPUT_LIMITS.email}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      error={submitted && emailError ? tDynamic(emailError) : null}
+                    />
+                  </div>
+                  <div className="form-grid" style={{ marginTop: 'var(--space-4)' }}>
+                    <Input
+                      label={t('checkout.phone')}
+                      type="tel"
+                      required
+                      maxLength={INPUT_LIMITS.phone}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      error={submitted && phoneError ? tDynamic(phoneError) : null}
+                      placeholder="+90 5xx xxx xx xx"
+                    />
+                  </div>
+                  <div className="form-grid" style={{ marginTop: 'var(--space-4)' }}>
+                    <Textarea
+                      label={t('checkout.note')}
+                      rows={3}
+                      maxLength={INPUT_LIMITS.note}
+                      value={orderNote}
+                      onChange={(e) => setOrderNote(e.target.value)}
+                      hint={t('checkout.noteHint')}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="summary__row summary__total">
-                <span>{t('cart.total')}</span>
-                <span>{price(total)}</span>
-              </div>
-              <p className="muted" style={{ fontSize: '0.84rem' }}>{t('cart.noPaymentNote')}</p>
-              <LinkButton to={ROUTES.products} variant="ghost" block>
-                {t('cart.continueShopping')}
-              </LinkButton>
-              <LinkButton to={ROUTES.checkout} size="lg" block>
-                {t('cart.checkout')}
-              </LinkButton>
-            </aside>
-          </div>
+
+              <aside className="summary" aria-label={t('cart.summary')}>
+                <h2 style={{ fontSize: '1.5rem' }}>{t('cart.summary')}</h2>
+                <div className="summary__row">
+                  <span>{t('cart.items', { n: count })}</span>
+                  <span>{price(total)}</span>
+                </div>
+                <div className="summary__row summary__total">
+                  <span>{t('cart.total')}</span>
+                  <span>{price(total)}</span>
+                </div>
+                <Alert kind="info">{t('checkout.noPayment')}</Alert>
+                {serverError && <Alert kind="error">{serverError}</Alert>}
+                <LinkButton to={ROUTES.products} variant="ghost" block>
+                  {t('cart.continueShopping')}
+                </LinkButton>
+                <Button type="submit" size="lg" block loading={busy}>
+                  {t('checkout.placeOrder')}
+                </Button>
+              </aside>
+            </div>
+          </form>
         )}
       </div>
     </>

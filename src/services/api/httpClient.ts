@@ -106,16 +106,37 @@ export async function http<T = void>(path: string, opts: RequestOptions = {}, is
   }
 
   if (!res.ok) {
-    let payload: { code?: string; fieldErrors?: Record<string, string> } = {};
+    let payload: { code?: string; fieldErrors?: Record<string, string>; retryAfter?: number } = {};
     try {
       payload = await res.json();
     } catch {}
-    
-    throw new AppError(payload.code ??
-      (res.status === 401 ? 'INVALID_CREDENTIALS' : res.status === 403 ? 'FORBIDDEN' : res.status === 404 ? 'NOT_FOUND' : res.status >= 500 ? 'NETWORK_ERROR' : 'UNKNOWN'), {
-      fieldErrors: payload.fieldErrors,
-      status: res.status,
-    });
+
+    const retryHeader = res.headers.get('Retry-After');
+    const parsedRetry = retryHeader ? parseInt(retryHeader, 10) : undefined;
+    const retryAfter =
+      typeof payload.retryAfter === 'number'
+        ? payload.retryAfter
+        : parsedRetry !== undefined && !isNaN(parsedRetry)
+        ? parsedRetry
+        : undefined;
+
+    throw new AppError(
+      payload.code ??
+        (res.status === 401
+          ? 'INVALID_CREDENTIALS'
+          : res.status === 403
+          ? 'FORBIDDEN'
+          : res.status === 404
+          ? 'NOT_FOUND'
+          : res.status >= 500
+          ? 'NETWORK_ERROR'
+          : 'UNKNOWN'),
+      {
+        fieldErrors: payload.fieldErrors,
+        status: res.status,
+        retryAfter,
+      },
+    );
   }
   
   if (res.status === 204) return undefined as T;

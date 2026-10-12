@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthShell } from '@/components/AuthShell';
 import { Button } from '@/components/ui/Button';
@@ -22,8 +22,27 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [serverErrorCode, setServerErrorCode] = useState<string | null>(null);
+  const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
   const [showForgot, setShowForgot] = useState(false);
   useDocumentMeta({ title: t('auth.loginMeta'), noindex: true });
+
+  const isLockedOut = Boolean(lockoutSeconds !== null && lockoutSeconds > 0);
+
+  // Kilitlenme durumunda saniyeyi geriye doğru sayma
+  useEffect(() => {
+    if (lockoutSeconds === null || lockoutSeconds <= 0) return;
+    const interval = window.setInterval(() => {
+      setLockoutSeconds((prev) => (prev !== null && prev > 1 ? prev - 1 : null));
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [lockoutSeconds !== null && lockoutSeconds > 0]);
+
+  useEffect(() => {
+    if (lockoutSeconds === null && serverErrorCode === 'TOO_MANY_ATTEMPTS') {
+      setServerError(null);
+      setServerErrorCode(null);
+    }
+  }, [lockoutSeconds, serverErrorCode]);
 
   const identifierVal = identifier.trim();
   const identifierError = !identifierVal
@@ -34,6 +53,7 @@ export default function LoginPage() {
   const passwordError = v.required(password);
 
   const clearErrors = () => {
+    if (isLockedOut) return;
     if (serverError || serverErrorCode) {
       setServerError(null);
       setServerErrorCode(null);
@@ -42,6 +62,7 @@ export default function LoginPage() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (isLockedOut) return;
     setSubmitted(true);
     clearErrors();
     if (identifierError || passwordError) return;
@@ -52,9 +73,17 @@ export default function LoginPage() {
     } catch (err) {
       if (isAppError(err)) {
         setServerErrorCode(err.code);
-        setServerError(errorMessage(err));
+        if (err.code === 'TOO_MANY_ATTEMPTS') {
+          const secs = err.retryAfter && err.retryAfter > 0 ? err.retryAfter : 60;
+          setLockoutSeconds(secs);
+          setServerError(tDynamic('errors.TOO_MANY_ATTEMPTS', { seconds: secs }));
+        } else {
+          setLockoutSeconds(null);
+          setServerError(errorMessage(err));
+        }
       } else {
         setServerErrorCode(null);
+        setLockoutSeconds(null);
         setServerError(errorMessage(err));
       }
       setBusy(false);
@@ -100,6 +129,8 @@ export default function LoginPage() {
           error={
             submitted && passwordError
               ? tDynamic(passwordError)
+              : serverErrorCode === 'TOO_MANY_ATTEMPTS' && isLockedOut
+              ? tDynamic('errors.TOO_MANY_ATTEMPTS', { seconds: lockoutSeconds ?? 60 })
               : serverErrorCode && serverErrorCode !== 'USER_NOT_FOUND'
               ? serverError
               : null
@@ -115,7 +146,7 @@ export default function LoginPage() {
             {t('auth.forgotSoon')}
           </p>
         )}
-        <Button type="submit" size="lg" block loading={busy}>
+        <Button type="submit" size="lg" block loading={busy} disabled={isLockedOut}>
           {t('auth.loginSubmit')}
         </Button>
       </form>

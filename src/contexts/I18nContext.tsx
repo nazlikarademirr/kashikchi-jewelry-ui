@@ -11,20 +11,20 @@ interface I18nValue {
   locale: Locale;
   setLocale: (l: Locale) => void;
   t: (key: TranslationKey, params?: Params) => string;
-    tDynamic: (key: string, params?: Params) => string;
-    tError: (code: string) => string;
+  tDynamic: (key: string, params?: Params) => string;
+  tError: (code: string, params?: Params) => string;
   loc: (text: LocalizedText | undefined) => string;
   price: (n: number) => string;
   date: (iso: string, withTime?: boolean) => string;
   carat: (n: number) => string;
-  errorMessage: (err: unknown) => string;
+  errorMessage: (err: unknown, params?: Params) => string;
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
 
 function interpolate(template: string, params?: Params): string {
-  if (!params) return template;
-  return template.replace(/\{(\w+)\}/g, (_, k: string) => String(params[k] ?? `{${k}}`));
+  const merged: Params = { seconds: 60, ...params };
+  return template.replace(/\{(\w+)\}/g, (_, k: string) => (merged[k] !== undefined ? String(merged[k]) : `{${k}}`));
 }
 
 function initialLocale(): Locale {
@@ -55,7 +55,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const dict = dictionaries[locale];
     const tDynamic = (key: string, params?: Params) =>
       interpolate(lookup(dict, key) ?? lookup(dictionaries[DEFAULT_LOCALE], key) ?? key, params);
-    const tError = (code: string) => lookup(dict, `errors.${code}`) ?? dict.errors.UNKNOWN;
+    const tError = (code: string, params?: Params) =>
+      interpolate(lookup(dict, `errors.${code}`) ?? lookup(dictionaries[DEFAULT_LOCALE], `errors.${code}`) ?? dict.errors.UNKNOWN, params);
     return {
       locale,
       setLocale,
@@ -66,7 +67,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       price: (n) => formatPrice(n, locale),
       date: (iso, withTime) => formatDate(iso, locale, withTime),
       carat: (n) => formatCarat(n, locale),
-      errorMessage: (err) => (isAppError(err) ? tError(err.code) : dict.errors.UNKNOWN),
+      errorMessage: (err, params) =>
+        isAppError(err)
+          ? tError(err.code, params ?? (err.retryAfter ? { seconds: err.retryAfter } : undefined))
+          : dict.errors.UNKNOWN,
     };
   }, [locale, setLocale]);
 

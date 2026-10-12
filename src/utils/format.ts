@@ -18,8 +18,8 @@ export function formatDate(iso: string, locale: Locale, withTime = false): strin
   }).format(new Date(iso));
 }
 
-export function formatCarat(carat: number, locale: Locale): string {
-  return new Intl.NumberFormat(LOCALE_TAG[locale], { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(carat);
+export function formatCarat(carat: number, _locale?: Locale): string {
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(carat);
 }
 
 export function localized(text: LocalizedText | undefined, locale: Locale): string {

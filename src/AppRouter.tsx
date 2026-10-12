@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { Spinner } from '@/components/ui/State';
+import { ROUTES } from '@/constants/routes';
 import PublicLayout from '@/layout/PublicLayout';
 import { AccountLayout, AdminLayout } from '@/layout/DashLayouts';
 import { GuestOnly, RequireRole } from './routes/guards';
@@ -12,7 +13,6 @@ const CategoryPage = lazy(() => import('@/pages/Category/CategoryPage'));
 const ProductDetailPage = lazy(() => import('@/pages/ProductDetail/ProductDetailPage'));
 const FavoritesPage = lazy(() => import('@/pages/Favorites/FavoritesPage'));
 const CartPage = lazy(() => import('@/pages/Cart/CartPage'));
-const CheckoutPage = lazy(() => import('@/pages/Checkout/CheckoutPage'));
 const LoginPage = lazy(() => import('@/pages/Login/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/Register/RegisterPage'));
 const LegalPage = lazy(() => import('@/pages/Legal/LegalPage'));
@@ -55,7 +55,7 @@ export function AppRoutes() {
           <Route element={<RequireRole role={0} />}>
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="cart" element={<CartPage />} />
-            <Route path="checkout" element={<CheckoutPage />} />
+            <Route path="checkout" element={<Navigate to={ROUTES.cart} replace />} />
             <Route path="account" element={<AccountLayout />}>
               <Route index element={<AccountHome />} />
               <Route path="orders" element={<AccountOrders />} />

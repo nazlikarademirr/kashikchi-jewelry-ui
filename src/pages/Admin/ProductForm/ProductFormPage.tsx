@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Input, Select, Textarea } from '@/components/ui/Input';
@@ -38,7 +38,7 @@ const EMPTY: FormState = {
   code: '',
   category: '',
   subCategory: '',
-  goldKarat: '',
+  goldKarat: '14K',
   carat: '',
   price: '',
   discount: '0',
@@ -48,7 +48,30 @@ const EMPTY: FormState = {
   featured: false,
 };
 
-const num = (s: string): number | '' => (s.trim() === '' ? '' : Number(s.replace(/\./g, '').replace(',', '.')));
+const parsePrice = (s: string): number | '' => {
+  const clean = s.replace(/\./g, '').trim();
+  return clean === '' ? '' : Number(clean);
+};
+
+const parseIntNum = (s: string): number | '' => {
+  const clean = s.trim();
+  return clean === '' ? '' : Number(clean);
+};
+
+const parseCarat = (s: string): number | null => {
+  const clean = s.trim();
+  if (clean === '') return null;
+  const n = Number(clean);
+  return Number.isFinite(n) ? n : null;
+};
+
+const isCaratValid = (s: string): boolean => {
+  const clean = s.trim();
+  if (clean === '') return true;
+  if (!/^\d+(\.\d{1,3})?$/.test(clean)) return false;
+  const n = Number(clean);
+  return Number.isFinite(n) && n > 0;
+};
 
 function fromProduct(p: Product): FormState {
   return {
@@ -68,18 +91,55 @@ function fromProduct(p: Product): FormState {
   };
 }
 
-function ProductForm({ product }: { product: Product | null }) {
+function isFormEqual(a: FormState, b: FormState): boolean {
+  if (a.name.trim() !== b.name.trim()) return false;
+  if (a.description.trim() !== b.description.trim()) return false;
+  if (a.code.trim().toUpperCase() !== b.code.trim().toUpperCase()) return false;
+  if (a.category !== b.category) return false;
+  if ((a.subCategory || '') !== (b.subCategory || '')) return false;
+  if (a.goldKarat !== b.goldKarat) return false;
+  const aCarat = a.carat.trim();
+  const bCarat = b.carat.trim();
+  if (aCarat !== bCarat) {
+    const an = parseCarat(aCarat);
+    const bn = parseCarat(bCarat);
+    if (an === null || bn === null || an !== bn) return false;
+  }
+  if (parsePrice(a.price) !== parsePrice(b.price)) return false;
+  if (parseIntNum(a.discount) !== parseIntNum(b.discount)) return false;
+  if (parseIntNum(a.stock) !== parseIntNum(b.stock)) return false;
+  if (a.isActive !== b.isActive) return false;
+  if (a.featured !== b.featured) return false;
+  if (a.imageKeys.length !== b.imageKeys.length) return false;
+  for (let i = 0; i < a.imageKeys.length; i++) {
+    if (a.imageKeys[i] !== b.imageKeys[i]) return false;
+  }
+  return true;
+}
+
+function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: (updated: Product) => void }) {
   const { t, tDynamic, errorMessage } = useI18n();
   const { tree } = useCategories();
   const toast = useToast();
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState<FormState>(product ? fromProduct(product) : EMPTY);
+  const [savedForm, setSavedForm] = useState<FormState>(() => (product ? fromProduct(product) : EMPTY));
+  const [form, setForm] = useState<FormState>(savedForm);
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [serverFields, setServerFields] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (product) {
+      const pForm = fromProduct(product);
+      setSavedForm(pForm);
+      setForm(pForm);
+    }
+  }, [product]);
+
+  const isDirty = !isFormEqual(form, savedForm);
 
   const set =
     <K extends keyof FormState>(key: K) =>
@@ -101,6 +161,91 @@ function ProductForm({ product }: { product: Product | null }) {
     set('price')(val.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
   };
 
+  const handleCaratKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (
+      e.key === 'Backspace' ||
+      e.key === 'Delete' ||
+      e.key === 'Tab' ||
+      e.key === 'Escape' ||
+      e.key === 'Enter' ||
+      e.key === 'ArrowLeft' ||
+      e.key === 'ArrowRight' ||
+      e.key === 'ArrowUp' ||
+      e.key === 'ArrowDown' ||
+      e.key === 'Home' ||
+      e.key === 'End' ||
+      e.ctrlKey ||
+      e.metaKey
+    ) {
+      return;
+    }
+
+    if (e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') {
+      e.preventDefault();
+      return;
+    }
+
+    if (e.key === '.') {
+      const input = e.currentTarget;
+      const val = input.value;
+      const start = input.selectionStart ?? 0;
+      const end = input.selectionEnd ?? 0;
+      const selectedText = val.slice(start, end);
+      if (val.includes('.') && !selectedText.includes('.')) {
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (!/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleCaratPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const paste = e.clipboardData.getData('text');
+    if (/[,eE+-]/.test(paste) || !/^[0-9.]*$/.test(paste)) {
+      e.preventDefault();
+      return;
+    }
+    const input = e.currentTarget;
+    const val = input.value;
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? 0;
+    const existingWithoutSelected = val.slice(0, start) + val.slice(end);
+    const totalDots = (existingWithoutSelected.match(/\./g) || []).length + (paste.match(/\./g) || []).length;
+    if (totalDots > 1) {
+      e.preventDefault();
+      return;
+    }
+  };
+
+  const handleCaratChange = (e: ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/[,eE+-]/g, '').replace(/[^0-9.]/g, '');
+
+    if (val.startsWith('.')) {
+      val = '0' + val;
+    }
+
+    const parts = val.split('.');
+    if (parts.length > 2) {
+      val = parts[0] + '.' + parts.slice(1).join('');
+    }
+    if (parts.length >= 2 && parts[1].length > 3) {
+      val = parts[0] + '.' + parts[1].slice(0, 3);
+    }
+    if (val.length > INPUT_LIMITS.carat) {
+      val = val.slice(0, INPUT_LIMITS.carat);
+    }
+    set('carat')(val);
+  };
+
+  const handleCaratBlur = () => {
+    if (form.carat.endsWith('.')) {
+      set('carat')(form.carat.slice(0, -1));
+    }
+  };
+
   const topCategory = tree.find((c) => c.id === form.category);
   const subCategories = topCategory?.children ?? [];
 
@@ -109,10 +254,10 @@ function ProductForm({ product }: { product: Product | null }) {
     code: v.code(form.code),
     category: form.category ? null : 'validation.categoryInvalid',
     goldKarat: form.goldKarat ? null : 'validation.required',
-    carat: num(form.carat) !== '' ? v.positive(num(form.carat)) : null,
-    price: v.positive(num(form.price)),
-    discount: v.discount(num(form.discount)),
-    stock: v.nonNegativeInt(num(form.stock)),
+    carat: isCaratValid(form.carat) ? null : 'validation.positive',
+    price: v.positive(parsePrice(form.price)),
+    discount: v.discount(parseIntNum(form.discount)),
+    stock: v.nonNegativeInt(parseIntNum(form.stock)),
     images: form.imageKeys.length > 0 ? null : 'validation.imagesRequired',
   };
   const hasErrors = Object.values(errors).some(Boolean);
@@ -156,30 +301,41 @@ function ProductForm({ product }: { product: Product | null }) {
     e.preventDefault();
     setSubmitted(true);
     setServerError(null);
-    if (hasErrors) return;
+    if (hasErrors || !isDirty) return;
     const name = sanitizeText(form.name, INPUT_LIMITS.productName);
     const desc = sanitizeText(form.description, INPUT_LIMITS.productDescription);
+    const caratNum = parseCarat(form.carat);
     const input: ProductInput = {
       name: { tr: name, en: name },
       description: { tr: desc, en: desc },
       code: form.code.trim().toUpperCase(),
-      stock: Number(num(form.stock)),
+      stock: Number(parseIntNum(form.stock)),
       category: form.category,
       subCategory: form.subCategory || null,
       goldKarat: form.goldKarat,
-      carat: num(form.carat) !== '' ? Number(num(form.carat)) : null,
-      price: Number(num(form.price)),
-      discount: Number(num(form.discount)),
+      carat: caratNum !== null && isCaratValid(form.carat) ? caratNum : null,
+      price: Number(parsePrice(form.price)),
+      discount: Number(parseIntNum(form.discount)),
       imageKeys: form.imageKeys,
       isActive: form.isActive,
       featured: form.featured,
     };
     setBusy(true);
     try {
-      if (product) await services.products.update(product.id, input);
-      else await services.products.create(input);
-      toast.success(product ? 'admin.form.updated' : 'admin.form.created');
-      navigate(ROUTES.adminProducts);
+      if (product) {
+        const updated = await services.products.update(product.id, input);
+        const updatedForm = fromProduct(updated);
+        setSavedForm(updatedForm);
+        setForm(updatedForm);
+        setSubmitted(false);
+        setBusy(false);
+        toast.success('admin.form.updated');
+        onSaved?.(updated);
+      } else {
+        const created = await services.products.create(input);
+        toast.success('admin.form.created');
+        navigate(ROUTES.adminProductEdit(created.id));
+      }
     } catch (er) {
       if (isAppError(er) && er.fieldErrors) setServerFields(er.fieldErrors);
       setServerError(errorMessage(er));
@@ -257,14 +413,24 @@ function ProductForm({ product }: { product: Product | null }) {
             onChange={onText('goldKarat')}
             error={err('goldKarat')}
           >
-            <option value="">{t('admin.form.selectGoldKarat')}</option>
             {GOLD_KARAT_OPTIONS.map((k) => (
               <option key={k} value={k}>
                 {k}
               </option>
             ))}
           </Select>
-          <Input label={t('admin.form.carat')} type="number" min={0} step="0.01" inputMode="decimal" value={form.carat} onChange={onText('carat')} error={err('carat')} />
+          <Input
+            label={t('admin.form.carat')}
+            type="text"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={form.carat}
+            onKeyDown={handleCaratKeyDown}
+            onPaste={handleCaratPaste}
+            onChange={handleCaratChange}
+            onBlur={handleCaratBlur}
+            error={err('carat')}
+          />
           <Input label={t('admin.form.price')} required type="text" inputMode="numeric" maxLength={INPUT_LIMITS.price} value={form.price} onChange={handlePriceChange} error={err('price')} />
           <Input label={t('admin.form.discount')} required type="number" min={0} max={100} step="1" inputMode="decimal" value={form.discount} onChange={onText('discount')} error={err('discount')} />
           <Input
@@ -347,13 +513,13 @@ function ProductForm({ product }: { product: Product | null }) {
       </div>
 
       {serverError && <Alert kind="error">{serverError}</Alert>}
-      <div className="row">
-        <Button type="submit" size="lg" loading={busy}>
-          {t('admin.form.save')}
-        </Button>
+      <div className="row" style={{ justifyContent: 'flex-end', gap: 'var(--space-3)' }}>
         <LinkButton to={ROUTES.adminProducts} variant="ghost" size="lg">
           {t('common.cancel')}
         </LinkButton>
+        <Button type="submit" size="lg" loading={busy} disabled={busy || !isDirty}>
+          {t('admin.form.save')}
+        </Button>
       </div>
     </form>
   );
@@ -377,12 +543,12 @@ export default function AdminProductFormPage() {
       <div className="dash__head">
         <h1>{editing ? t('admin.form.titleEdit') : t('admin.form.titleNew')}</h1>
       </div>
-      {product.loading ? (
+      {product.loading && !product.data ? (
         <Skeleton style={{ height: 320 }} />
       ) : product.error ? (
         <ErrorState error={product.error} onRetry={product.reload} />
       ) : (
-        <ProductForm key={id ?? 'new'} product={product.data} />
+        <ProductForm key={id ?? 'new'} product={product.data} onSaved={product.setData} />
       )}
     </>
   );

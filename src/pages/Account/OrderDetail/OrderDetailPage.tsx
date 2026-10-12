@@ -1,9 +1,9 @@
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { MessagePanel, OrderItemsList, OrderTimeline } from '@/components/order';
 import { OrderStatusBadge } from '@/components/product';
 import { LinkButton } from '@/components/ui/Button';
 import { Breadcrumb } from '@/components/ui/Misc';
-import { ErrorState, Skeleton } from '@/components/ui/State';
+import { Alert, ErrorState, Skeleton } from '@/components/ui/State';
 import { ROUTES } from '@/constants/routes';
 import { useI18n } from '@/contexts/I18nContext';
 import { useAsync } from '@/hooks/useAsync';
@@ -13,6 +13,8 @@ import { shortId } from '@/utils/format';
 
 export default function AccountOrderDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
+  const justCreated = (location.state as { justCreated?: boolean } | null)?.justCreated;
   const { t, date, price } = useI18n();
   const order = useAsync(() => services.orders.get(id), [id]);
   const o = order.data;
@@ -31,6 +33,11 @@ export default function AccountOrderDetailPage() {
           { label: t('orders.no', { no: shortId(o.id) }) },
         ]}
       />
+      {justCreated && (
+        <Alert kind="success">
+          {t('checkout.orderCreatedBanner')}
+        </Alert>
+      )}
       <div className="dash__head">
         <div>
           <h1>{t('orders.no', { no: shortId(o.id) })}</h1>

@@ -194,10 +194,22 @@ export default function ProductDetailPage() {
                 <dd>{loc(top.name)}</dd>
               </div>
             ) : null}
-            <div className="spec">
-              <dt>{t('product.code')}</dt>
-              <dd>{product.code}</dd>
-            </div>
+            {isAdmin ? (
+              <div className="spec">
+                <dt>{t('product.subCategory')}</dt>
+                <dd>{sub ? loc(sub.name) : product.subCategory || '—'}</dd>
+              </div>
+            ) : sub ? (
+              <div className="spec">
+                <dt>{t('product.subCategory')}</dt>
+                <dd>{loc(sub.name)}</dd>
+              </div>
+            ) : (
+              <div className="spec">
+                <dt>{t('product.code')}</dt>
+                <dd>{product.code}</dd>
+              </div>
+            )}
           </dl>
 
           <div className="product-info__actions">

@@ -6,7 +6,7 @@ export const ROUTES = {
     subCategory ? `/category/${category}/${subCategory}` : `/category/${category}`,
   favorites: '/favorites',
   cart: '/cart',
-  checkout: '/checkout',
+  checkout: '/cart',
   login: '/login',
   register: '/register',
   account: '/account',

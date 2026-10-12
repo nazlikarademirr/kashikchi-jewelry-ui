@@ -282,7 +282,8 @@
 .table tbody tr:last-child td { border-bottom: 0; }
 .table tbody tr:hover { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
 .table__thumb { width: 52px; height: 64px; object-fit: cover; border-radius: var(--r-control); background: var(--surface-2); }
-.table__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.table__actions { display: flex; gap: var(--space-2); justify-content: flex-end; align-items: center; flex-wrap: nowrap; }
+.table__actions .btn { min-width: 150px; }
 
 .pagination { display: flex; justify-content: center; align-items: center; gap: var(--space-2); margin-top: var(--space-7); flex-wrap: wrap; }
 .pagination button { min-width: 42px; height: 42px; border-radius: var(--r-control); border: 1px solid var(--border-strong); background: transparent; }
