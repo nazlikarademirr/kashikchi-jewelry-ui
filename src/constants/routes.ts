@@ -14,6 +14,7 @@ export const ROUTES = {
   accountOrder: (id: string) => `/account/orders/${id}`,
   accountNotifications: '/account/notifications',
   accountMessages: '/account/messages',
+  accountProfile: '/account/profile',
   admin: '/admin',
   adminProducts: '/admin/products',
   adminProductNew: '/admin/products/new',

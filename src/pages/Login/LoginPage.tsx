@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthShell } from '@/components/AuthShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -14,7 +15,7 @@ export default function LoginPage() {
   const { t, tDynamic, errorMessage } = useI18n();
   const { login } = useAuth();
   const toast = useToast();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -22,17 +23,22 @@ export default function LoginPage() {
   const [showForgot, setShowForgot] = useState(false);
   useDocumentMeta({ title: t('auth.loginMeta'), noindex: true });
 
-  const emailError = v.email(email);
+  const identifierVal = identifier.trim();
+  const identifierError = !identifierVal
+    ? 'validation.required'
+    : identifierVal.includes('@')
+    ? v.email(identifierVal)
+    : null;
   const passwordError = v.required(password);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     setServerError(null);
-    if (emailError || passwordError) return;
+    if (identifierError || passwordError) return;
     setBusy(true);
     try {
-      await login({ email: email.trim(), password });
+      await login({ email: identifierVal, password });
       toast.success('auth.loggedIn');
     } catch (err) {
       setServerError(errorMessage(err));
@@ -45,31 +51,44 @@ export default function LoginPage() {
       <h1 style={{ marginBottom: 24 }}>{t('auth.loginTitle')}</h1>
       <form className="form-grid" onSubmit={submit} noValidate style={{ display: 'grid', gap: 0 }}>
         <Input
-          label={t('auth.email')}
-          type="email"
-          autoComplete="email"
+          label={t('auth.emailOrPhone')}
+          type="text"
+          autoComplete="username"
           required
           reserveMessageSpace
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={submitted && emailError ? tDynamic(emailError) : null}
+          maxLength={INPUT_LIMITS.email}
+          value={identifier}
+          onChange={(e) => {
+            setIdentifier(e.target.value);
+            if (serverError) setServerError(null);
+          }}
+          error={submitted && identifierError ? tDynamic(identifierError) : null}
         />
         <Input
           label={t('auth.password')}
           type="password"
           autoComplete="current-password"
           required
-          reserveMessageSpace
+          reserveMessageSpace={2}
+          maxLength={INPUT_LIMITS.password}
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          // Sunucu hatası (ör. "Kullanıcı adı veya şifre hatalı.") alan hatası gibi aynı ayrılmış satırda gösterilir; yerleşim kaymaz.
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (serverError) setServerError(null);
+          }}
+          // Sunucu hatası (ör. "E-posta veya şifre hatalı." veya "Çok fazla hatalı deneme yaptınız...") ayrılmış 2 satırlık alanda gösterilir; yerleşim ve inputlar asla kaymaz.
           error={submitted && passwordError ? tDynamic(passwordError) : serverError}
         />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 0, marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 0, marginBottom: showForgot ? 8 : 14 }}>
           <Button type="button" variant="ghost" size="sm" aria-expanded={showForgot} onClick={() => setShowForgot((s) => !s)} style={{ padding: '4px 8px', height: 'auto' }}>
             {t('auth.forgot')}
           </Button>
         </div>
+        {showForgot && (
+          <p className="muted" style={{ fontSize: '0.85rem', margin: '0 0 16px', textAlign: 'right' }}>
+            {t('auth.forgotSoon')}
+          </p>
+        )}
         <Button type="submit" size="lg" block loading={busy}>
           {t('auth.loginSubmit')}
         </Button>

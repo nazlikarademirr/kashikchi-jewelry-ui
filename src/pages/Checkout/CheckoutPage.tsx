@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Alert, EmptyState, Spinner } from '@/components/ui/State';
+import { INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
@@ -89,6 +90,7 @@ export default function CheckoutPage() {
                   autoComplete="tel"
                   inputMode="tel"
                   required
+                  maxLength={INPUT_LIMITS.phone}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   error={submitted && phoneError ? tDynamic(phoneError) : null}
@@ -97,7 +99,7 @@ export default function CheckoutPage() {
                 <Textarea
                   label={t('checkout.note')}
                   value={note}
-                  maxLength={1000}
+                  maxLength={INPUT_LIMITS.note}
                   onChange={(e) => setNote(e.target.value)}
                   hint={t('checkout.noteHint')}
                 />

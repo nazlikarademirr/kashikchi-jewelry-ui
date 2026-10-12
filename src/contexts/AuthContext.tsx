@@ -1,20 +1,23 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useToast } from './ToastContext';
 import { services } from '@/services';
-import type { LoginInput, RegisterInput, User } from '@/types';
+import type { LoginInput, RegisterInput, UpdateProfileInput, User } from '@/types';
 
 interface AuthValue {
   user: User | null;
-    loading: boolean;
+  loading: boolean;
   isAdmin: boolean;
   isCustomer: boolean;
   login: (input: LoginInput) => Promise<User>;
   register: (input: RegisterInput) => Promise<User>;
+  updateProfile: (input: UpdateProfileInput) => Promise<User>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const toast = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,10 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return u;
   }, []);
 
+  const updateProfile = useCallback(async (input: UpdateProfileInput) => {
+    const u = await services.auth.updateProfile(input);
+    setUser(u);
+    return u;
+  }, []);
+
   const logout = useCallback(async () => {
     await services.auth.logout();
     setUser(null);
-  }, []);
+    toast.success('auth.loggedOut');
+  }, [toast]);
 
   const value = useMemo<AuthValue>(
     () => ({
@@ -59,9 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isCustomer: user?.role === 0,
       login,
       register,
+      updateProfile,
       logout,
     }),
-    [user, loading, login, register, logout],
+    [user, loading, login, register, updateProfile, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

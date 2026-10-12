@@ -17,6 +17,7 @@ import type {
   ProductInput,
   ProductQuery,
   RegisterInput,
+  UpdateProfileInput,
   User,
 } from '@/types';
 
@@ -25,7 +26,8 @@ export interface AuthService {
   login(input: LoginInput): Promise<User>;
   register(input: RegisterInput): Promise<User>;
   logout(): Promise<void>;
-    me(): Promise<User | null>;
+  me(): Promise<User | null>;
+  updateProfile(input: UpdateProfileInput): Promise<User>;
 }
 
 export interface CategoryService {

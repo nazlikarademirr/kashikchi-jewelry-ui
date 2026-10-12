@@ -11,9 +11,9 @@ export function Footer() {
     <footer className="site-footer">
       <div className="container">
         <div className="footer__grid">
-          <div className="footer__brand" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <Logo noLink />
-            <div className="social" style={{ marginTop: 0 }}>
+          <div className="footer__brand">
+            <Logo noLink variant="light" />
+            <div className="social">
               {SOCIAL_LINKS.map((s) => (
                 <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.name}>
                   <Icon name={s.icon} />
@@ -21,8 +21,6 @@ export function Footer() {
               ))}
             </div>
           </div>
-
-
 
           <nav aria-label={t('footer.legal')}>
             <h2 className="footer__title">{t('footer.legal')}</h2>
@@ -36,24 +34,31 @@ export function Footer() {
           <div>
             <h2 className="footer__title">{t('footer.contact')}</h2>
             <address className="footer__contact">
-              <a href={`tel:${STORE_CONTACT.phone.replace(/\s/g, '')}`} className="row" style={{ flexWrap: 'nowrap' }}>
-                <Icon name="phone" size={18} /> {STORE_CONTACT.phone}
+              <a href={`tel:${STORE_CONTACT.phone.replace(/\s/g, '')}`} className="footer__contact-item">
+                <Icon name="phone" size={18} />
+                <span>{STORE_CONTACT.phone}</span>
               </a>
-              <a href={`mailto:${STORE_CONTACT.email}`} className="row" style={{ flexWrap: 'nowrap' }}>
-                <Icon name="mail" size={18} /> {STORE_CONTACT.email}
+              <a href={`mailto:${STORE_CONTACT.email}`} className="footer__contact-item">
+                <Icon name="mail" size={18} />
+                <span>{STORE_CONTACT.email}</span>
               </a>
-              <a href="https://www.google.com/maps/place/Molla+Fenari,+K%C4%B1l%C4%B1%C3%A7%C3%A7%C4%B1lar+Sok.,+34120+Fatih%2F%C4%B0stanbul/@41.0108369,28.9709054,17z/data=!3m1!4b1!4m6!3m5!1s0x14cab99400b21ddd:0x2f7f144cc932c884!8m2!3d41.0108369!4d28.9709054!16s%2Fg%2F1tdj7z81?entry=ttu&g_ep=EgoyMDI2MTAwNC4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" className="row" style={{ flexWrap: 'nowrap', alignItems: 'flex-start' }}>
-                <Icon name="pin" size={18} style={{ flex: 'none', marginTop: 3 }} />
+              <a
+                href="https://www.google.com/maps/place/Molla+Fenari,+K%C4%B1l%C4%B1%C3%A7%C3%A7%C4%B1lar+Sok.,+34120+Fatih%2F%C4%B0stanbul/@41.0108369,28.9709054,17z/data=!3m1!4b1!4m6!3m5!1s0x14cab99400b21ddd:0x2f7f144cc932c884!8m2!3d41.0108369!4d28.9709054!16s%2Fg%2F1tdj7z81?entry=ttu&g_ep=EgoyMDI2MTAwNC4wIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer__contact-item"
+              >
+                <Icon name="pin" size={18} />
                 <span>{t('footer.address')}</span>
               </a>
-              <span className="row" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
-                <Icon name="clock" size={18} style={{ flex: 'none' }} />
+              <div className="footer__contact-item">
+                <Icon name="clock" size={18} />
                 <span>
                   {t('footer.hoursWeekday')}
                   <br />
                   {t('footer.hoursWeekend')}
                 </span>
-              </span>
+              </div>
             </address>
           </div>
         </div>

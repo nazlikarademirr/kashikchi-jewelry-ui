@@ -10,14 +10,22 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { SUPPORTED_LOCALES } from '@/locales';
 import { Icon } from '@/components/ui/Icon';
 
-export function Logo({ noLink }: { noLink?: boolean }) {
+export function Logo({ noLink, variant }: { noLink?: boolean; variant?: 'light' | 'dark' }) {
   const { t } = useI18n();
+  const { theme } = useTheme();
+
+  const isLightLogo = variant === 'light' || (!variant && theme === 'dark');
+  const logoSrc = isLightLogo ? '/logo-light.png' : '/logo.png';
+
   const content = (
     <>
-      <svg className="brand__mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
-        <path d="M14 8h20l8 10-18 22L6 18l8-10Z" />
-        <path d="M6 18h36M18 8l6 10 6-10M18 18l6 22 6-22" strokeWidth="1.3" />
-      </svg>
+      <img
+        src={logoSrc}
+        alt="Kashikchi Jewelry"
+        className="brand__mark"
+        width={35}
+        height={48}
+      />
       <span className="brand__text">
         <span className="brand__name">KASHIKCHI</span>
         <span className="brand__sub">JEWELRY</span>
@@ -56,14 +64,14 @@ export function LanguageSwitcher() {
   );
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, toggleTheme } = useTheme();
   const { t } = useI18n();
   const dark = theme === 'dark';
   return (
     <button
       type="button"
-      className="icon-btn"
+      className={`icon-btn theme-toggle ${className}`.trim()}
       onClick={toggleTheme}
       aria-pressed={dark}
       aria-label={dark ? t('header.switchToLight') : t('header.switchToDark')}
@@ -164,6 +172,10 @@ function MobileNav({ onClose }: { onClose: () => void }) {
             {t('nav.allProducts')}
           </NavLink>
         </nav>
+        <div className="mobile-nav__footer">
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
       </div>
     </div>
   );
@@ -219,7 +231,7 @@ function UserMenu() {
             <strong>
               {user.name} {user.surname}
             </strong>
-            <span>{user.email}</span>
+            <span>{user.email || user.phone}</span>
           </div>
           {isAdmin ? (
             <>
@@ -239,6 +251,7 @@ function UserMenu() {
                 {unreadCount > 0 && <span className="badge badge--primary">{unreadCount}</span>}
               </Link>
               <Link to={ROUTES.accountMessages} role="menuitem">{t('account.nav.messages')}</Link>
+              <Link to={ROUTES.accountProfile} role="menuitem">{t('account.nav.profile')}</Link>
             </>
           )}
           <button
@@ -246,6 +259,7 @@ function UserMenu() {
             className="menu-item"
             role="menuitem"
             onClick={async () => {
+              setOpen(false);
               await logout();
               navigate(ROUTES.home);
             }}
@@ -294,8 +308,10 @@ export function Header() {
                 </Link>
               </>
             )}
-            <LanguageSwitcher />
-            <ThemeToggle />
+            <div className="header__desktop-only">
+              <LanguageSwitcher />
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>

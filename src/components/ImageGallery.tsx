@@ -10,7 +10,7 @@ export function ImageGallery({ product }: { product: Product }) {
   const images = product.images;
   const name = loc(product.name);
   if (images.length === 0) return (
-    <div className="gallery__main" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--surface)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', aspectRatio: '4/5', borderRadius: 'var(--r-control)' }}>
+    <div className="gallery__main" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--surface)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', aspectRatio: '1/1', borderRadius: 'var(--r-control)' }}>
       {t('product.comingSoon')}
     </div>
   );
@@ -35,7 +35,7 @@ export function ImageGallery({ product }: { product: Product }) {
           src={mediaUrl(current.storageKey)}
           alt={t('product.imageN', { name, n: index + 1, total: images.length })}
           width={800}
-          height={1000}
+          height={800}
           decoding="async"
         />
         {images.length > 1 && (
@@ -60,7 +60,7 @@ export function ImageGallery({ product }: { product: Product }) {
               aria-label={t('product.showImage', { n: i + 1 })}
               onClick={() => setIndex(i)}
             >
-              <img src={mediaUrl(img.storageKey)} alt="" loading="lazy" width={84} height={84} />
+              <img src={mediaUrl(img.storageKey)} alt="" loading="lazy" width={120} height={120} />
             </button>
           ))}
         </div>

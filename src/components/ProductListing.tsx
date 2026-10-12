@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
-import { PRODUCT_PAGE_SIZE } from '@/constants';
+import { INPUT_LIMITS, PRODUCT_PAGE_SIZE } from '@/constants';
 import { useI18n } from '@/contexts/I18nContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useAsync } from '@/hooks/useAsync';
@@ -57,7 +57,7 @@ export function ProductListing({ category, subCategory }: { category?: string; s
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('listing.searchPlaceholder')}
-            maxLength={80}
+            maxLength={INPUT_LIMITS.search}
             autoComplete="off"
           />
           <Select label={t('listing.sort')} value={sort} onChange={(e) => update('sort', e.target.value === 'newest' ? '' : e.target.value)}>

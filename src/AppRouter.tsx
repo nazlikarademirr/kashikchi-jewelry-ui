@@ -21,6 +21,7 @@ const NotFoundPage = lazy(() => import('@/pages/NotFound/NotFoundPage'));
 const AccountHome = lazy(() => import('@/pages/Account/Home/AccountHome'));
 const AccountOrders = lazy(() => import('@/pages/Account/Orders/OrdersPage'));
 const AccountOrderDetail = lazy(() => import('@/pages/Account/OrderDetail/OrderDetailPage'));
+const AccountProfile = lazy(() => import('@/pages/Account/Profile/ProfilePage'));
 const NotificationsPage = lazy(() => import('@/pages/Notifications/NotificationsPage'));
 const MessagesPage = lazy(() => import('@/pages/Messages/MessagesPage'));
 
@@ -59,6 +60,7 @@ export function AppRoutes() {
               <Route index element={<AccountHome />} />
               <Route path="orders" element={<AccountOrders />} />
               <Route path="orders/:id" element={<AccountOrderDetail />} />
+              <Route path="profile" element={<AccountProfile />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="messages" element={<MessagesPage />} />
             </Route>

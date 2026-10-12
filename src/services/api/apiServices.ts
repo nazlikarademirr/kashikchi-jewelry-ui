@@ -23,6 +23,10 @@ export const apiServices: Services = {
       if (!user) setTokens(null, null);
       return user;
     },
+    updateProfile: async (input) => {
+      const user = await http<User>('/auth/profile', { method: 'PUT', body: input });
+      return user;
+    },
   },
   categories: {
     getTree: () => http<Category[]>('/categories'),

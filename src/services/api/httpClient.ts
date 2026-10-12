@@ -90,16 +90,19 @@ export async function http<T = void>(path: string, opts: RequestOptions = {}, is
   }
 
   if (res.status === 401) {
-    if (!isRetry && refreshToken) {
-      const newToken = await refreshTokens();
-      if (newToken) return http<T>(path, opts, true);
+    const isAuthPath = path.startsWith('/auth/login') || path.startsWith('/auth/register');
+    if (!isAuthPath) {
+      if (!isRetry && refreshToken) {
+        const newToken = await refreshTokens();
+        if (newToken) return http<T>(path, opts, true);
+      }
+      
+      if (opts.allowUnauthorized) return null as T;
+      
+      window.dispatchEvent(new Event('kj:unauthorized'));
+      setTokens(null, null);
+      throw new AppError('UNAUTHORIZED');
     }
-    
-    if (opts.allowUnauthorized) return null as T;
-    
-    window.dispatchEvent(new Event('kj:unauthorized'));
-    setTokens(null, null);
-    throw new AppError('UNAUTHORIZED');
   }
 
   if (!res.ok) {
@@ -109,7 +112,7 @@ export async function http<T = void>(path: string, opts: RequestOptions = {}, is
     } catch {}
     
     throw new AppError(payload.code ??
-      (res.status === 403 ? 'FORBIDDEN' : res.status === 404 ? 'NOT_FOUND' : res.status >= 500 ? 'NETWORK_ERROR' : 'UNKNOWN'), {
+      (res.status === 401 ? 'INVALID_CREDENTIALS' : res.status === 403 ? 'FORBIDDEN' : res.status === 404 ? 'NOT_FOUND' : res.status >= 500 ? 'NETWORK_ERROR' : 'UNKNOWN'), {
       fieldErrors: payload.fieldErrors,
       status: res.status,
     });

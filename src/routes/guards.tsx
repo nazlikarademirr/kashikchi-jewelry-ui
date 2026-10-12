@@ -34,11 +34,9 @@ export function RequireRole({ role }: { role: UserRole }) {
 
 export function GuestOnly() {
   const { user, loading } = useAuth();
-  const location = useLocation();
   if (loading) return <Spinner />;
   if (user) {
-    const from = (location.state as { from?: string } | null)?.from;
-    return <Navigate to={user.role === 1 ? ROUTES.admin : (from ?? ROUTES.home)} replace />;
+    return <Navigate to={ROUTES.home} replace />;
   }
   return <Outlet />;
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ImageGallery, QuantityStepper } from '@/components/ImageGallery';
 import { FavoriteButton, PriceTag, StockBadge } from '@/components/product';
@@ -7,7 +7,7 @@ import { Textarea, Input } from '@/components/ui/Input';
 import { Breadcrumb } from '@/components/ui/Misc';
 import { Modal } from '@/components/ui/Modal';
 import { ErrorState, Skeleton } from '@/components/ui/State';
-import { MAX_CART_QUANTITY } from '@/constants';
+import { INPUT_LIMITS, MAX_CART_QUANTITY } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
@@ -18,10 +18,11 @@ import { useAsync } from '@/hooks/useAsync';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { useRequireCustomer } from '@/hooks/useRequireCustomer';
 import { services } from '@/services';
+import { isAppError } from '@/types';
 import { finalPrice } from '@/utils/format';
 import { mediaUrl } from '@/utils/media';
 
-const NOTE_MAX = 1000;
+const NOTE_MAX = INPUT_LIMITS.note;
 
 export default function ProductDetailPage() {
   const { id = '' } = useParams();
@@ -38,6 +39,27 @@ export default function ProductDetailPage() {
   const [customOpen, setCustomOpen] = useState(false);
   const [note, setNote] = useState('');
   const [ringSize, setRingSize] = useState('');
+  const noteRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const adjustNoteHeight = useCallback(() => {
+    const el = noteRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const borderOffset = el.offsetHeight - el.clientHeight;
+    el.style.height = `${Math.max(76, el.scrollHeight + borderOffset)}px`;
+  }, []);
+
+  useEffect(() => {
+    if (customOpen) {
+      requestAnimationFrame(() => adjustNoteHeight());
+    }
+  }, [customOpen, adjustNoteHeight]);
+
+  useEffect(() => {
+    adjustNoteHeight();
+    window.addEventListener('resize', adjustNoteHeight);
+    return () => window.removeEventListener('resize', adjustNoteHeight);
+  }, [note, adjustNoteHeight]);
 
   const name = product ? loc(product.name) : '';
   const description = product ? loc(product.description) : '';
@@ -66,9 +88,9 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="container section">
+      <div className="container product-detail-page">
         <div className="product-detail" role="status" aria-label={t('common.loading')}>
-          <Skeleton style={{ aspectRatio: '4/5', borderRadius: 18 }} />
+          <Skeleton style={{ aspectRatio: '1/1', borderRadius: 18 }} />
           <div>
             <Skeleton className="skeleton--title" />
             <Skeleton className="skeleton--text" style={{ width: '30%' }} />
@@ -80,7 +102,7 @@ export default function ProductDetailPage() {
   }
   if (error || !product) {
     return (
-      <div className="container section">
+      <div className="container product-detail-page">
         <ErrorState error={error} onRetry={reload} />
       </div>
     );
@@ -91,6 +113,9 @@ export default function ProductDetailPage() {
   const maxQty = product.stock > 0 ? Math.min(product.stock, MAX_CART_QUANTITY) : MAX_CART_QUANTITY;
   const isRing = product.category === 'yuzuk';
 
+  const isNoteOverLimit = note.length > NOTE_MAX;
+  const noteError = isNoteOverLimit ? t('validation.maxLength', { max: NOTE_MAX }) : null;
+
   const addToCart = async (customizationNote?: string) => {
     if (!requireCustomer()) return false;
     setAdding(true);
@@ -99,7 +124,11 @@ export default function ProductDetailPage() {
       toast.success('cart.added');
       return true;
     } catch (e) {
-      toast.error(errorMessage(e));
+      if (isAppError(e) && e.fieldErrors?.customizationNote) {
+        toast.error(t('validation.maxLength', { max: NOTE_MAX }));
+      } else {
+        toast.error(errorMessage(e));
+      }
       return false;
     } finally {
       setAdding(false);
@@ -107,13 +136,14 @@ export default function ProductDetailPage() {
   };
 
   const submitCustom = async () => {
+    if (isNoteOverLimit) return;
     const parts = [ringSize.trim() && `${t('product.ringSize')}: ${ringSize.trim()}`, note.trim()].filter(Boolean);
     const ok = await addToCart(parts.join('\n'));
     if (ok) setCustomOpen(false);
   };
 
   return (
-    <div className="container section section--tight">
+    <div className="container product-detail-page">
       <Breadcrumb
         items={[
           { label: t('nav.home'), to: ROUTES.home },
@@ -127,7 +157,7 @@ export default function ProductDetailPage() {
 
         <div className="product-info">
           <div className="row row--between" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
-            <div>
+            <div style={{ minWidth: 0, flex: 1, paddingRight: 'var(--space-3)' }}>
               <h1>{name}</h1>
               <p className="product-info__code">
                 {t('product.code')}: {product.code}
@@ -141,16 +171,18 @@ export default function ProductDetailPage() {
             <StockBadge stock={product.stock} />
           </div>
 
-          <p style={{ marginTop: 'var(--space-5)', color: 'var(--text-muted)' }}>{description}</p>
-
-
-          {product.stock <= 0 && (
-            <div className="notice" role="note">
-              <span>{t('product.madeToOrderNote')}</span>
-            </div>
+          {description && (
+            <p style={{ marginTop: 'var(--space-3)', marginBottom: 'var(--space-2)', color: 'var(--text-muted)' }}>
+              {description}
+            </p>
           )}
 
           <div className="product-info__actions">
+            {!isAdmin && product.stock <= 0 && (
+              <div className="notice" role="note">
+                <span>{t('product.madeToOrderNote')}</span>
+              </div>
+            )}
             {isAdmin ? (
               <LinkButton to={ROUTES.adminProductEdit(product.id)} variant="secondary" block>
                 {t('admin.products.edit')}
@@ -181,31 +213,38 @@ export default function ProductDetailPage() {
             <Button variant="ghost" onClick={() => setCustomOpen(false)}>
               {t('common.cancel')}
             </Button>
-            <Button onClick={submitCustom} loading={adding}>
+            <Button onClick={submitCustom} loading={adding} disabled={isNoteOverLimit}>
               {t('product.addCustomToCart')}
             </Button>
           </>
         }
       >
-        <p className="muted">{t('product.customizeHelp')}</p>
+        <p className="muted customize-modal__help">{t('product.customizeHelp')}</p>
         <div className="form-grid">
           {isRing && (
             <Input
               label={t('product.ringSize')}
               value={ringSize}
               onChange={(e) => setRingSize(e.target.value)}
-              maxLength={10}
+              maxLength={INPUT_LIMITS.ringSize}
               hint={t('product.ringSizeHint')}
             />
           )}
           <Textarea
+            ref={noteRef}
             data-autofocus
             label={t('product.customizationNote')}
             value={note}
-            maxLength={NOTE_MAX}
-            onChange={(e) => setNote(e.target.value)}
+            error={noteError}
+            reserveMessageSpace={false}
+            className="customize-note-input"
+            onChange={(e) => {
+              setNote(e.target.value);
+              e.target.style.height = 'auto';
+              const borderOffset = e.target.offsetHeight - e.target.clientHeight;
+              e.target.style.height = `${Math.max(76, e.target.scrollHeight + borderOffset)}px`;
+            }}
             placeholder={t('product.customizationPlaceholder')}
-            hint={`${note.length}/${NOTE_MAX}`}
           />
         </div>
       </Modal>

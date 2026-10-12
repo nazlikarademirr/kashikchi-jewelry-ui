@@ -14,6 +14,8 @@ export const v = {
   required: (value: string): Validation => (value.trim() ? null : 'validation.required'),
   email: (value: string): Validation =>
     !value.trim() ? 'validation.required' : EMAIL_RE.test(value.trim()) && value.length <= 254 ? null : 'validation.email',
+  optionalEmail: (value: string): Validation =>
+    !value.trim() ? null : EMAIL_RE.test(value.trim()) && value.length <= 254 ? null : 'validation.email',
   password: (value: string): Validation => {
     if (!value) return 'validation.required';
     if (value.length < PASSWORD_MIN_LENGTH) return 'validation.passwordMin';
@@ -24,6 +26,8 @@ export const v = {
     !value ? 'validation.required' : value === other ? null : 'validation.passwordMatch',
   phone: (value: string): Validation =>
     !value.trim() ? 'validation.required' : PHONE_RE.test(value.trim()) ? null : 'validation.phone',
+  optionalPhone: (value: string): Validation =>
+    !value.trim() ? null : PHONE_RE.test(value.trim()) ? null : 'validation.phone',
   code: (value: string): Validation =>
     !value.trim() ? 'validation.required' : CODE_RE.test(value.trim()) ? null : 'validation.codeFormat',
   maxLength: (value: string, max: number): Validation => (value.length > max ? 'validation.maxLength' : null),

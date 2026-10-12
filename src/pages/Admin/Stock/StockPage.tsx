@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { StockBadge } from '@/components/product';
-import { Button } from '@/components/ui/Button';
+import { Button, LinkButton } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { ErrorState, Skeleton } from '@/components/ui/State';
+import { EmptyState, ErrorState, Skeleton } from '@/components/ui/State';
+import { ROUTES } from '@/constants/routes';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useAsync } from '@/hooks/useAsync';
@@ -70,11 +71,12 @@ function StockRow({ product, onSaved }: { product: Product; onSaved: () => void 
               label={t('admin.stock.newStock')}
               type="number"
               min={0}
+              max={999999}
               step={1}
               inputMode="numeric"
               value={value}
               error={error}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={(e) => setValue(e.target.value.slice(0, 6))}
             />
           </div>
           <Button type="submit" variant="secondary" loading={busy} disabled={!dirty} style={{ marginTop: 28 }}>
@@ -102,6 +104,13 @@ export default function AdminStockPage() {
         <Skeleton style={{ height: 280 }} />
       ) : list.error || !list.data ? (
         <ErrorState error={list.error} onRetry={list.reload} />
+      ) : list.data.items.length === 0 ? (
+        <EmptyState
+          icon="gem"
+          title={t('admin.stock.emptyTitle')}
+          description={t('admin.stock.emptyText')}
+          action={<LinkButton to={ROUTES.adminProductNew}>{t('admin.products.add')}</LinkButton>}
+        />
       ) : (
         <div className="table-wrap">
           <table className="table">

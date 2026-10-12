@@ -6,7 +6,8 @@ export interface User {
   id: string;
   name: string;
   surname: string;
-  email: string;
+  email: string | null;
+  phone?: string;
   role: UserRole;
 }
 
@@ -18,8 +19,17 @@ export interface LoginInput {
 export interface RegisterInput {
   name: string;
   surname: string;
-  email: string;
+  email?: string;
+  phone?: string;
   password: string;
+}
+
+export interface UpdateProfileInput {
+  name: string;
+  surname: string;
+  email?: string | null;
+  phone?: string | null;
+  password?: string | null;
 }
 
 export interface Category {

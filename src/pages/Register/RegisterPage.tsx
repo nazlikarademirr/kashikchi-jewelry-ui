@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthShell } from '@/components/AuthShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -15,7 +16,7 @@ export default function RegisterPage() {
   const { t, tDynamic, errorMessage } = useI18n();
   const { register } = useAuth();
   const toast = useToast();
-  const [form, setForm] = useState({ name: '', surname: '', email: '', password: '', passwordRepeat: '' });
+  const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '', password: '', passwordRepeat: '' });
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -27,24 +28,30 @@ export default function RegisterPage() {
     setServerFields((s) => (s[key] ? { ...s, [key]: '' } : s));
   };
 
+  const emailVal = form.email.trim();
+  const phoneVal = form.phone.trim();
+  const neitherProvided = !emailVal && !phoneVal;
+
   const errors = {
     name: v.required(form.name),
     surname: v.required(form.surname),
-    email: v.email(form.email),
+    email: v.optionalEmail(emailVal),
+    phone: v.optionalPhone(phoneVal),
     password: v.password(form.password),
     passwordRepeat: v.passwordMatch(form.passwordRepeat, form.password),
   };
-  const hasErrors = Object.values(errors).some(Boolean);
+  const hasErrors = Object.values(errors).some(Boolean) || neitherProvided;
   const hasServerFieldErrors = Object.values(serverFields).some(Boolean);
 
   const fieldError = (key: keyof typeof errors) => {
     const local = submitted ? errors[key] : null;
-    const remote = serverFields[key];
+    const remote = serverFields[key] || serverFields[key.charAt(0).toUpperCase() + key.slice(1)];
     const code = local ?? (remote || null);
-    return code ? tDynamic(code) : null;
+    if (!code || code === 'validation.emailOrPhoneRequired') return null;
+    return tDynamic(code);
   };
 
-    const submit = async (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     setServerError(null);
@@ -52,9 +59,10 @@ export default function RegisterPage() {
     setBusy(true);
     try {
       await register({
-        name: sanitizeText(form.name, 80),
-        surname: sanitizeText(form.surname, 80),
-        email: form.email.trim().toLowerCase(),
+        name: sanitizeText(form.name, INPUT_LIMITS.name),
+        surname: sanitizeText(form.surname, INPUT_LIMITS.surname),
+        email: emailVal ? emailVal.toLowerCase() : undefined,
+        phone: phoneVal || undefined,
         password: form.password,
       });
       toast.success('auth.registered');
@@ -67,8 +75,7 @@ export default function RegisterPage() {
 
   return (
     <AuthShell>
-      <h1>{t('auth.registerTitle')}</h1>
-      <p>{t('auth.registerText')}</p>
+      <h1 style={{ marginBottom: 24 }}>{t('auth.registerTitle')}</h1>
       <form className="form-grid" onSubmit={submit} noValidate style={{ gap: 0 }}>
         <div className="form-grid form-grid--2">
           <Input
@@ -76,7 +83,7 @@ export default function RegisterPage() {
             autoComplete="given-name"
             required
             reserveMessageSpace
-            maxLength={80}
+            maxLength={INPUT_LIMITS.name}
             value={form.name}
             onChange={set('name')}
             error={fieldError('name')}
@@ -86,7 +93,7 @@ export default function RegisterPage() {
             autoComplete="family-name"
             required
             reserveMessageSpace
-            maxLength={80}
+            maxLength={INPUT_LIMITS.surname}
             value={form.surname}
             onChange={set('surname')}
             error={fieldError('surname')}
@@ -96,18 +103,36 @@ export default function RegisterPage() {
           label={t('auth.email')}
           type="email"
           autoComplete="email"
-          required
           reserveMessageSpace
+          maxLength={INPUT_LIMITS.email}
           value={form.email}
           onChange={set('email')}
           error={fieldError('email')}
         />
+        <Input
+          label={t('auth.phone')}
+          type="tel"
+          autoComplete="tel"
+          reserveMessageSpace
+          maxLength={INPUT_LIMITS.phone}
+          value={form.phone}
+          onChange={set('phone')}
+          error={fieldError('phone')}
+        />
+        <p
+          className={submitted && neitherProvided ? 'field__error' : 'muted'}
+          style={{ fontSize: '0.82rem', margin: '-6px 0 12px' }}
+          role={submitted && neitherProvided ? 'alert' : undefined}
+        >
+          {t('auth.emailOrPhoneHint')}
+        </p>
         <Input
           label={t('auth.password')}
           type="password"
           autoComplete="new-password"
           required
           reserveMessageSpace
+          maxLength={INPUT_LIMITS.password}
           value={form.password}
           onChange={set('password')}
           hint={t('auth.passwordHint')}
@@ -118,7 +143,8 @@ export default function RegisterPage() {
           type="password"
           autoComplete="new-password"
           required
-          reserveMessageSpace
+          reserveMessageSpace={2}
+          maxLength={INPUT_LIMITS.password}
           value={form.passwordRepeat}
           onChange={set('passwordRepeat')}
           // Sunucu hatası, alan hatalarıyla aynı ayrılmış satırda gösterilir; mesaj gelince yerleşim kaymaz.

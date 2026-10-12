@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { QuantityStepper } from '@/components/ImageGallery';
 import { PriceTag, StockBadge } from '@/components/product';
@@ -6,7 +6,7 @@ import { Button, LinkButton } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Input';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { EmptyState, Skeleton } from '@/components/ui/State';
-import { MAX_CART_QUANTITY } from '@/constants';
+import { INPUT_LIMITS, MAX_CART_QUANTITY } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useCart } from '@/contexts/CartContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -23,9 +23,24 @@ function CartLine({ item }: { item: CartItem }) {
   const [note, setNote] = useState(item.customizationNote);
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const p = item.product;
   const maxQty = p.stock > 0 ? Math.min(p.stock, MAX_CART_QUANTITY) : MAX_CART_QUANTITY;
   const name = loc(p.name);
+
+  const adjustTextareaHeight = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const borderOffset = el.offsetHeight - el.clientHeight;
+    el.style.height = `${Math.max(44, el.scrollHeight + borderOffset)}px`;
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+    window.addEventListener('resize', adjustTextareaHeight);
+    return () => window.removeEventListener('resize', adjustTextareaHeight);
+  }, [note]);
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -37,6 +52,9 @@ function CartLine({ item }: { item: CartItem }) {
       setBusy(false);
     }
   };
+
+  const isOver = note.length > INPUT_LIMITS.note;
+  const noteError = isOver ? t('validation.maxLength', { max: INPUT_LIMITS.note }) : null;
 
   return (
     <li className="cart-line">
@@ -60,31 +78,42 @@ function CartLine({ item }: { item: CartItem }) {
           <PriceTag product={p} />
           <StockBadge stock={p.stock} />
         </div>
-        <Textarea
-          label={t('cart.note')}
-          value={note}
-          rows={2}
-          maxLength={1000}
-          onChange={(e) => setNote(e.target.value)}
-          onBlur={() => {
-            if (note !== item.customizationNote) void run(() => cart.updateNote(item.id, note));
-          }}
-          placeholder={t('product.customizationPlaceholder')}
-          style={{ minHeight: 64 }}
-        />
       </div>
       <div className="cart-line__side">
-        <strong>{price(finalPrice(p) * item.quantity)}</strong>
-        <QuantityStepper
-          value={item.quantity}
-          max={maxQty}
-          disabled={busy}
-          label={t('cart.quantity')}
-          onChange={(q) => void run(() => cart.updateQuantity(item.id, q))}
+        <strong className="cart-line__price">{price(finalPrice(p) * item.quantity)}</strong>
+        <div className="cart-line__actions">
+          <QuantityStepper
+            value={item.quantity}
+            max={maxQty}
+            disabled={busy}
+            label={t('cart.quantity')}
+            onChange={(q) => void run(() => cart.updateQuantity(item.id, q))}
+          />
+          <Button variant="ghost" size="sm" className="cart-line__remove-btn" onClick={() => setConfirm(true)} disabled={busy}>
+            {t('cart.remove')}
+          </Button>
+        </div>
+      </div>
+      <div className="cart-line__note">
+        <Textarea
+          ref={textareaRef}
+          label={t('cart.note')}
+          value={note}
+          rows={1}
+          error={noteError}
+          reserveMessageSpace={false}
+          className="cart-line__note-input"
+          onChange={(e) => {
+            setNote(e.target.value);
+            e.target.style.height = 'auto';
+            const borderOffset = e.target.offsetHeight - e.target.clientHeight;
+            e.target.style.height = `${e.target.scrollHeight + borderOffset}px`;
+          }}
+          onBlur={() => {
+            if (!isOver && note !== item.customizationNote) void run(() => cart.updateNote(item.id, note));
+          }}
+          placeholder={t('product.customizationPlaceholder')}
         />
-        <Button variant="ghost" size="sm" onClick={() => setConfirm(true)} disabled={busy}>
-          {t('cart.remove')}
-        </Button>
       </div>
       <ConfirmDialog
         open={confirm}
@@ -145,11 +174,11 @@ export default function CartPage() {
                 <span>{price(total)}</span>
               </div>
               <p className="muted" style={{ fontSize: '0.84rem' }}>{t('cart.noPaymentNote')}</p>
-              <LinkButton to={ROUTES.checkout} size="lg" block>
-                {t('cart.checkout')}
-              </LinkButton>
               <LinkButton to={ROUTES.products} variant="ghost" block>
                 {t('cart.continueShopping')}
+              </LinkButton>
+              <LinkButton to={ROUTES.checkout} size="lg" block>
+                {t('cart.checkout')}
               </LinkButton>
             </aside>
           </div>

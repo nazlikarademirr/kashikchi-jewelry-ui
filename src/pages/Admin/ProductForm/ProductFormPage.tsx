@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Input, Select, Textarea } from '@/components/ui/Input';
 import { Breadcrumb } from '@/components/ui/Misc';
 import { Alert, ErrorState, Skeleton } from '@/components/ui/State';
-import { IMAGE_UPLOAD } from '@/constants';
+import { IMAGE_UPLOAD, INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useCategories } from '@/contexts/CategoriesContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -77,12 +77,6 @@ function ProductForm({ product }: { product: Product | null }) {
   const [uploading, setUploading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [serverFields, setServerFields] = useState<Record<string, string>>({});
-  const editing = product !== null;
-
-  // Yeni üründe ilk kategoriyi varsayılan seç
-  useEffect(() => {
-    if (!editing && !form.category && tree.length > 0) setForm((f) => ({ ...f, category: tree[0].id }));
-  }, [tree, editing, form.category]);
 
   const set =
     <K extends keyof FormState>(key: K) =>
@@ -159,8 +153,8 @@ function ProductForm({ product }: { product: Product | null }) {
     setSubmitted(true);
     setServerError(null);
     if (hasErrors) return;
-    const name = sanitizeText(form.name, 160);
-    const desc = sanitizeText(form.description, 4000);
+    const name = sanitizeText(form.name, INPUT_LIMITS.productName);
+    const desc = sanitizeText(form.description, INPUT_LIMITS.productDescription);
     const input: ProductInput = {
       name: { tr: name, en: name },
       description: { tr: desc, en: desc },
@@ -196,13 +190,27 @@ function ProductForm({ product }: { product: Product | null }) {
           <Input
             label={t('admin.form.code')}
             required
-            maxLength={30}
+            maxLength={INPUT_LIMITS.productCode}
             value={form.code}
             onChange={(e) => set('code')(e.target.value.toUpperCase())}
             error={err('code')}
           />
-          <Input label={t('admin.form.nameTr')} required maxLength={160} value={form.name} onChange={onText('name')} error={err('name')} />
-          <Textarea label={t('admin.form.descTr')} rows={4} maxLength={4000} value={form.description} onChange={onText('description')} error={err('description')} />
+          <Input
+            label={t('admin.form.nameTr')}
+            required
+            maxLength={INPUT_LIMITS.productName}
+            value={form.name}
+            onChange={onText('name')}
+            error={err('name')}
+          />
+          <Textarea
+            label={t('admin.form.descTr')}
+            rows={4}
+            maxLength={INPUT_LIMITS.productDescription}
+            value={form.description}
+            onChange={onText('description')}
+            error={err('description')}
+          />
         </div>
       </div>
 
@@ -216,6 +224,7 @@ function ProductForm({ product }: { product: Product | null }) {
             onChange={(e) => setForm((f) => ({ ...f, category: e.target.value, subCategory: '' }))}
             error={err('category')}
           >
+            <option value=""></option>
             {tree.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name.tr}
@@ -223,7 +232,7 @@ function ProductForm({ product }: { product: Product | null }) {
             ))}
           </Select>
           <Select label={t('admin.form.subCategory')} value={form.subCategory} onChange={onText('subCategory')} error={err('subCategory')}>
-            <option value="">{t('admin.form.noSubCategory')}</option>
+            <option value=""></option>
             {subCategories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name.tr}
@@ -237,13 +246,14 @@ function ProductForm({ product }: { product: Product | null }) {
         <h2 className="card__title">{t('admin.form.pricing')}</h2>
         <div className="form-grid form-grid--2">
           <Input label={t('admin.form.carat')} type="number" min={0} step="0.01" inputMode="decimal" value={form.carat} onChange={onText('carat')} error={err('carat')} />
-          <Input label={t('admin.form.price')} required type="text" inputMode="numeric" value={form.price} onChange={handlePriceChange} error={err('price')} />
+          <Input label={t('admin.form.price')} required type="text" inputMode="numeric" maxLength={INPUT_LIMITS.price} value={form.price} onChange={handlePriceChange} error={err('price')} />
           <Input label={t('admin.form.discount')} required type="number" min={0} max={100} step="1" inputMode="decimal" value={form.discount} onChange={onText('discount')} error={err('discount')} />
           <Input
             label={t('admin.form.stock')}
             required
             type="number"
             min={0}
+            max={999999}
             step="1"
             inputMode="numeric"
             value={form.stock}

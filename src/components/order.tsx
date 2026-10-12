@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/State';
-import { ORDER_STATUSES } from '@/constants';
+import { INPUT_LIMITS, ORDER_STATUSES } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useNotificationsBadge } from '@/contexts/NotificationsContext';
@@ -143,7 +143,7 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
 
   const send = async (e?: React.SyntheticEvent) => {
     if (e) e.preventDefault();
-    const body = sanitizeText(text, 2000);
+    const body = sanitizeText(text, INPUT_LIMITS.message);
     if (!body) return;
     setBusy(true);
     setError(null);
@@ -183,7 +183,7 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
             label={t('messages.label')}
             placeholder={t('messages.placeholder')}
             value={text}
-            maxLength={2000}
+            maxLength={INPUT_LIMITS.message}
             onChange={handleInput}
             style={{ overflow: 'hidden', resize: 'none' }}
             onKeyDown={(e) => {

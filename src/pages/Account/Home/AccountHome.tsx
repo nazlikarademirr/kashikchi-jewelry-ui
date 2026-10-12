@@ -24,11 +24,15 @@ export default function AccountHome() {
     <>
       <div className="dash__head">
         <h1>{t('account.hello', { name: user?.name ?? '' })}</h1>
-        {isAdmin && <LinkButton to={ROUTES.admin}>{t('account.adminPanel')}</LinkButton>}
+        {isAdmin && (
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <LinkButton to={ROUTES.admin}>{t('account.adminPanel')}</LinkButton>
+          </div>
+        )}
       </div>
       <p className="muted">{t('account.helloText')}</p>
 
-      <div className="stat-grid" style={{ marginTop: 24 }}>
+      <div className="stat-grid stat-grid--3" style={{ marginTop: 24 }}>
         <div className="stat-card">
           <div className="stat-card__label">{t('account.statOrders')}</div>
           <div className="stat-card__value">{orders.data?.length ?? '–'}</div>

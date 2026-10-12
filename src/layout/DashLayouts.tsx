@@ -44,7 +44,7 @@ export function AccountLayout() {
         { to: ROUTES.accountOrders, label: 'account.nav.orders' },
         { to: ROUTES.accountNotifications, label: 'account.nav.notifications', badge: true },
         { to: ROUTES.accountMessages, label: 'account.nav.messages' },
-        { to: ROUTES.favorites, label: 'header.favorites' },
+        { to: ROUTES.accountProfile, label: 'account.nav.profile' },
       ]}
     />
   );

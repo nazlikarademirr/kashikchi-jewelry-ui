@@ -18,6 +18,25 @@ export const MAX_CART_QUANTITY = 10;
 export const LOW_STOCK_THRESHOLD = 3;
 export const PASSWORD_MIN_LENGTH = 8;
 
+export const INPUT_LIMITS = {
+  name: 60,
+  surname: 60,
+  email: 254,
+  phone: 20,
+  password: 100,
+  productCode: 30,
+  productName: 160,
+  productDescription: 4000,
+  categoryName: 60,
+  price: 15,
+  stock: 6,
+  carat: 10,
+  note: 1000,
+  message: 2000,
+  search: 80,
+  ringSize: 10,
+} as const;
+
 export const IMAGE_UPLOAD = {
   maxFiles: 6,
   maxBytes: 1_000_000,
@@ -35,11 +54,10 @@ export const ORDER_STATUS_I18N: Record<OrderStatus, `orderStatus.${OrderStatus}`
 export const STORAGE_KEYS = {
   theme: 'kj.theme',
   locale: 'kj.locale',
-  mockDb: 'kj.mockdb.v2',
   session: 'kj.session',
 } as const;
 
 export const PRODUCT_PAGE_SIZE = 8;
 
-export const LEGAL_DOCS = ['terms', 'privacy', 'returns'] as const;
+export const LEGAL_DOCS = ['privacy', 'returns'] as const;
 export type LegalDoc = typeof LEGAL_DOCS[number];

@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { EmptyState, Skeleton } from '@/components/ui/State';
+import { INPUT_LIMITS } from '@/constants';
 import { useCategories } from '@/contexts/CategoriesContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { services } from '@/services';
-import type { Category, CategoryInput } from '@/types';
+import { isAppError, type Category, type CategoryInput } from '@/types';
 import { Modal } from '@/components/ui/Modal';
 
 function reorderArray<T>(list: T[], fromId: string, toId: string, isAfter: boolean, getId: (item: T) => string): T[] {
@@ -173,7 +174,7 @@ function OrderHandle({
 }
 
 export default function AdminCategoriesPage() {
-  const { t, loc, errorMessage } = useI18n();
+  const { t, tDynamic, loc, errorMessage } = useI18n();
   const { tree, loading, reload } = useCategories();
   const toast = useToast();
 
@@ -189,16 +190,21 @@ export default function AdminCategoriesPage() {
     setCategoriesList(sorted);
   }, [tree]);
 
-  // Modal state only for creating new categories
+  // Modal state only for creating new main categories
   const [formOpen, setFormOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState('');
-  const [parentId, setParentId] = useState<string>('');
+  const [nameError, setNameError] = useState<string | null>(null);
 
   // Inline editing state for existing categories/subcategories
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>('');
   const [savingId, setSavingId] = useState<string | null>(null);
+
+  // Inline adding state for new subcategories
+  const [addingSubParentId, setAddingSubParentId] = useState<string | null>(null);
+  const [newSubName, setNewSubName] = useState<string>('');
+  const [savingNewSub, setSavingNewSub] = useState(false);
 
   // Drag and drop state for main categories
   const [draggedCatId, setDraggedCatId] = useState<string | null>(null);
@@ -208,18 +214,21 @@ export default function AdminCategoriesPage() {
   const [draggedSub, setDraggedSub] = useState<{ parentId: string; id: string } | null>(null);
   const [dragOverSub, setDragOverSub] = useState<{ id: string; isAfter: boolean } | null>(null);
 
-  const openAddForm = (pId?: string) => {
+  const openAddForm = () => {
     cancelEditing();
+    cancelAddSub();
     setName('');
-    setParentId(pId || '');
+    setNameError(null);
     setFormOpen(true);
   };
 
   const closeForm = () => {
     setFormOpen(false);
+    setNameError(null);
   };
 
   const startEditing = (cat: Category) => {
+    cancelAddSub();
     setEditingId(cat.id);
     setEditingName(cat.name.tr || cat.name.en || '');
   };
@@ -229,13 +238,56 @@ export default function AdminCategoriesPage() {
     setEditingName('');
   };
 
+  const startAddSub = (pId: string) => {
+    cancelEditing();
+    setAddingSubParentId(pId);
+    setNewSubName('');
+  };
+
+  const cancelAddSub = () => {
+    setAddingSubParentId(null);
+    setNewSubName('');
+  };
+
   const saveInline = async (cat: Category) => {
     const trimmed = editingName.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      toast.error(t('validation.required'));
+      return;
+    }
     if (trimmed === (cat.name.tr || cat.name.en || '')) {
       cancelEditing();
       return;
     }
+
+    // Duplicate check for inline edit
+    if (!cat.parentId) {
+      const exists = categoriesList.some((c) => {
+        if (c.id === cat.id) return false;
+        const tr = (c.name.tr || '').trim().toLocaleLowerCase('tr');
+        const en = (c.name.en || '').trim().toLocaleLowerCase('tr');
+        const target = trimmed.toLocaleLowerCase('tr');
+        return tr === target || en === target;
+      });
+      if (exists) {
+        toast.error(t('validation.categoryNameTaken'));
+        return;
+      }
+    } else {
+      const parent = categoriesList.find((c) => c.id === cat.parentId);
+      const exists = parent?.children.some((s) => {
+        if (s.id === cat.id) return false;
+        const tr = (s.name.tr || '').trim().toLocaleLowerCase('tr');
+        const en = (s.name.en || '').trim().toLocaleLowerCase('tr');
+        const target = trimmed.toLocaleLowerCase('tr');
+        return tr === target || en === target;
+      });
+      if (exists) {
+        toast.error(t('validation.subCategoryNameTaken'));
+        return;
+      }
+    }
+
     setSavingId(cat.id);
     try {
       const input: CategoryInput = {
@@ -261,43 +313,106 @@ export default function AdminCategoriesPage() {
       );
 
       await services.categories.update(cat.id, input);
-      toast.success(t('admin.form.updated') as any);
+      toast.success('admin.categories.updated');
       await reload();
       cancelEditing();
     } catch (er) {
-      toast.error(errorMessage(er));
+      if (isAppError(er) && er.fieldErrors?.name) {
+        toast.error(tDynamic(er.fieldErrors.name));
+      } else {
+        toast.error(errorMessage(er));
+      }
       await reload();
     } finally {
       setSavingId(null);
     }
   };
 
-  const saveNew = async () => {
-    if (!name.trim()) return;
-    setBusy(true);
+  const saveNewSub = async (parentCatId: string) => {
+    const trimmed = newSubName.trim();
+    if (!trimmed) {
+      toast.error(t('validation.required'));
+      return;
+    }
+
+    const parent = categoriesList.find((c) => c.id === parentCatId);
+    const exists = parent?.children.some((s) => {
+      const tr = (s.name.tr || '').trim().toLocaleLowerCase('tr');
+      const en = (s.name.en || '').trim().toLocaleLowerCase('tr');
+      const target = trimmed.toLocaleLowerCase('tr');
+      return tr === target || en === target;
+    });
+    if (exists) {
+      toast.error(t('validation.subCategoryNameTaken'));
+      return;
+    }
+
+    setSavingNewSub(true);
     try {
-      let finalSortOrder = 1;
-      if (parentId) {
-        const parent = categoriesList.find((c) => c.id === parentId);
-        const maxSort = parent && parent.children.length > 0 ? Math.max(...parent.children.map((c) => c.sortOrder || 0)) : 0;
-        finalSortOrder = maxSort + 1;
-      } else {
-        const maxSort = categoriesList.length > 0 ? Math.max(...categoriesList.map((c) => c.sortOrder || 0)) : 0;
-        finalSortOrder = maxSort + 1;
-      }
+      const maxSort = parent && parent.children.length > 0 ? Math.max(...parent.children.map((c) => c.sortOrder || 0)) : 0;
+      const finalSortOrder = maxSort + 1;
 
       const input: CategoryInput = {
-        name: { tr: name.trim(), en: name.trim() },
-        parentId: parentId || null,
+        name: { tr: trimmed, en: trimmed },
+        parentId: parentCatId,
         sortOrder: finalSortOrder,
       };
 
       await services.categories.create(input);
-      toast.success(t('admin.form.created') as any);
+      toast.success('admin.categories.created');
+      await reload();
+      cancelAddSub();
+    } catch (er) {
+      if (isAppError(er) && er.fieldErrors?.name) {
+        toast.error(tDynamic(er.fieldErrors.name));
+      } else {
+        toast.error(errorMessage(er));
+      }
+    } finally {
+      setSavingNewSub(false);
+    }
+  };
+
+  const saveNew = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setNameError(t('validation.required'));
+      return;
+    }
+
+    // Duplicate check for main category
+    const exists = categoriesList.some((c) => {
+      const tr = (c.name.tr || '').trim().toLocaleLowerCase('tr');
+      const en = (c.name.en || '').trim().toLocaleLowerCase('tr');
+      const target = trimmed.toLocaleLowerCase('tr');
+      return tr === target || en === target;
+    });
+    if (exists) {
+      setNameError(t('validation.categoryNameTaken'));
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const maxSort = categoriesList.length > 0 ? Math.max(...categoriesList.map((c) => c.sortOrder || 0)) : 0;
+      const finalSortOrder = maxSort + 1;
+
+      const input: CategoryInput = {
+        name: { tr: trimmed, en: trimmed },
+        parentId: null,
+        sortOrder: finalSortOrder,
+      };
+
+      await services.categories.create(input);
+      toast.success('admin.categories.created');
       await reload();
       closeForm();
     } catch (er) {
-      toast.error(errorMessage(er));
+      if (isAppError(er) && er.fieldErrors?.name) {
+        setNameError(tDynamic(er.fieldErrors.name));
+      } else {
+        toast.error(errorMessage(er));
+      }
     } finally {
       setBusy(false);
     }
@@ -307,7 +422,7 @@ export default function AdminCategoriesPage() {
     try {
       await services.categories.reorder(items);
       await reload();
-      toast.success('Sıralama güncellendi' as any);
+      toast.success('admin.categories.reordered');
     } catch (er) {
       toast.error(errorMessage(er));
       await reload();
@@ -315,7 +430,7 @@ export default function AdminCategoriesPage() {
   };
 
   const moveMainCategory = async (id: string, direction: 'up' | 'down') => {
-    if (editingId !== null) return;
+    if (editingId !== null || addingSubParentId !== null) return;
     const index = categoriesList.findIndex((c) => c.id === id);
     if (index === -1) return;
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -331,7 +446,7 @@ export default function AdminCategoriesPage() {
   };
 
   const moveSubCategory = async (parentId: string, id: string, direction: 'up' | 'down') => {
-    if (editingId !== null) return;
+    if (editingId !== null || addingSubParentId !== null) return;
     const parent = categoriesList.find((c) => c.id === parentId);
     if (!parent) return;
 
@@ -352,14 +467,14 @@ export default function AdminCategoriesPage() {
   };
 
   const handleMainDragStart = (e: React.DragEvent, id: string) => {
-    if (draggedSub || editingId !== null) return;
+    if (draggedSub || editingId !== null || addingSubParentId !== null) return;
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', id);
     setDraggedCatId(id);
   };
 
   const handleMainDragOver = (e: React.DragEvent, id: string) => {
-    if (draggedSub || editingId !== null) return;
+    if (draggedSub || editingId !== null || addingSubParentId !== null) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     if (draggedCatId && draggedCatId !== id) {
@@ -378,7 +493,7 @@ export default function AdminCategoriesPage() {
   };
 
   const handleMainDrop = async (e: React.DragEvent, targetId: string) => {
-    if (draggedSub || editingId !== null) return;
+    if (draggedSub || editingId !== null || addingSubParentId !== null) return;
     e.preventDefault();
     if (!draggedCatId || draggedCatId === targetId) {
       setDraggedCatId(null);
@@ -403,7 +518,7 @@ export default function AdminCategoriesPage() {
   };
 
   const handleSubDragStart = (e: React.DragEvent, pId: string, id: string) => {
-    if (editingId !== null) return;
+    if (editingId !== null || addingSubParentId !== null) return;
     e.stopPropagation();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', id);
@@ -411,7 +526,7 @@ export default function AdminCategoriesPage() {
   };
 
   const handleSubDragOver = (e: React.DragEvent, pId: string, id: string) => {
-    if (draggedCatId || editingId !== null) return;
+    if (draggedCatId || editingId !== null || addingSubParentId !== null) return;
     if (!draggedSub || draggedSub.parentId !== pId) return;
     e.preventDefault();
     e.stopPropagation();
@@ -463,7 +578,7 @@ export default function AdminCategoriesPage() {
     try {
       await services.categories.delete(id);
       await reload();
-      toast.success(t('admin.form.updated') as any);
+      toast.success('admin.categories.deleted');
     } catch (er) {
       toast.error(errorMessage(er));
     }
@@ -503,7 +618,7 @@ export default function AdminCategoriesPage() {
                 <li
                   key={cat.id}
                   className="card"
-                  draggable={editingId === null}
+                  draggable={editingId === null && addingSubParentId === null}
                   onDragStart={(e) => handleMainDragStart(e, cat.id)}
                   onDragOver={(e) => handleMainDragOver(e, cat.id)}
                   onDragLeave={(e) => handleMainDragLeave(e, cat.id)}
@@ -519,21 +634,22 @@ export default function AdminCategoriesPage() {
                     borderBottom: isCatOver && dragOverCat?.isAfter ? '3px solid var(--primary)' : undefined,
                     boxShadow: isCatOver ? '0 0 0 1px var(--primary-soft, rgba(90, 15, 30, 0.2))' : undefined,
                     transition: 'opacity 0.15s, border-color 0.15s, box-shadow 0.15s',
-                    cursor: editingId === null ? 'grab' : 'default',
+                    cursor: editingId === null && addingSubParentId === null ? 'grab' : 'default',
                   }}
                 >
-                  <div className="row row--between" style={{ alignItems: 'center', flexWrap: 'nowrap', gap: 'var(--space-2)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 'var(--space-3)' }}>
+                  <div className="row row--between cat-item-row">
+                    <div className="cat-title-area">
                       <OrderHandle
                         onMoveUp={() => void moveMainCategory(cat.id, 'up')}
                         onMoveDown={() => void moveMainCategory(cat.id, 'down')}
                         isFirst={isFirst}
                         isLast={isLast}
-                        disabled={editingId !== null}
+                        disabled={editingId !== null || addingSubParentId !== null}
                       />
                       {isEditingCat ? (
                         <input
                           type="text"
+                          maxLength={INPUT_LIMITS.categoryName}
                           autoFocus
                           value={editingName}
                           onChange={(e) => setEditingName(e.target.value)}
@@ -564,11 +680,11 @@ export default function AdminCategoriesPage() {
                     </div>
                     {isEditingCat ? (
                       <div
-                        style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0, cursor: 'default' }}
+                        className="cat-actions"
                         onMouseDown={(e) => e.stopPropagation()}
                         draggable={false}
                       >
-                        <div style={{ width: 165 }} />
+                        <div className="cat-spacer" />
                         <Button
                           size="sm"
                           variant="primary"
@@ -591,7 +707,7 @@ export default function AdminCategoriesPage() {
                       </div>
                     ) : (
                       <div
-                        style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0, cursor: 'default' }}
+                        className="cat-actions"
                         onMouseDown={(e) => e.stopPropagation()}
                         draggable={false}
                       >
@@ -599,9 +715,9 @@ export default function AdminCategoriesPage() {
                           size="sm"
                           variant="secondary"
                           style={{ width: 165, whiteSpace: 'nowrap', textAlign: 'center', padding: '0 8px' }}
-                          onClick={() => openAddForm(cat.id)}
+                          onClick={() => startAddSub(cat.id)}
                         >
-                          +&nbsp; Alt Kategori Ekle
+                          +&nbsp; {t('admin.categories.addSub') || 'Alt Kategori Ekle'}
                         </Button>
                         <Button
                           size="sm"
@@ -622,7 +738,7 @@ export default function AdminCategoriesPage() {
                       </div>
                     )}
                   </div>
-                  {cat.children.length > 0 && (
+                  {(cat.children.length > 0 || addingSubParentId === cat.id) && (
                     <ul
                       className="stack"
                       style={{ listStyle: 'none', margin: 0, padding: 0, marginTop: 'var(--space-3)', gap: 'var(--space-2)' }}
@@ -646,8 +762,8 @@ export default function AdminCategoriesPage() {
                         return (
                           <li
                             key={sub.id}
-                            className="row row--between"
-                            draggable={editingId === null}
+                            className="row row--between cat-item-row"
+                            draggable={editingId === null && addingSubParentId === null}
                             onDragStart={(e) => handleSubDragStart(e, cat.id, sub.id)}
                             onDragOver={(e) => handleSubDragOver(e, cat.id, sub.id)}
                             onDragLeave={(e) => handleSubDragLeave(e, sub.id)}
@@ -663,27 +779,25 @@ export default function AdminCategoriesPage() {
                                   ? '2px solid var(--primary)'
                                   : '1px solid var(--border-subtle, rgba(0, 0, 0, 0.06))',
                               borderBottom: isSubOver && dragOverSub?.isAfter ? '2px solid var(--primary)' : undefined,
-                              alignItems: 'center',
-                              flexWrap: 'nowrap',
-                              gap: 'var(--space-2)',
                               opacity: draggedSub?.id === sub.id ? 0.35 : 1,
                               backgroundColor: isSubOver ? 'var(--primary-soft, rgba(90, 15, 30, 0.04))' : undefined,
                               borderRadius: '4px',
                               transition: 'opacity 0.15s, background-color 0.15s',
-                              cursor: editingId === null ? 'grab' : 'default',
+                              cursor: editingId === null && addingSubParentId === null ? 'grab' : 'default',
                             }}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, marginRight: 'var(--space-3)' }}>
+                            <div className="cat-title-area">
                               <OrderHandle
                                 onMoveUp={() => void moveSubCategory(cat.id, sub.id, 'up')}
                                 onMoveDown={() => void moveSubCategory(cat.id, sub.id, 'down')}
                                 isFirst={isFirstSub}
                                 isLast={isLastSub}
-                                disabled={editingId !== null}
+                                disabled={editingId !== null || addingSubParentId !== null}
                               />
                               {isEditingSub ? (
                                 <input
                                   type="text"
+                                  maxLength={INPUT_LIMITS.categoryName}
                                   autoFocus
                                   value={editingName}
                                   onChange={(e) => setEditingName(e.target.value)}
@@ -713,11 +827,11 @@ export default function AdminCategoriesPage() {
                             </div>
                             {isEditingSub ? (
                               <div
-                                style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0, cursor: 'default' }}
+                                className="cat-actions"
                                 onMouseDown={(e) => e.stopPropagation()}
                                 draggable={false}
                               >
-                                <div style={{ width: 165 }} />
+                                <div className="cat-spacer" />
                                 <Button
                                   size="sm"
                                   variant="primary"
@@ -740,11 +854,11 @@ export default function AdminCategoriesPage() {
                               </div>
                             ) : (
                               <div
-                                style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0, cursor: 'default' }}
+                                className="cat-actions"
                                 onMouseDown={(e) => e.stopPropagation()}
                                 draggable={false}
                               >
-                                <div style={{ width: 165 }} />
+                                <div className="cat-spacer" />
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -766,6 +880,72 @@ export default function AdminCategoriesPage() {
                           </li>
                         );
                       })}
+                      {addingSubParentId === cat.id && (
+                        <li
+                          className="row row--between cat-item-row"
+                          style={{
+                            padding: 'var(--space-2) 0',
+                            borderTop: cat.children.length > 0 ? '1px solid var(--border-subtle, rgba(0, 0, 0, 0.06))' : undefined,
+                            borderRadius: '4px',
+                          }}
+                        >
+                          <div className="cat-title-area">
+                            <div style={{ width: '18px', marginRight: '10px', flexShrink: 0 }} />
+                            <input
+                              type="text"
+                              maxLength={INPUT_LIMITS.categoryName}
+                              autoFocus
+                              placeholder={t('admin.categories.subName') || 'Alt Kategori Adı'}
+                              value={newSubName}
+                              onChange={(e) => setNewSubName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') void saveNewSub(cat.id);
+                                if (e.key === 'Escape') cancelAddSub();
+                              }}
+                              style={{
+                                fontSize: '0.98rem',
+                                fontFamily: 'inherit',
+                                height: '32px',
+                                padding: '0 10px',
+                                width: '100%',
+                                maxWidth: '320px',
+                                border: '1.5px solid var(--primary)',
+                                borderRadius: 'var(--r-control)',
+                                background: 'var(--surface)',
+                                color: 'var(--text)',
+                                outline: 'none',
+                                boxShadow: '0 0 0 2px var(--primary-soft, rgba(90, 15, 30, 0.15))',
+                              }}
+                            />
+                          </div>
+                          <div
+                            className="cat-actions"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            draggable={false}
+                          >
+                            <div className="cat-spacer" />
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              loading={savingNewSub}
+                              disabled={!newSubName.trim() || savingNewSub}
+                              style={{ width: 76, textAlign: 'center' }}
+                              onClick={() => void saveNewSub(cat.id)}
+                            >
+                              {t('admin.form.save') || 'Kaydet'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={savingNewSub}
+                              style={{ width: 76, textAlign: 'center' }}
+                              onClick={cancelAddSub}
+                            >
+                              {t('common.cancel') || 'Vazgeç'}
+                            </Button>
+                          </div>
+                        </li>
+                      )}
                     </ul>
                   )}
                 </li>
@@ -778,6 +958,7 @@ export default function AdminCategoriesPage() {
       <Modal
         open={formOpen}
         onClose={closeForm}
+        title={t('admin.categories.add') || 'Yeni Kategori Ekle'}
         footer={
           <>
             <Button variant="ghost" onClick={closeForm}>{t('common.cancel')}</Button>
@@ -788,7 +969,18 @@ export default function AdminCategoriesPage() {
         }
       >
         <div className="stack">
-          <Input label="Kategori Adı" required value={name} onChange={(e) => setName(e.target.value)} />
+          <Input
+            label={t('admin.categories.name') || 'Kategori Adı'}
+            required
+            maxLength={INPUT_LIMITS.categoryName}
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (nameError) setNameError(null);
+            }}
+            error={nameError}
+            autoFocus
+          />
         </div>
       </Modal>
     </>
