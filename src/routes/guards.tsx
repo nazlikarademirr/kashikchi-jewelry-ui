@@ -24,11 +24,20 @@ function Forbidden() {
 }
 
 export function RequireRole({ role }: { role: UserRole }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const location = useLocation();
   if (loading) return <Spinner />;
   if (!user) return <Navigate to={ROUTES.login} replace state={{ from: location.pathname + location.search }} />;
-  if (user.role !== role) return <Forbidden />;
+  if (user.role !== role) {
+    if (isAdmin && location.pathname.startsWith('/account')) {
+      if (location.pathname === '/account/profile') return <Navigate to={ROUTES.adminProfile} replace />;
+      if (location.pathname === '/account/orders') return <Navigate to={ROUTES.adminOrders} replace />;
+      if (location.pathname === '/account/notifications') return <Navigate to={ROUTES.adminNotifications} replace />;
+      if (location.pathname === '/account/messages') return <Navigate to={ROUTES.adminMessages} replace />;
+      return <Navigate to={ROUTES.admin} replace />;
+    }
+    return <Forbidden />;
+  }
   return <Outlet />;
 }
 

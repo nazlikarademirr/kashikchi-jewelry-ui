@@ -61,11 +61,12 @@ export interface Product {
   code: string;
   description: LocalizedText;
   stock: number;
-    category: string;
-    subCategory: string | null;
+  category: string;
+  subCategory: string | null;
+  goldKarat: string;
   carat: number | null;
   price: number;
-    discount: number;
+  discount: number;
   images: ProductImage[];
   isActive: boolean;
   featured: boolean;
@@ -80,10 +81,11 @@ export interface ProductInput {
   stock: number;
   category: string;
   subCategory: string | null;
+  goldKarat: string;
   carat: number | null;
   price: number;
   discount: number;
-    imageKeys: string[];
+  imageKeys: string[];
   isActive: boolean;
   featured: boolean;
 }

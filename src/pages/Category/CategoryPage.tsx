@@ -45,7 +45,6 @@ export default function CategoryPage() {
             ]}
           />
           <h1>{sub ? loc(sub.name) : loc(top.name)}</h1>
-          <p>{description}</p>
         </div>
       </div>
       <div className="container section section--tight">

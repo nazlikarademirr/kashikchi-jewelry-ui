@@ -86,6 +86,7 @@ export default function AdminProductsPage() {
                       {p.images[0] && <img className="table__thumb" src={mediaUrl(p.images[0].storageKey)} alt="" loading="lazy" />}
                       <Link to={ROUTES.adminProductEdit(p.id)}>
                         <strong>{loc(p.name)}</strong>
+                        {p.goldKarat && <span className="muted" style={{ display: 'block', fontSize: '0.82rem' }}>{p.goldKarat}</span>}
                       </Link>
                     </div>
                   </td>

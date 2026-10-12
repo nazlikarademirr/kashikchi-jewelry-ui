@@ -26,7 +26,7 @@ const NOTE_MAX = INPUT_LIMITS.note;
 
 export default function ProductDetailPage() {
   const { id = '' } = useParams();
-  const { t, loc, errorMessage } = useI18n();
+  const { t, loc, carat, errorMessage } = useI18n();
   const { findTop, findSub } = useCategories();
   const { isAdmin } = useAuth();
   const cart = useCart();
@@ -176,6 +176,29 @@ export default function ProductDetailPage() {
               {description}
             </p>
           )}
+
+          <dl className="product-info__specs">
+            <div className="spec">
+              <dt>{t('product.goldKarat')}</dt>
+              <dd>{product.goldKarat || '—'}</dd>
+            </div>
+            {product.carat != null && product.carat > 0 ? (
+              <div className="spec">
+                <dt>{t('product.carat')}</dt>
+                <dd>{carat(product.carat)} {t('product.caratUnit')}</dd>
+              </div>
+            ) : null}
+            {top ? (
+              <div className="spec">
+                <dt>{t('product.category')}</dt>
+                <dd>{loc(top.name)}</dd>
+              </div>
+            ) : null}
+            <div className="spec">
+              <dt>{t('product.code')}</dt>
+              <dd>{product.code}</dd>
+            </div>
+          </dl>
 
           <div className="product-info__actions">
             {!isAdmin && product.stock <= 0 && (

@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
+import { isAppError } from '@/types';
 import { v } from '@/utils/validation';
 
 export default function LoginPage() {
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [serverErrorCode, setServerErrorCode] = useState<string | null>(null);
   const [showForgot, setShowForgot] = useState(false);
   useDocumentMeta({ title: t('auth.loginMeta'), noindex: true });
 
@@ -31,17 +33,30 @@ export default function LoginPage() {
     : null;
   const passwordError = v.required(password);
 
+  const clearErrors = () => {
+    if (serverError || serverErrorCode) {
+      setServerError(null);
+      setServerErrorCode(null);
+    }
+  };
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
-    setServerError(null);
+    clearErrors();
     if (identifierError || passwordError) return;
     setBusy(true);
     try {
       await login({ email: identifierVal, password });
       toast.success('auth.loggedIn');
     } catch (err) {
-      setServerError(errorMessage(err));
+      if (isAppError(err)) {
+        setServerErrorCode(err.code);
+        setServerError(errorMessage(err));
+      } else {
+        setServerErrorCode(null);
+        setServerError(errorMessage(err));
+      }
       setBusy(false);
     }
   };
@@ -55,14 +70,20 @@ export default function LoginPage() {
           type="text"
           autoComplete="username"
           required
-          reserveMessageSpace
+          reserveMessageSpace={2}
           maxLength={INPUT_LIMITS.email}
           value={identifier}
           onChange={(e) => {
             setIdentifier(e.target.value);
-            if (serverError) setServerError(null);
+            clearErrors();
           }}
-          error={submitted && identifierError ? tDynamic(identifierError) : null}
+          error={
+            submitted && identifierError
+              ? tDynamic(identifierError)
+              : serverErrorCode === 'USER_NOT_FOUND'
+              ? serverError
+              : null
+          }
         />
         <Input
           label={t('auth.password')}
@@ -74,10 +95,15 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => {
             setPassword(e.target.value);
-            if (serverError) setServerError(null);
+            clearErrors();
           }}
-          // Sunucu hatası (ör. "E-posta veya şifre hatalı." veya "Çok fazla hatalı deneme yaptınız...") ayrılmış 2 satırlık alanda gösterilir; yerleşim ve inputlar asla kaymaz.
-          error={submitted && passwordError ? tDynamic(passwordError) : serverError}
+          error={
+            submitted && passwordError
+              ? tDynamic(passwordError)
+              : serverErrorCode && serverErrorCode !== 'USER_NOT_FOUND'
+              ? serverError
+              : null
+          }
         />
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 0, marginBottom: showForgot ? 8 : 14 }}>
           <Button type="button" variant="ghost" size="sm" aria-expanded={showForgot} onClick={() => setShowForgot((s) => !s)} style={{ padding: '4px 8px', height: 'auto' }}>

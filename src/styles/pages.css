@@ -349,6 +349,7 @@
 
 .page-head { padding-block: var(--space-5); border-bottom: 1px solid var(--border); }
 .page-head h1 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: var(--space-2); }
+.page-head h1:last-child { margin-bottom: 0; }
 .page-head p { color: var(--text-muted); margin: 0; }
 .toolbar { display: flex; gap: var(--space-4); justify-content: space-between; align-items: end; flex-wrap: wrap; margin-bottom: var(--space-6); }
 .toolbar__filters { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: end; }
@@ -391,6 +392,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;
 }
 .gallery {
   display: flex;
@@ -398,18 +400,35 @@
   gap: var(--space-3);
   max-width: 480px;
   width: 100%;
+  min-width: 0;
   height: 100%;
 }
 .gallery__main {
   position: relative;
   flex: 1;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
   overflow: hidden;
   background: var(--surface-2);
   border-radius: var(--r-control);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.gallery__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
 }
 .gallery__main img {
   width: 100%;
@@ -683,8 +702,11 @@ a.list-card:hover { text-decoration: none; border-color: var(--primary-text); ba
 .thread__top { display: flex; justify-content: space-between; gap: var(--space-2); font-weight: 600; }
 .thread__last { font-size: 0.9rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.legal { max-width: 720px; }
-.legal h2 { font-size: 1.5rem; margin-top: var(--space-6); }
+.legal { max-width: 760px; line-height: 1.75; }
+.legal__intro { font-size: 1.05rem; line-height: 1.8; color: var(--text); margin-bottom: var(--space-6); font-weight: 400; }
+.legal section { margin-bottom: var(--space-6); }
+.legal h2 { font-size: 1.3rem; margin-top: var(--space-5); margin-bottom: var(--space-3); color: var(--text); }
+.legal p { line-height: 1.75; color: var(--text-muted); margin-bottom: var(--space-3); font-size: 0.98rem; }
 
 .cat-item-row {
   display: flex;

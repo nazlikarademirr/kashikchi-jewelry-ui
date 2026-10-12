@@ -98,7 +98,10 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
           </div>
         </div>
         <div className="product-card__body">
-          <span className="product-card__meta">{product.code}</span>
+          <span className="product-card__meta">
+            {product.code}
+            {product.goldKarat ? ` · ${product.goldKarat}` : null}
+          </span>
           <h3 className="product-card__name">
             {name}
             {product.carat != null && product.carat > 0 ? ` · ${carat(product.carat)} ct` : null}

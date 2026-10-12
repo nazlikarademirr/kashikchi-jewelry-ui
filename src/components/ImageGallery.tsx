@@ -9,11 +9,18 @@ export function ImageGallery({ product }: { product: Product }) {
   const [index, setIndex] = useState(0);
   const images = product.images;
   const name = loc(product.name);
-  if (images.length === 0) return (
-    <div className="gallery__main" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--surface)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', aspectRatio: '1/1', borderRadius: 'var(--r-control)' }}>
-      {t('product.comingSoon')}
-    </div>
-  );
+  if (images.length === 0) {
+    return (
+      <div className="gallery" role="group" aria-label={t('product.gallery')}>
+        <div className="gallery__main" aria-hidden="true">
+          <div className="gallery__placeholder">
+            <Icon name="image" size={40} style={{ opacity: 0.4 }} />
+            <span>{t('product.comingSoon')}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const current = images[Math.min(index, images.length - 1)];
   const go = (d: number) => setIndex((i) => (i + d + images.length) % images.length);
 

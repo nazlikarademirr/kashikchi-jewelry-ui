@@ -61,3 +61,6 @@ export const PRODUCT_PAGE_SIZE = 8;
 
 export const LEGAL_DOCS = ['privacy', 'returns'] as const;
 export type LegalDoc = typeof LEGAL_DOCS[number];
+
+export const GOLD_KARAT_OPTIONS = ['8K', '10K', '14K', '18K', '21K', '22K', '24K'] as const;
+export type GoldKaratOption = typeof GOLD_KARAT_OPTIONS[number];

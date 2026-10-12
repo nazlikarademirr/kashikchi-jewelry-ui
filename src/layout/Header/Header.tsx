@@ -241,6 +241,8 @@ function UserMenu() {
                 {t('admin.nav.notifications')}
                 {unreadCount > 0 && <span className="badge badge--primary">{unreadCount}</span>}
               </Link>
+              <Link to={ROUTES.adminMessages} role="menuitem">{t('admin.nav.messages')}</Link>
+              <Link to={ROUTES.adminProfile} role="menuitem">{t('account.nav.profile')}</Link>
             </>
           ) : (
             <>

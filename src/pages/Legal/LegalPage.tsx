@@ -7,7 +7,7 @@ import { ROUTES } from '@/constants/routes';
 import { useI18n } from '@/contexts/I18nContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 
-const SECTIONS = ['s1', 's2', 's3'] as const;
+const SECTIONS = ['s1', 's2', 's3', 's4'] as const;
 
 function isLegalDoc(value: string | undefined): value is LegalDoc {
   return (LEGAL_DOCS as readonly string[]).includes(value ?? '');
@@ -44,13 +44,18 @@ export default function LegalPage() {
       </div>
       <div className="container section section--tight">
         <article className="legal">
-          <p>{t(`legal.${doc}.intro`)}</p>
-          {SECTIONS.map((s) => (
-            <section key={s}>
-              <h2>{t(`legal.${doc}.${s}Title`)}</h2>
-              <p>{t(`legal.${doc}.${s}Text`)}</p>
-            </section>
-          ))}
+          <p className="legal__intro">{t(`legal.${doc}.intro`)}</p>
+          {SECTIONS.map((s) => {
+            const text = t(`legal.${doc}.${s}Text`);
+            return (
+              <section key={s}>
+                <h2>{t(`legal.${doc}.${s}Title`)}</h2>
+                {text.split('\n\n').map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+              </section>
+            );
+          })}
         </article>
       </div>
     </>

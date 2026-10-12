@@ -60,13 +60,13 @@ function StockRow({ product, onSaved }: { product: Product; onSaved: () => void 
       <td>
         <form
           className="row"
-          style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}
+          style={{ alignItems: 'flex-start', flexWrap: 'nowrap', gap: 'var(--space-2)', width: '100%' }}
           onSubmit={(e) => {
             e.preventDefault();
             void save();
           }}
         >
-          <div style={{ width: 120 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <Input
               label={t('admin.stock.newStock')}
               type="number"
@@ -79,7 +79,7 @@ function StockRow({ product, onSaved }: { product: Product; onSaved: () => void 
               onChange={(e) => setValue(e.target.value.slice(0, 6))}
             />
           </div>
-          <Button type="submit" variant="secondary" loading={busy} disabled={!dirty} style={{ marginTop: 28 }}>
+          <Button type="submit" variant="secondary" loading={busy} disabled={!dirty} style={{ marginTop: 28, flex: 1, minWidth: 0 }}>
             {t('admin.stock.update')}
           </Button>
         </form>
@@ -113,12 +113,12 @@ export default function AdminStockPage() {
         />
       ) : (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table" style={{ tableLayout: 'fixed', minWidth: 840 }}>
             <thead>
               <tr>
-                <th scope="col">{t('admin.products.colProduct')}</th>
-                <th scope="col">{t('admin.stock.colStock')}</th>
-                <th scope="col">{t('admin.stock.newStock')}</th>
+                <th scope="col" style={{ width: '33.333%' }}>{t('admin.products.colProduct')}</th>
+                <th scope="col" style={{ width: '33.333%' }}>{t('admin.stock.colStock')}</th>
+                <th scope="col" style={{ width: '33.333%' }}>{t('admin.stock.newStock')}</th>
               </tr>
             </thead>
             <tbody>

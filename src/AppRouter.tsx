@@ -79,6 +79,7 @@ export function AppRoutes() {
               <Route path="orders/:id" element={<AdminOrderDetail />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="messages" element={<MessagesPage />} />
+              <Route path="profile" element={<AccountProfile />} />
             </Route>
           </Route>
 

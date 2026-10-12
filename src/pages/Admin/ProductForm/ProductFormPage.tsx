@@ -4,7 +4,7 @@ import { Button, LinkButton } from '@/components/ui/Button';
 import { Input, Select, Textarea } from '@/components/ui/Input';
 import { Breadcrumb } from '@/components/ui/Misc';
 import { Alert, ErrorState, Skeleton } from '@/components/ui/State';
-import { IMAGE_UPLOAD, INPUT_LIMITS } from '@/constants';
+import { GOLD_KARAT_OPTIONS, IMAGE_UPLOAD, INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useCategories } from '@/contexts/CategoriesContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -22,6 +22,7 @@ interface FormState {
   code: string;
   category: string;
   subCategory: string;
+  goldKarat: string;
   carat: string;
   price: string;
   discount: string;
@@ -37,6 +38,7 @@ const EMPTY: FormState = {
   code: '',
   category: '',
   subCategory: '',
+  goldKarat: '',
   carat: '',
   price: '',
   discount: '0',
@@ -55,6 +57,7 @@ function fromProduct(p: Product): FormState {
     code: p.code,
     category: p.category,
     subCategory: p.subCategory ?? '',
+    goldKarat: p.goldKarat || '14K',
     carat: p.carat != null ? String(p.carat) : '',
     price: p.price ? p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '',
     discount: String(p.discount),
@@ -105,11 +108,12 @@ function ProductForm({ product }: { product: Product | null }) {
     name: v.required(form.name),
     code: v.code(form.code),
     category: form.category ? null : 'validation.categoryInvalid',
+    goldKarat: form.goldKarat ? null : 'validation.required',
     carat: num(form.carat) !== '' ? v.positive(num(form.carat)) : null,
     price: v.positive(num(form.price)),
     discount: v.discount(num(form.discount)),
     stock: v.nonNegativeInt(num(form.stock)),
-
+    images: form.imageKeys.length > 0 ? null : 'validation.imagesRequired',
   };
   const hasErrors = Object.values(errors).some(Boolean);
 
@@ -162,6 +166,7 @@ function ProductForm({ product }: { product: Product | null }) {
       stock: Number(num(form.stock)),
       category: form.category,
       subCategory: form.subCategory || null,
+      goldKarat: form.goldKarat,
       carat: num(form.carat) !== '' ? Number(num(form.carat)) : null,
       price: Number(num(form.price)),
       discount: Number(num(form.discount)),
@@ -245,6 +250,20 @@ function ProductForm({ product }: { product: Product | null }) {
       <div className="card">
         <h2 className="card__title">{t('admin.form.pricing')}</h2>
         <div className="form-grid form-grid--2">
+          <Select
+            label={t('admin.form.goldKarat')}
+            required
+            value={form.goldKarat}
+            onChange={onText('goldKarat')}
+            error={err('goldKarat')}
+          >
+            <option value="">{t('admin.form.selectGoldKarat')}</option>
+            {GOLD_KARAT_OPTIONS.map((k) => (
+              <option key={k} value={k}>
+                {k}
+              </option>
+            ))}
+          </Select>
           <Input label={t('admin.form.carat')} type="number" min={0} step="0.01" inputMode="decimal" value={form.carat} onChange={onText('carat')} error={err('carat')} />
           <Input label={t('admin.form.price')} required type="text" inputMode="numeric" maxLength={INPUT_LIMITS.price} value={form.price} onChange={handlePriceChange} error={err('price')} />
           <Input label={t('admin.form.discount')} required type="number" min={0} max={100} step="1" inputMode="decimal" value={form.discount} onChange={onText('discount')} error={err('discount')} />
@@ -264,7 +283,10 @@ function ProductForm({ product }: { product: Product | null }) {
       </div>
 
       <div className="card">
-        <h2 className="card__title">{t('admin.form.media')}</h2>
+        <h2 className="card__title">
+          {t('admin.form.media')}{' '}
+          <span className="field__required" aria-hidden="true">*</span>
+        </h2>
         <p className="muted" style={{ marginTop: 0 }}>
           {t('admin.form.mediaHint')}
         </p>
