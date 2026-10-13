@@ -16,7 +16,7 @@ import { finalPrice } from '@/utils/format';
 import { mediaUrl } from '@/utils/media';
 
 export default function AdminProductsPage() {
-  const { t, loc, price } = useI18n();
+  const { t, loc, price, carat } = useI18n();
   const toast = useToast();
   const list = useAsync(() => services.products.list({ includeInactive: true, pageSize: 100, sort: 'newest' }), []);
   const [target, setTarget] = useState<Product | null>(null);
@@ -83,9 +83,8 @@ export default function AdminProductsPage() {
                   <td>
                     <div className="row" style={{ flexWrap: 'nowrap' }}>
                       {p.images[0] && <img className="table__thumb" src={mediaUrl(p.images[0].storageKey)} alt="" loading="lazy" />}
-                      <Link to={ROUTES.adminProductEdit(p.id)}>
-                        <strong>{loc(p.name)}</strong>
-                        {p.goldKarat && <span className="muted" style={{ display: 'block', fontSize: '0.82rem' }}>{p.goldKarat}</span>}
+                      <Link to={ROUTES.product(p.slug)}>
+                        <strong>{loc(p.name)}{p.carat != null && p.carat > 0 ? ` · ${carat(p.carat)} ct` : null}</strong>
                       </Link>
                     </div>
                   </td>
