@@ -387,7 +387,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
       description: { tr: desc, en: desc },
       features: sanitizeText(form.features, INPUT_LIMITS.productDescription),
       extraFeatures: form.extraFeatures.filter((feature) => feature.name.trim() || feature.detail.trim())
-        .map((feature) => ({ name: sanitizeText(feature.name, 80), detail: sanitizeText(feature.detail, 1000) })),
+        .map((feature) => ({ name: toTitleCase(sanitizeText(feature.name, 80)), detail: sanitizeText(feature.detail, 1000) })),
       weightGrams: form.weightGrams.trim() ? Number(form.weightGrams.replace(',', '.')) : null,
       metal: sanitizeText(form.metal, 80),
       diamondColor: sanitizeText(form.diamondColor, 80),
@@ -513,6 +513,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
               <div key={feature.id} className="product-feature-editor__row">
                 <Input label={t('admin.form.featureName')} value={feature.name} maxLength={80}
                   onChange={(e) => set('extraFeatures')(form.extraFeatures.map((row) => row.id === feature.id ? { ...row, name: e.target.value } : row))}
+                  onBlur={() => set('extraFeatures')(form.extraFeatures.map((row) => row.id === feature.id ? { ...row, name: toTitleCase(row.name) } : row))}
                   error={err(`extraFeatures[${index}].name`)} />
                 <Input label={t('admin.form.featureDetail')} value={feature.detail} maxLength={1000}
                   onChange={(e) => set('extraFeatures')(form.extraFeatures.map((row) => row.id === feature.id ? { ...row, detail: e.target.value } : row))}
