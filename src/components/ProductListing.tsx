@@ -11,7 +11,7 @@ import { Input, Select } from './ui/Input';
 import { Pagination } from './ui/Misc';
 import { EmptyState, ErrorState, ProductGridSkeleton } from './ui/State';
 
-const SORTS: ProductSort[] = ['newest', 'priceAsc', 'priceDesc', 'caratDesc'];
+const SORTS: ProductSort[] = ['newest', 'priceAsc', 'priceDesc', 'caratAsc', 'caratDesc'];
 
 export function ProductListing({ category, subCategory }: { category?: string; subCategory?: string }) {
   const { t } = useI18n();

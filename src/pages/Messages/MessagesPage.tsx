@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MessagePanel } from '@/components/order';
 import { OrderStatusBadge } from '@/components/product';
@@ -19,7 +19,6 @@ export default function MessagesPage() {
   const { refresh } = useNotificationsBadge();
   const threads = useAsync(() => services.messages.listThreads(), []);
   const [selected, setSelected] = useState<string | null>(null);
-  const initialOpened = useRef(false);
   useDocumentMeta({ title: t('messages.title'), noindex: true });
 
   useEffect(() => {
@@ -30,13 +29,6 @@ export default function MessagesPage() {
     return () => window.clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!initialOpened.current && threads.data && threads.data.length > 0) {
-      setSelected(threads.data[0].orderId);
-      initialOpened.current = true;
-    }
-  }, [threads.data]);
 
   return (
     <>

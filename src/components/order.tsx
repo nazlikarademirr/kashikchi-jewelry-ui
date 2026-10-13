@@ -115,7 +115,7 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
         await services.messages.markRead(orderId);
         void refresh();
       }
-    } catch (e) {
+    } catch {
       setMessages([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

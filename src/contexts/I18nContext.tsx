@@ -66,7 +66,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       loc: (text) => localized(text, locale),
       price: (n) => formatPrice(n, locale),
       date: (iso, withTime) => formatDate(iso, locale, withTime),
-      carat: (n) => formatCarat(n, locale),
+      carat: (n) => formatCarat(n),
       errorMessage: (err, params) =>
         isAppError(err)
           ? tError(err.code, params ?? (err.retryAfter ? { seconds: err.retryAfter } : undefined))

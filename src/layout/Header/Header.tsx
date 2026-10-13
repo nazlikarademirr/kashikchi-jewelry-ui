@@ -160,7 +160,7 @@ function MobileNav({ onClose }: { onClose: () => void }) {
       <div className="mobile-nav__panel" ref={ref}>
         <div className="mobile-nav__head">
           <Logo onClick={onClose} />
-          <button ref={closeRef} type="button" className="icon-btn" onClick={onClose} aria-label={t('common.close')}>
+          <button ref={closeRef} type="button" className="icon-btn mobile-nav__close" onClick={onClose} aria-label={t('common.close')}>
             <Icon name="close" />
           </button>
         </div>

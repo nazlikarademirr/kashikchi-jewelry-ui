@@ -1,17 +1,13 @@
 import { AppError } from '@/types';
+import { expireSession, readSession, saveSession } from './authSession';
 
 const BASE_URL = ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api').replace(/\/$/, '');
 
-let accessToken: string | null = localStorage.getItem('access_token');
-let refreshToken: string | null = localStorage.getItem('refresh_token');
-
-export function setTokens(access: string | null, refresh: string | null) {
-  accessToken = access;
-  refreshToken = refresh;
-  if (access) localStorage.setItem('access_token', access);
-  else localStorage.removeItem('access_token');
-  if (refresh) localStorage.setItem('refresh_token', refresh);
-  else localStorage.removeItem('refresh_token');
+export function setTokens(access: string | null, refresh: string | null, sessionExpiresAt?: string) {
+  if (!access || !refresh) { saveSession(null); return; }
+  const expiresAt = sessionExpiresAt ? Date.parse(sessionExpiresAt) : readSession()?.expiresAt;
+  if (!expiresAt || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) return;
+  saveSession({ accessToken: access, refreshToken: refresh, expiresAt });
 }
 
 type Query = Record<string, string | number | boolean | undefined | null>;
@@ -24,42 +20,40 @@ export interface RequestOptions {
   allowUnauthorized?: boolean;
 }
 
-let isRefreshing = false;
-let refreshSubscribers: ((token: string | null) => void)[] = [];
-
-function onRefreshed(token: string | null) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
+let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshTokens(): Promise<string | null> {
-  if (!refreshToken) return null;
-  if (isRefreshing) {
-    return new Promise((resolve) => {
-      refreshSubscribers.push(resolve);
-    });
-  }
-
-  isRefreshing = true;
-  try {
-    const res = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-    
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    setTokens(data.accessToken, data.refreshToken);
-    onRefreshed(data.accessToken);
-    return data.accessToken;
-  } catch {
-    setTokens(null, null);
-    onRefreshed(null);
-    return null;
-  } finally {
-    isRefreshing = false;
-  }
+  if (refreshPromise) return refreshPromise;
+  const original = readSession();
+  if (!original || expireSession()) return null;
+  const refresh = async () => {
+    const session = readSession();
+    if (!session || expireSession()) return null;
+    // Başka bir sekme beklerken yenilemiş olabilir.
+    if (session.accessToken !== original.accessToken) return session.accessToken;
+    try {
+      const res = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: session.refreshToken }),
+      });
+      if (!res.ok) {
+        // Geçici sunucu/ağ hataları açık oturumu silmez.
+        if (res.status === 401 && readSession()?.refreshToken === session.refreshToken) saveSession(null);
+        if (res.status >= 500) throw new AppError('NETWORK_ERROR');
+        return null;
+      }
+      const data = await res.json();
+      const current = readSession();
+      if (!current || expireSession()) return null;
+      if (current.refreshToken !== session.refreshToken) return current.accessToken;
+      setTokens(data.accessToken, data.refreshToken, data.sessionExpiresAt);
+      return readSession()?.accessToken ?? null;
+    } catch { throw new AppError('NETWORK_ERROR'); }
+  };
+  refreshPromise = (navigator.locks
+    ? navigator.locks.request('kj:token-refresh', refresh)
+    : refresh()).finally(() => { refreshPromise = null; });
+  return refreshPromise;
 }
 
 export async function http<T = void>(path: string, opts: RequestOptions = {}, isRetry = false): Promise<T> {
@@ -71,9 +65,9 @@ export async function http<T = void>(path: string, opts: RequestOptions = {}, is
   const method = opts.method ?? 'GET';
   const headers: Record<string, string> = { Accept: 'application/json' };
   
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
-  }
+  expireSession();
+  const session = readSession();
+  if (session) headers['Authorization'] = `Bearer ${session.accessToken}`;
 
   let body: BodyInit | undefined;
   if (opts.formData) body = opts.formData;
@@ -92,15 +86,15 @@ export async function http<T = void>(path: string, opts: RequestOptions = {}, is
   if (res.status === 401) {
     const isAuthPath = path.startsWith('/auth/login') || path.startsWith('/auth/register');
     if (!isAuthPath) {
-      if (!isRetry && refreshToken) {
+      if (!isRetry && readSession()?.refreshToken) {
         const newToken = await refreshTokens();
         if (newToken) return http<T>(path, opts, true);
       }
       
-      if (opts.allowUnauthorized) return null as T;
-      
-      window.dispatchEvent(new Event('kj:unauthorized'));
+      if (readSession()?.accessToken !== session?.accessToken && readSession()) return http<T>(path, opts, true);
       setTokens(null, null);
+      if (session) window.dispatchEvent(new Event('kj:unauthorized'));
+      if (opts.allowUnauthorized) return null as T;
       throw new AppError('UNAUTHORIZED');
     }
   }

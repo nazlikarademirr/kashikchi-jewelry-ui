@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { QuantityStepper } from '@/components/ImageGallery';
-import { PriceTag, StockBadge } from '@/components/product';
+import { PriceTag } from '@/components/product';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
 import { ConfirmDialog } from '@/components/ui/Modal';
@@ -30,9 +30,6 @@ function CartLine({ item }: { item: CartItem }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const p = item.product;
   const maxQty = MAX_CART_QUANTITY;
-  const productQuantity = cart.items.filter((line) => line.product.id === p.id).reduce((sum, line) => sum + line.quantity, 0);
-  const madeToOrderQuantity = Math.max(0, productQuantity - p.stock);
-  const showStockNotice = madeToOrderQuantity > 0 && cart.items.find((line) => line.product.id === p.id)?.id === item.id;
   const name = loc(p.name);
 
   const adjustTextareaHeight = () => {
@@ -83,7 +80,6 @@ function CartLine({ item }: { item: CartItem }) {
         </span>
         <div className="row">
           <PriceTag product={p} />
-          <StockBadge stock={p.stock} />
         </div>
       </div>
       <div className="cart-line__side">
@@ -101,11 +97,6 @@ function CartLine({ item }: { item: CartItem }) {
           </Button>
         </div>
       </div>
-      {showStockNotice && (
-        <div className="cart-line__note">
-          <Alert kind="info">{t('cart.stockNotice', { stock: p.stock, remaining: madeToOrderQuantity })}</Alert>
-        </div>
-      )}
       <div className="cart-line__note">
         <Textarea
           ref={textareaRef}

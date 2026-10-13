@@ -116,8 +116,7 @@
 .checkbox input { width: 18px; height: 18px; accent-color: var(--primary); }
 .form-grid { display: grid; gap: var(--space-4); }
 .form-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.form-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 640px) { .form-grid--2, .form-grid--3 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .form-grid--2 { grid-template-columns: 1fr; } }
 
 .badge {
   display: inline-flex; align-items: center; gap: 6px;
@@ -295,6 +294,7 @@
 .pagination button:hover:not(:disabled) { border-color: var(--primary-text); color: var(--primary-text); }
 .pagination button[aria-current='page'] { background: var(--primary); color: var(--text-on-primary); border-color: var(--primary); }
 .pagination button:disabled { opacity: 0.4; }
+.pagination button[aria-current='page']:disabled { opacity: 1; cursor: default; }
 
 .breadcrumb { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.88rem; color: var(--text-muted); margin-bottom: var(--space-4); word-break: break-word; }
 .breadcrumb li + li::before { content: '/'; margin-right: 8px; opacity: 0.6; }

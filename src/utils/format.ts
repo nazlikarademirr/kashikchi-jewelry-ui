@@ -18,7 +18,7 @@ export function formatDate(iso: string, locale: Locale, withTime = false): strin
   }).format(new Date(iso));
 }
 
-export function formatCarat(carat: number, _locale?: Locale): string {
+export function formatCarat(carat: number): string {
   return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(carat);
 }
 
@@ -32,9 +32,6 @@ export function finalPrice(p: Pick<Product, 'price' | 'discount'>): number {
   return Math.round(p.price * (1 - p.discount / 100));
 }
 
-export function isMadeToOrder(p: Pick<Product, 'stock'>): boolean {
-  return p.stock <= 0;
-}
 
 export function shortId(id: string): string {
   return id.replace(/-/g, '').slice(0, 8).toUpperCase();

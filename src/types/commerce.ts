@@ -100,8 +100,6 @@ export interface MessageThread {
 export interface DashboardStats {
   totalProducts: number;
   activeProducts: number;
-  lowStockProducts: number;
-  madeToOrderProducts: number;
   totalOrders: number;
   ordersByStatus: Record<OrderStatus, number>;
   revenue: number;

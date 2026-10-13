@@ -71,7 +71,6 @@ export interface Product {
   metal?: string;
   diamondColor?: string;
   diamondClarity?: string;
-  stock: number;
   category: string;
   subCategory: string | null;
   goldKarat: string;
@@ -95,7 +94,6 @@ export interface ProductInput {
   metal?: string;
   diamondColor?: string;
   diamondClarity?: string;
-  stock: number;
   category: string;
   subCategory: string | null;
   goldKarat: string;
@@ -107,7 +105,7 @@ export interface ProductInput {
   featured: boolean;
 }
 
-export type ProductSort = 'newest' | 'priceAsc' | 'priceDesc' | 'caratDesc';
+export type ProductSort = 'newest' | 'priceAsc' | 'priceDesc' | 'caratAsc' | 'caratDesc';
 
 export interface ProductQuery {
   category?: string;
@@ -118,11 +116,4 @@ export interface ProductQuery {
   sort?: ProductSort;
   page?: number;
   pageSize?: number;
-}
-
-export interface Favorite {
-  id: string;
-  userId: string;
-  productId: string;
-  createdAt: string;
 }

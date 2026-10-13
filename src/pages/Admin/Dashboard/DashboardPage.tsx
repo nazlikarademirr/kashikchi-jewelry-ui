@@ -32,8 +32,6 @@ export default function AdminDashboardPage() {
           <div className="stat-grid">
             <Stat label={t('admin.dashboard.products')} value={s.totalProducts} />
             <Stat label={t('admin.dashboard.active')} value={s.activeProducts} />
-            <Stat label={t('admin.dashboard.lowStock')} value={s.lowStockProducts} />
-            <Stat label={t('admin.dashboard.madeToOrder')} value={s.madeToOrderProducts} />
             <Stat label={t('admin.dashboard.orders')} value={s.totalOrders} />
             <Stat label={t('admin.dashboard.revenue')} value={price(s.revenue)} />
           </div>

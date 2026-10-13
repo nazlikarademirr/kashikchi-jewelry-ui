@@ -33,7 +33,6 @@ interface FormState {
   carat: string;
   price: string;
   discount: string;
-  stock: string;
   imageKeys: string[];
   isActive: boolean;
   featured: boolean;
@@ -55,7 +54,6 @@ const EMPTY: FormState = {
   carat: '',
   price: '',
   discount: '0',
-  stock: '0',
   imageKeys: [],
   isActive: true,
   featured: false,
@@ -103,7 +101,6 @@ function fromProduct(p: Product): FormState {
     carat: p.carat != null ? String(p.carat) : '',
     price: p.price ? p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '',
     discount: String(p.discount),
-    stock: String(p.stock),
     imageKeys: p.images.map((i) => i.storageKey),
     isActive: p.isActive,
     featured: p.featured,
@@ -133,7 +130,6 @@ function isFormEqual(a: FormState, b: FormState): boolean {
   }
   if (parsePrice(a.price) !== parsePrice(b.price)) return false;
   if (parseIntNum(a.discount) !== parseIntNum(b.discount)) return false;
-  if (parseIntNum(a.stock) !== parseIntNum(b.stock)) return false;
   if (a.isActive !== b.isActive) return false;
   if (a.featured !== b.featured) return false;
   if (a.imageKeys.length !== b.imageKeys.length) return false;
@@ -328,7 +324,6 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
     carat: isCaratValid(form.carat) ? null : 'validation.positive',
     price: v.positive(parsePrice(form.price)),
     discount: v.discount(parseIntNum(form.discount)),
-    stock: v.nonNegativeInt(parseIntNum(form.stock)),
     images: form.imageKeys.length > 0 ? null : 'validation.imagesRequired',
   };
   form.extraFeatures.forEach((feature, index) => {
@@ -393,7 +388,6 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
       diamondColor: sanitizeText(form.diamondColor, 80),
       diamondClarity: sanitizeText(form.diamondClarity, 80),
       code: form.code.trim().toLocaleUpperCase('tr-TR'),
-      stock: Number(parseIntNum(form.stock)),
       category: form.category,
       subCategory: form.subCategory || null,
       goldKarat: form.goldKarat,
@@ -544,21 +538,9 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
 
       <div className="card">
         <h2 className="card__title">{t('admin.form.pricing')}</h2>
-        <div className="form-grid form-grid--3">
+        <div className="form-grid form-grid--2">
           <Input label={t('admin.form.price')} required type="text" inputMode="numeric" maxLength={INPUT_LIMITS.price} value={form.price} onChange={handlePriceChange} error={err('price')} />
           <Input label={t('admin.form.discount')} required type="number" min={0} max={100} step="1" inputMode="decimal" value={form.discount} onChange={onText('discount')} error={err('discount')} />
-          <Input
-            label={t('admin.form.stock')}
-            required
-            type="number"
-            min={0}
-            max={999999}
-            step="1"
-            inputMode="numeric"
-            value={form.stock}
-            onChange={onText('stock')}
-            error={err('stock')}
-          />
         </div>
       </div>
 

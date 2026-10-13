@@ -1,21 +1,22 @@
 import type { Category, CartItem, Message, MessageThread, Notification, Order, Paged, Product, User, DashboardStats } from '@/types';
 import type { Services } from '../contracts';
 import { http, setTokens } from './httpClient';
+import { readSession } from './authSession';
 
 export const apiServices: Services = {
   auth: {
     login: async (input) => {
-      const res = await http<{ user: User; accessToken: string; refreshToken: string }>('/auth/login', { method: 'POST', body: input });
-      setTokens(res.accessToken, res.refreshToken);
+      const res = await http<{ user: User; accessToken: string; refreshToken: string; sessionExpiresAt: string }>('/auth/login', { method: 'POST', body: input });
+      setTokens(res.accessToken, res.refreshToken, res.sessionExpiresAt);
       return res.user;
     },
     register: async (input) => {
-      const res = await http<{ user: User; accessToken: string; refreshToken: string }>('/auth/register', { method: 'POST', body: input });
-      setTokens(res.accessToken, res.refreshToken);
+      const res = await http<{ user: User; accessToken: string; refreshToken: string; sessionExpiresAt: string }>('/auth/register', { method: 'POST', body: input });
+      setTokens(res.accessToken, res.refreshToken, res.sessionExpiresAt);
       return res.user;
     },
     logout: async () => {
-      try { await http('/auth/logout', { method: 'POST' }); } catch {}
+      try { await http('/auth/logout', { method: 'POST', body: { refreshToken: readSession()?.refreshToken } }); } catch {}
       setTokens(null, null);
     },
     me: async () => {
@@ -52,7 +53,6 @@ export const apiServices: Services = {
     },
     create: (input) => http<Product>('/admin/products', { method: 'POST', body: input }),
     update: (id, input) => http<Product>(`/admin/products/${id}`, { method: 'PUT', body: input }),
-    updateStock: (id, stock) => http<Product>(`/admin/products/${id}/stock`, { method: 'PATCH', body: { stock } }),
     setActive: (id, isActive) => http<Product>(`/admin/products/${id}/active`, { method: 'PATCH', body: { isActive } }),
   },
   favorites: {

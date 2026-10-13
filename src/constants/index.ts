@@ -15,7 +15,6 @@ export const SOCIAL_LINKS = [
 export const CURRENCY = 'USD';
 
 export const MAX_CART_QUANTITY = 10;
-export const LOW_STOCK_THRESHOLD = 3;
 export const PASSWORD_MIN_LENGTH = 8;
 
 export const INPUT_LIMITS = {
@@ -29,7 +28,6 @@ export const INPUT_LIMITS = {
   productDescription: 4000,
   categoryName: 60,
   price: 15,
-  stock: 6,
   carat: 10,
   note: 1000,
   message: 2000,
@@ -54,7 +52,6 @@ export const ORDER_STATUS_I18N: Record<OrderStatus, `orderStatus.${OrderStatus}`
 export const STORAGE_KEYS = {
   theme: 'kj.theme',
   locale: 'kj.locale',
-  session: 'kj.session',
 } as const;
 
 export const PRODUCT_PAGE_SIZE = 8;
@@ -63,7 +60,6 @@ export const LEGAL_DOCS = ['privacy', 'returns'] as const;
 export type LegalDoc = typeof LEGAL_DOCS[number];
 
 export const GOLD_KARAT_OPTIONS = ['8K', '10K', '14K', '18K', '21K', '22K', '24K'] as const;
-export type GoldKaratOption = typeof GOLD_KARAT_OPTIONS[number];
 
 // GIA D–Z color scale and clarity grades; combined values remain editable.
 export const DIAMOND_COLOR_OPTIONS = Array.from({ length: 23 }, (_, i) => String.fromCharCode(68 + i));

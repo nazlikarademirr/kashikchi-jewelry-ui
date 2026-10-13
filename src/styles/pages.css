@@ -110,6 +110,7 @@
   .mobile-nav .brand__name { font-size: clamp(1rem, 4vw, 1.3rem); white-space: nowrap; }
   .mobile-nav .brand__mark { flex-shrink: 0; }
   .mobile-nav__head > .icon-btn { flex-shrink: 0; }
+  .mobile-nav__close:focus-visible { outline: none; box-shadow: none; color: var(--primary-text); }
   .mobile-nav .sub a { font-family: var(--font-sans); font-size: 0.98rem; padding: 9px 0 9px 16px; color: var(--text-muted); border-bottom: 0; }
   .mobile-nav nav { flex: 1; }
   .mobile-nav__footer {
@@ -162,7 +163,6 @@
 .footer__brand .brand__mark { color: var(--on-velvet); }
 .footer__brand .brand__sub { color: var(--on-velvet-muted); }
 .footer__brand .social { margin-top: 0; }
-.footer__about { margin-top: var(--space-4); color: var(--on-velvet-muted); max-width: 34ch; font-size: 0.96rem; }
 .footer__title { font-size: 1.15rem; margin-bottom: var(--space-4); color: var(--on-velvet); font-weight: 600; }
 .footer__list { display: grid; gap: 10px; font-size: 0.96rem; }
 .footer__contact { display: grid; gap: 12px; font-size: 0.96rem; font-style: normal; color: var(--on-velvet-muted); }
@@ -187,7 +187,10 @@
   .footer__grid { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
 }
 @media (max-width: 640px) {
-  .footer__brand { flex-direction: column; align-items: flex-start; gap: var(--space-4); }
+  .footer__brand { flex-direction: row; align-items: center; gap: var(--space-4); }
+  .footer__brand .brand { gap: 8px; }
+  .footer__brand .brand__name { font-size: clamp(1rem, 4.8vw, 1.7rem); }
+  .footer__brand .social { flex-shrink: 0; }
 }
 @media (max-width: 560px) {
   .footer__grid { grid-template-columns: 1fr; gap: var(--space-5); }
@@ -532,17 +535,6 @@
 }
 .product-info__description { margin: 0; color: var(--text-muted); white-space: pre-line; overflow-wrap: anywhere; }
 .product-info__divider { width: 100%; margin: var(--space-4) 0; border: 0; border-top: 1px solid var(--border); }
-.product-info__details + .product-info__description { margin-top: var(--space-3); }
-.product-info__specs {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  margin-block: var(--space-4);
-  border-top: 1px solid var(--border-strong);
-}
-.spec { padding: var(--space-2) 0; border-bottom: 1px solid var(--border); }
-.spec:nth-child(odd) { padding-right: var(--space-4); }
-.spec dt { font-size: 0.86rem; color: var(--text-muted); }
-.spec dd { margin: 2px 0 0; font-weight: 600; }
 .product-info__actions {
   display: grid;
   gap: var(--space-3);

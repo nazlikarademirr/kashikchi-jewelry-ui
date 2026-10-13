@@ -70,7 +70,6 @@ export default function AdminProductsPage() {
               <tr>
                 <th scope="col">{t('admin.products.colProduct')}</th>
                 <th scope="col">{t('admin.products.colCode')}</th>
-                <th scope="col">{t('admin.products.colStock')}</th>
                 <th scope="col">{t('admin.products.colPrice')}</th>
                 <th scope="col">{t('admin.products.colStatus')}</th>
                 <th scope="col" style={{ textAlign: 'right' }}>
@@ -91,9 +90,6 @@ export default function AdminProductsPage() {
                     </div>
                   </td>
                   <td className="nowrap">{p.code}</td>
-                  <td>
-                    {p.stock}
-                  </td>
                   <td className="nowrap">
                     {p.discount > 0 ? (
                       <>

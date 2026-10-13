@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { AuthShell } from '@/components/AuthShell';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Alert } from '@/components/ui/State';
 import { INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +14,7 @@ import { isAppError } from '@/types';
 import { v } from '@/utils/validation';
 
 export default function LoginPage() {
+  const location = useLocation();
   const { t, tDynamic, errorMessage } = useI18n();
   const { login } = useAuth();
   const toast = useToast();
@@ -92,6 +94,7 @@ export default function LoginPage() {
   return (
     <AuthShell>
       <h1 style={{ marginBottom: 24 }}>{t('auth.loginTitle')}</h1>
+      {location.state?.sessionExpired && <Alert kind="warning">{t('auth.sessionExpired')}</Alert>}
       <form className="form-grid" onSubmit={submit} noValidate style={{ display: 'grid', gap: 0 }}>
         <Input
           label={t('auth.emailOrPhone')}

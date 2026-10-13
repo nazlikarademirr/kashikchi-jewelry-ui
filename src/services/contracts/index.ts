@@ -47,7 +47,6 @@ export interface ProductService {
     uploadImage(file: File): Promise<string>;
   create(input: ProductInput): Promise<Product>;
   update(id: string, input: ProductInput): Promise<Product>;
-  updateStock(id: string, stock: number): Promise<Product>;
   setActive(id: string, isActive: boolean): Promise<Product>;
 }
 

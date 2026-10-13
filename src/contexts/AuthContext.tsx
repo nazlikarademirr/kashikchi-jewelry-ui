@@ -1,6 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useToast } from './ToastContext';
 import { services } from '@/services';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
+import { useI18n } from './I18nContext';
+import { AUTH_SESSION_KEY, SESSION_CHANGED, SESSION_EXPIRED, expireSession, readSession } from '@/services/api/authSession';
 import type { LoginInput, RegisterInput, UpdateProfileInput, User } from '@/types';
 
 interface AuthValue {
@@ -18,24 +22,64 @@ const AuthContext = createContext<AuthValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const toast = useToast();
+  const navigate = useNavigate();
+  const { t } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
-    services.auth
-      .me()
-      .then((u) => alive && setUser(u))
-      .catch(() => alive && setUser(null))
-      .finally(() => alive && setLoading(false));
-    
-    const onUnauthorized = () => setUser(null);
+    let generation = 0;
+    let timer: number | undefined;
+    const expired = () => {
+      generation++;
+      setUser(null);
+      setLoading(false);
+      toast.error(t('auth.sessionExpired'));
+      navigate(ROUTES.login, { replace: true, state: { sessionExpired: true } });
+    };
+    const schedule = () => {
+      window.clearTimeout(timer);
+      const session = readSession();
+      if (!session) { generation++; setUser(null); setLoading(false); return; }
+      if (expireSession()) return;
+      timer = window.setTimeout(() => expireSession(), Math.max(0, session.expiresAt - Date.now()));
+    };
+    const reload = () => {
+      schedule();
+      if (!readSession()) return;
+      const current = ++generation;
+      services.auth.me().then((u) => { if (alive && current === generation) setUser(u); })
+        .catch(() => { if (alive && current === generation) setUser(null); })
+        .finally(() => { if (alive && current === generation) setLoading(false); });
+    };
+    const onUnauthorized = () => { generation++; setUser(null); setLoading(false); };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== AUTH_SESSION_KEY && e.key !== null) return;
+      if (!e.newValue && e.oldValue && !readSession()) {
+        try { if (JSON.parse(e.oldValue).expiresAt <= Date.now()) { expired(); return; } } catch { /* invalid old data */ }
+      }
+      reload();
+    };
+    const onResume = () => { if (document.visibilityState !== 'hidden') schedule(); };
+    window.addEventListener(SESSION_EXPIRED, expired);
+    window.addEventListener(SESSION_CHANGED, schedule);
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', onResume);
+    document.addEventListener('visibilitychange', onResume);
     window.addEventListener('kj:unauthorized', onUnauthorized);
+    reload();
     return () => {
       alive = false;
+      window.clearTimeout(timer);
+      window.removeEventListener(SESSION_EXPIRED, expired);
+      window.removeEventListener(SESSION_CHANGED, schedule);
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', onResume);
+      document.removeEventListener('visibilitychange', onResume);
       window.removeEventListener('kj:unauthorized', onUnauthorized);
     };
-  }, []);
+  }, [navigate, toast, t]);
 
   const login = useCallback(async (input: LoginInput) => {
     const u = await services.auth.login(input);
@@ -51,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = useCallback(async (input: UpdateProfileInput) => {
     const u = await services.auth.updateProfile(input);
-    setUser(u);
+    if (!expireSession() && readSession()) setUser(u);
     return u;
   }, []);
 

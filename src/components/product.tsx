@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LOW_STOCK_THRESHOLD, ORDER_STATUS_I18N } from '@/constants';
+import { ORDER_STATUS_I18N } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
@@ -32,13 +32,6 @@ export function FavoriteButton({ productId, large }: { productId: string; large?
       <Icon name="heart" />
     </button>
   );
-}
-
-export function StockBadge({ stock }: { stock: number }) {
-  const { t } = useI18n();
-  if (stock <= 0) return <Badge kind="warning" dot>{t('product.madeToOrder')}</Badge>;
-  if (stock <= LOW_STOCK_THRESHOLD) return <Badge kind="warning" dot>{t('product.lowStock', { n: stock })}</Badge>;
-  return <Badge kind="success" dot>{t('product.inStock')}</Badge>;
 }
 
 const STATUS_KIND: Record<OrderStatus, 'info' | 'warning' | 'success'> = {
@@ -95,7 +88,6 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
           )}
           <div className="product-card__tags">
             {product.discount > 0 && <Badge kind="danger">-%{product.discount}</Badge>}
-            {product.stock <= 0 && <Badge kind="warning">{t('product.madeToOrder')}</Badge>}
             {!product.isActive && <Badge>{t('product.inactive')}</Badge>}
           </div>
         </div>

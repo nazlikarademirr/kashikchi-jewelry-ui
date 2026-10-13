@@ -31,7 +31,6 @@ const AdminDashboard = lazy(() => import('@/pages/Admin/Dashboard/DashboardPage'
 const AdminCategories = lazy(() => import('@/pages/Admin/Categories/CategoriesPage'));
 const AdminProducts = lazy(() => import('@/pages/Admin/Products/ProductsPage'));
 const AdminProductForm = lazy(() => import('@/pages/Admin/ProductForm/ProductFormPage'));
-const AdminStock = lazy(() => import('@/pages/Admin/Stock/StockPage'));
 const AdminOrders = lazy(() => import('@/pages/Admin/Orders/OrdersPage'));
 const AdminOrderDetail = lazy(() => import('@/pages/Admin/OrderDetail/OrderDetailPage'));
 const AdminDeletedOrders = lazy(() => import('@/pages/Admin/DeletedOrders/DeletedOrdersPage'));
@@ -41,7 +40,6 @@ export function AppRoutes() {
     <Suspense fallback={<Spinner />}>
       <Routes>
         <Route element={<PublicLayout />}>
-          {}
           <Route index element={<HomePage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:id" element={<ProductDetailPage />} />
@@ -56,7 +54,6 @@ export function AppRoutes() {
             <Route path="reset-password" element={<ResetPasswordPage />} />
           </Route>
 
-          {}
           <Route element={<RequireRole role={0} />}>
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="cart" element={<CartPage />} />
@@ -71,7 +68,6 @@ export function AppRoutes() {
             </Route>
           </Route>
 
-          {}
           <Route element={<RequireRole role={1} />}>
             <Route path="admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
@@ -79,7 +75,6 @@ export function AppRoutes() {
               <Route path="products" element={<AdminProducts />} />
               <Route path="products/new" element={<AdminProductForm />} />
               <Route path="products/:id/edit" element={<AdminProductForm />} />
-              <Route path="stock" element={<AdminStock />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="orders/:id" element={<AdminOrderDetail />} />
               <Route path="deleted-orders" element={<AdminDeletedOrders />} />

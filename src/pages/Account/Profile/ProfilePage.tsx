@@ -49,9 +49,15 @@ export default function ProfilePage() {
 
   const emailVal = form.email.trim();
   const phoneVal = form.phone.trim();
-  const neitherProvided = !emailVal && !phoneVal;
 
   const isChangingPassword = Boolean(form.newPassword || form.confirmPassword);
+  const isDirty = Boolean(user && (
+    toTitleCase(sanitizeText(form.name, INPUT_LIMITS.name)) !== toTitleCase(user.name ?? '')
+    || toTitleCase(sanitizeText(form.surname, INPUT_LIMITS.surname)) !== toTitleCase(user.surname ?? '')
+    || emailVal.toLowerCase() !== (user.email ?? '').trim().toLowerCase()
+    || phoneVal !== (user.phone ?? '').trim()
+    || isChangingPassword
+  ));
   const newPasswordError = isChangingPassword ? v.password(form.newPassword) : null;
   const confirmPasswordError = isChangingPassword
     ? !form.confirmPassword
@@ -64,20 +70,20 @@ export default function ProfilePage() {
   const errors = {
     name: v.required(form.name),
     surname: v.required(form.surname),
-    email: v.optionalEmail(emailVal),
+    email: v.email(emailVal),
     phone: v.optionalPhone(phoneVal),
     newPassword: newPasswordError,
     confirmPassword: confirmPasswordError,
   };
 
-  const hasErrors = Object.values(errors).some(Boolean) || neitherProvided;
+  const hasErrors = Object.values(errors).some(Boolean);
   const hasServerFieldErrors = Object.values(serverFields).some(Boolean);
 
   const fieldError = (key: keyof typeof errors) => {
     const local = submitted ? errors[key] : null;
     const remote = serverFields[key];
     const code = local ?? (remote || null);
-    if (!code || code === 'validation.emailOrPhoneRequired') return null;
+    if (!code) return null;
     return tDynamic(code);
   };
 
@@ -85,18 +91,21 @@ export default function ProfilePage() {
     e.preventDefault();
     setSubmitted(true);
     setServerError(null);
-    if (hasErrors) return;
+    if (hasErrors || !isDirty || busy) return;
 
     setBusy(true);
     try {
-      await updateProfile({
+      const updated = await updateProfile({
         name: toTitleCase(sanitizeText(form.name, INPUT_LIMITS.name)),
         surname: toTitleCase(sanitizeText(form.surname, INPUT_LIMITS.surname)),
-        email: emailVal.toLowerCase() || null,
+        email: emailVal.toLowerCase(),
         phone: phoneVal || null,
         password: isChangingPassword ? form.newPassword : null,
       });
-      setForm((f) => ({ ...f, newPassword: '', confirmPassword: '' }));
+      setForm({ name: updated.name ?? '', surname: updated.surname ?? '', email: updated.email ?? '',
+        phone: updated.phone ?? '', newPassword: '', confirmPassword: '' });
+      setSubmitted(false);
+      setServerFields({});
       toast.success('account.profileSaved');
     } catch (err) {
       if (isAppError(err) && err.fieldErrors) setServerFields(err.fieldErrors);
@@ -148,6 +157,7 @@ export default function ProfilePage() {
             <Input
               label={t('auth.email')}
               type="email"
+              required
               autoComplete="email"
               reserveMessageSpace
               maxLength={INPUT_LIMITS.email}
@@ -171,14 +181,6 @@ export default function ProfilePage() {
               error={fieldError('phone')}
             />
           </div>
-
-          <p
-            className={submitted && neitherProvided ? 'field__error' : 'muted'}
-            style={{ fontSize: '0.85rem', margin: '-4px 0 20px' }}
-            role={submitted && neitherProvided ? 'alert' : undefined}
-          >
-            {t('account.emailOrPhoneHint')}
-          </p>
 
           <div style={{ margin: '8px 0 20px', borderTop: '1px solid var(--border)', paddingTop: 20 }}>
             <h2 style={{ fontSize: '1.2rem', marginBottom: 4, color: 'var(--text)' }}>
@@ -219,7 +221,7 @@ export default function ProfilePage() {
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
-            <Button type="submit" size="lg" loading={busy}>
+            <Button type="submit" size="lg" loading={busy} disabled={!isDirty}>
               {t('account.saveProfile')}
             </Button>
           </div>

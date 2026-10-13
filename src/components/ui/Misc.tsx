@@ -62,6 +62,7 @@ export function Pagination({
           key={p}
           type="button"
           onClick={() => onChange(p)}
+          disabled={p === page}
           aria-current={p === page ? 'page' : undefined}
           aria-label={t('a11y.pageN', { n: p })}
         >

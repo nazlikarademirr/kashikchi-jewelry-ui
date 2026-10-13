@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { finalPrice, formatPrice, isMadeToOrder, localized, shortId } from './format';
+import { finalPrice, formatPrice, localized, shortId } from './format';
 import { sanitizeText, slugify, v } from './validation';
 import { mediaUrl } from './media';
 
@@ -8,11 +8,6 @@ describe('format', () => {
     expect(finalPrice({ price: 96500, discount: 10 })).toBe(86850);
     expect(finalPrice({ price: 100, discount: 0 })).toBe(100);
     expect(finalPrice({ price: 100, discount: 100 })).toBe(0);
-  });
-
-  it('stok 0 ise sipariş üzerine yapılır', () => {
-    expect(isMadeToOrder({ stock: 0 })).toBe(true);
-    expect(isMadeToOrder({ stock: 1 })).toBe(false);
   });
 
   it('dile göre metin seçer, eksikse varsayılana düşer', () => {
@@ -48,7 +43,7 @@ describe('validation', () => {
     expect(v.passwordMatch('abc12345', 'abc12346')).toBe('validation.passwordMatch');
   });
 
-  it('negatif stok ve fiyatı reddeder', () => {
+  it('negatif sayıları ve fiyatı reddeder', () => {
     expect(v.nonNegativeInt(-1)).toBe('validation.nonNegative');
     expect(v.nonNegativeInt(1.5)).toBe('validation.integer');
     expect(v.nonNegativeInt(0)).toBeNull();

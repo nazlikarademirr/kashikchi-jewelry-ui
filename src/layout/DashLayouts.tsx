@@ -60,7 +60,6 @@ export function AdminLayout() {
         { to: ROUTES.adminNotifications, label: 'admin.nav.notifications', badge: true },
         { to: ROUTES.adminMessages, label: 'admin.nav.messages' },
         { to: ROUTES.adminProducts, label: 'admin.nav.products' },
-        { to: ROUTES.adminStock, label: 'admin.nav.stock' },
         { to: ROUTES.adminCategories, label: 'admin.nav.categories' },
         { to: ROUTES.adminProfile, label: 'admin.nav.profile' },
         { to: ROUTES.adminDeletedOrders, label: 'admin.nav.deletedOrders' },
