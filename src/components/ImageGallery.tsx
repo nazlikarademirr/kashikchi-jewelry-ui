@@ -1,12 +1,57 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import type { Product } from '@/types';
 import { mediaUrl } from '@/utils/media';
 import { Icon } from './ui/Icon';
 
+function ImageZoom({ src, alt, onError }: { src: string; alt: string; onError: () => void }) {
+  const { t } = useI18n();
+  const [scale, setScale] = useState(1);
+  const viewport = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const node = viewport.current;
+    if (node) {
+      node.scrollLeft = (node.scrollWidth - node.clientWidth) / 2;
+      node.scrollTop = (node.scrollHeight - node.clientHeight) / 2;
+    }
+  }, [scale]);
+  return (
+    <>
+      <div className="gallery__zoom-controls">
+        <button type="button" className="icon-btn" disabled={scale <= 1} onClick={() => setScale((s) => s - 0.5)} aria-label={t('product.zoomOut')}>−</button>
+        <button type="button" className="icon-btn" disabled={scale >= 3} onClick={() => setScale((s) => s + 0.5)} aria-label={t('product.zoomIn')}>+</button>
+      </div>
+      <div
+        ref={viewport}
+        className={`image-zoom__viewport ${scale > 1 ? 'image-zoom__viewport--enlarged' : ''}`}
+        onDoubleClick={() => setScale((s) => s === 1 ? 2 : 1)}
+        onPointerDown={(e) => {
+          if (scale <= 1) return;
+          drag.current = { x: e.clientX, y: e.clientY, left: e.currentTarget.scrollLeft, top: e.currentTarget.scrollTop };
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }}
+        onPointerMove={(e) => {
+          if (!drag.current) return;
+          e.currentTarget.scrollLeft = drag.current.left - (e.clientX - drag.current.x);
+          e.currentTarget.scrollTop = drag.current.top - (e.clientY - drag.current.y);
+        }}
+        onPointerUp={() => { drag.current = null; }}
+        onPointerCancel={() => { drag.current = null; }}
+        onLostPointerCapture={() => { drag.current = null; }}
+      >
+        <div className="image-zoom__canvas" style={{ width: `${scale * 100}%`, height: `${scale * 100}%` }}>
+          <img src={src} alt={alt} draggable={false} onError={onError} decoding="async" />
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function ImageGallery({ product }: { product: Product }) {
   const { t, loc } = useI18n();
   const [index, setIndex] = useState(0);
+  const [failedKeys, setFailedKeys] = useState<Record<string, boolean>>({});
   const images = product.images;
   const name = loc(product.name);
   if (images.length === 0) {
@@ -22,7 +67,6 @@ export function ImageGallery({ product }: { product: Product }) {
     );
   }
   const current = images[Math.min(index, images.length - 1)];
-  const [failedKeys, setFailedKeys] = useState<Record<string, boolean>>({});
   const go = (d: number) => setIndex((i) => (i + d + images.length) % images.length);
 
   return (
@@ -38,14 +82,10 @@ export function ImageGallery({ product }: { product: Product }) {
     >
       <div className="gallery__main">
         {!failedKeys[current.storageKey] ? (
-          <img
+          <ImageZoom
             key={current.id}
-            className="fade-in"
             src={mediaUrl(current.storageKey)}
             alt={t('product.imageN', { name, n: index + 1, total: images.length })}
-            width={800}
-            height={800}
-            decoding="async"
             onError={() => setFailedKeys((prev) => ({ ...prev, [current.storageKey]: true }))}
           />
         ) : (
@@ -57,10 +97,10 @@ export function ImageGallery({ product }: { product: Product }) {
         {images.length > 1 && (
           <>
             <button type="button" className="gallery__nav gallery__nav--prev" onClick={() => go(-1)} aria-label={t('common.prev')}>
-              <Icon name="arrowLeft" size={18} />
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 3 8 12l7 9" /></svg>
             </button>
             <button type="button" className="gallery__nav gallery__nav--next" onClick={() => go(1)} aria-label={t('common.next')}>
-              <Icon name="arrowRight" size={18} />
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 3 7 9-7 9" /></svg>
             </button>
           </>
         )}
@@ -81,6 +121,7 @@ export function ImageGallery({ product }: { product: Product }) {
           ))}
         </div>
       )}
+
     </div>
   );
 }

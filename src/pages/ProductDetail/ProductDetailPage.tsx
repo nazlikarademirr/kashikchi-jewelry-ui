@@ -193,8 +193,15 @@ export default function ProductDetailPage() {
             )}
           </div>
 
+          {product.features?.trim() && (
+            <div className="product-info__features">
+              <h2>{t('admin.form.features')}</h2>
+              <p>{product.features}</p>
+            </div>
+          )}
+          {product.features?.trim() && description && <hr className="product-info__divider" />}
           {description && (
-            <p style={{ marginTop: 'var(--space-3)', marginBottom: 'var(--space-2)', color: 'var(--text-muted)' }}>
+            <p className="product-info__description">
               {description}
             </p>
           )}

@@ -5,6 +5,7 @@ import { Button } from './Button';
 import { Icon } from './Icon';
 
 interface ModalProps {
+  className?: string;
   open: boolean;
   title?: string;
   onClose: () => void;
@@ -15,7 +16,7 @@ interface ModalProps {
 const FOCUSABLE =
   'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-export function Modal({ open, title, onClose, children, footer }: ModalProps) {
+export function Modal({ open, title, onClose, children, footer, className }: ModalProps) {
   const { t } = useI18n();
   const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
@@ -68,7 +69,7 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
     >
       <div
         ref={ref}
-        className="modal"
+        className={`modal ${className ?? ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
