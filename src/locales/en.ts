@@ -166,6 +166,13 @@ export const en: Dictionary = {
   },
 
   product: {
+    weight: "Weight",
+    weightGrams: "Weight (g)",
+    metal: "Metal",
+    diamondColor: "Diamond Color",
+    diamondClarity: "Diamond Clarity",
+    metals: { whiteGold: "White Gold", yellowGold: "Yellow Gold", greenGold: "Green Gold", roseGold: "Rose Gold", platinum: "Platinum", silver: "Silver" },
+
     madeToOrder: "Made to Order",
     comingSoon: "Coming Soon",
     lowStock: "Last {n} in stock",
@@ -540,6 +547,13 @@ export const en: Dictionary = {
       activated: "Product published",
     },
     form: {
+      addFeature: "+ Add Feature",
+      featureName: "Feature Name",
+      featureDetail: "Detail",
+      removeFeature: "Remove Feature",
+
+      materialDetails: "Metal and Stone Details",
+      selectOrType: "Select or type",
       features: "Product Features",
       titleNew: "New Product",
       titleEdit: "Edit Product",

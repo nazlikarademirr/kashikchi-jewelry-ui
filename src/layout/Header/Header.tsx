@@ -10,7 +10,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { SUPPORTED_LOCALES } from '@/locales';
 import { Icon } from '@/components/ui/Icon';
 
-export function Logo({ noLink, variant }: { noLink?: boolean; variant?: 'light' | 'dark' }) {
+export function Logo({ noLink, variant, onClick }: { noLink?: boolean; variant?: 'light' | 'dark'; onClick?: () => void }) {
   const { t } = useI18n();
   const { theme } = useTheme();
 
@@ -38,7 +38,7 @@ export function Logo({ noLink, variant }: { noLink?: boolean; variant?: 'light' 
   }
 
   return (
-    <Link to={ROUTES.home} className="brand" aria-label={t('header.homeAria')}>
+    <Link to={ROUTES.home} className="brand" aria-label={t('header.homeAria')} onClick={onClick}>
       {content}
     </Link>
   );
@@ -125,19 +125,33 @@ function MobileNav({ onClose }: { onClose: () => void }) {
   const { tree } = useCategories();
   const { t, loc } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>('button, a')?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const previousOverflow = document.body.style.overflow;
+    closeRef.current?.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCloseRef.current();
+      if (e.key === 'Tab') {
+        const items = ref.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
+        if (!items?.length) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
       prev?.focus?.();
     };
-  }, [onClose]);
+  }, []);
 
   const cls = ({ isActive }: { isActive: boolean }) => (isActive ? 'active' : '');
   return (
@@ -145,14 +159,17 @@ function MobileNav({ onClose }: { onClose: () => void }) {
       <div className="mobile-nav__backdrop" onClick={onClose} />
       <div className="mobile-nav__panel" ref={ref}>
         <div className="mobile-nav__head">
-          <Logo />
-          <button type="button" className="icon-btn" onClick={onClose} aria-label={t('common.close')}>
+          <Logo onClick={onClose} />
+          <button ref={closeRef} type="button" className="icon-btn" onClick={onClose} aria-label={t('common.close')}>
             <Icon name="close" />
           </button>
         </div>
         <nav aria-label={t('a11y.mainNav')}>
           <NavLink to={ROUTES.home} end className={cls} onClick={onClose}>
             {t('nav.home')}
+          </NavLink>
+          <NavLink to={ROUTES.products} className={cls} onClick={onClose}>
+            {t('nav.allProducts')}
           </NavLink>
           {tree.map((c) => (
             <div key={c.id}>
@@ -168,9 +185,6 @@ function MobileNav({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           ))}
-          <NavLink to={ROUTES.products} className={cls} onClick={onClose}>
-            {t('nav.allProducts')}
-          </NavLink>
         </nav>
         <div className="mobile-nav__footer">
           <LanguageSwitcher />

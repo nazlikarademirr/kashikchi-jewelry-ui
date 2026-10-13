@@ -64,3 +64,7 @@ export type LegalDoc = typeof LEGAL_DOCS[number];
 
 export const GOLD_KARAT_OPTIONS = ['8K', '10K', '14K', '18K', '21K', '22K', '24K'] as const;
 export type GoldKaratOption = typeof GOLD_KARAT_OPTIONS[number];
+
+// GIA D–Z color scale and clarity grades; combined values remain editable.
+export const DIAMOND_COLOR_OPTIONS = Array.from({ length: 23 }, (_, i) => String.fromCharCode(68 + i));
+export const DIAMOND_CLARITY_OPTIONS = ['FL', 'IF', 'VVS1', 'VVS2', 'VS1', 'VS2', 'SI1', 'SI2', 'I1', 'I2', 'I3', 'VVS', 'VS', 'SI', 'VVS - VS', 'VS - SI', 'SI - I'];

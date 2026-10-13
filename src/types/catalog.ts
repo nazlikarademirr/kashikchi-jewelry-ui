@@ -54,6 +54,11 @@ export interface ProductImage {
   sortOrder: number;
 }
 
+export interface ProductFeature {
+  name: string;
+  detail: string;
+}
+
 export interface Product {
   id: string;
   slug: string;
@@ -61,6 +66,11 @@ export interface Product {
   code: string;
   description: LocalizedText;
   features?: string;
+  extraFeatures?: ProductFeature[];
+  weightGrams?: number | null;
+  metal?: string;
+  diamondColor?: string;
+  diamondClarity?: string;
   stock: number;
   category: string;
   subCategory: string | null;
@@ -80,6 +90,11 @@ export interface ProductInput {
   code: string;
   description: LocalizedText;
   features?: string;
+  extraFeatures?: ProductFeature[];
+  weightGrams?: number | null;
+  metal?: string;
+  diamondColor?: string;
+  diamondClarity?: string;
   stock: number;
   category: string;
   subCategory: string | null;

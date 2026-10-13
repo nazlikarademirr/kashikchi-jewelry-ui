@@ -164,6 +164,13 @@ export const tr = {
   },
 
   product: {
+    weight: "Ağırlık",
+    weightGrams: "Ağırlık (g)",
+    metal: "Maden",
+    diamondColor: "Pırlanta Rengi",
+    diamondClarity: "Pırlanta Berraklığı",
+    metals: { whiteGold: "Beyaz Altın", yellowGold: "Sarı Altın", greenGold: "Yeşil Altın", roseGold: "Roze Altın", platinum: "Platin", silver: "Gümüş" },
+
     madeToOrder: "Sipariş Üzerine Yapılır",
     comingSoon: "Yakında",
     lowStock: "Son {n} adet",
@@ -538,6 +545,13 @@ export const tr = {
       activated: "Ürün yayına alındı",
     },
     form: {
+      addFeature: "+ Özellik Ekle",
+      featureName: "Özellik İsmi",
+      featureDetail: "Detay",
+      removeFeature: "Özelliği Kaldır",
+
+      materialDetails: "Maden ve Taş Bilgileri",
+      selectOrType: "Seçin veya yazın",
       features: "Ürün Özellikleri",
       titleNew: "Yeni Ürün",
       titleEdit: "Ürünü Düzenle",

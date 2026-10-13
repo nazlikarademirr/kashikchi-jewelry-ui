@@ -26,7 +26,7 @@ const NOTE_MAX = INPUT_LIMITS.note;
 
 export default function ProductDetailPage() {
   const { id = '' } = useParams();
-  const { t, loc, carat, errorMessage } = useI18n();
+  const { t, loc, locale, carat, errorMessage } = useI18n();
   const { findTop, findSub } = useCategories();
   const { isAdmin } = useAuth();
   const cart = useCart();
@@ -63,6 +63,7 @@ export default function ProductDetailPage() {
 
   const name = product ? loc(product.name) : '';
   const description = product ? loc(product.description) : '';
+  const extraFeatures = product?.extraFeatures ?? [];
   useDocumentMeta({
     title: product ? name : t('product.metaFallback'),
     description: description.slice(0, 155),
@@ -191,15 +192,27 @@ export default function ProductDetailPage() {
                 <strong>{carat(product.carat)} {t('product.caratUnit')}</strong>
               </span>
             )}
+            {product.weightGrams != null && (
+              <span className="product-info__detail"><span className="muted">{t('product.weight')}</span><strong>{new Intl.NumberFormat(locale, { maximumFractionDigits: 3 }).format(product.weightGrams)} g</strong></span>
+            )}
+            {product.metal && (
+              <span className="product-info__detail"><span className="muted">{t('product.metal')}</span><strong>{product.metal}</strong></span>
+            )}
+            {product.diamondColor && (
+              <span className="product-info__detail"><span className="muted">{t('product.diamondColor')}</span><strong>{product.diamondColor}</strong></span>
+            )}
+            {product.diamondClarity && (
+              <span className="product-info__detail"><span className="muted">{t('product.diamondClarity')}</span><strong>{product.diamondClarity}</strong></span>
+            )}
+            {extraFeatures.map((feature, index) => (
+              <span className="product-info__detail product-info__detail--extra" key={`${feature.name}-${index}`}>
+                <span className="muted">{feature.name}</span>
+                <strong>{feature.detail}</strong>
+              </span>
+            ))}
           </div>
 
-          {product.features?.trim() && (
-            <div className="product-info__features">
-              <h2>{t('admin.form.features')}</h2>
-              <p>{product.features}</p>
-            </div>
-          )}
-          {product.features?.trim() && description && <hr className="product-info__divider" />}
+          {description && <hr className="product-info__divider" />}
           {description && (
             <p className="product-info__description">
               {description}

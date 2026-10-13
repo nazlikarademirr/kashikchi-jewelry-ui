@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, LinkButton } from '@/components/ui/Button';
-import { Input, Select, Textarea } from '@/components/ui/Input';
+import { ComboBox, Input, Select, Textarea } from '@/components/ui/Input';
+import { Icon } from '@/components/ui/Icon';
 import { Breadcrumb } from '@/components/ui/Misc';
 import { Alert, ErrorState, Skeleton } from '@/components/ui/State';
-import { GOLD_KARAT_OPTIONS, IMAGE_UPLOAD, INPUT_LIMITS } from '@/constants';
+import { DIAMOND_CLARITY_OPTIONS, DIAMOND_COLOR_OPTIONS, GOLD_KARAT_OPTIONS, IMAGE_UPLOAD, INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useCategories } from '@/contexts/CategoriesContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -14,12 +15,17 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
 import { isAppError, type Product, type ProductInput } from '@/types';
 import { mediaUrl } from '@/utils/media';
-import { sanitizeText, toTitleCase, v, type Validation } from '@/utils/validation';
+import { sanitizeText, toTitleCase, uid, v, type Validation } from '@/utils/validation';
 
 interface FormState {
   name: string;
   description: string;
   features: string;
+  extraFeatures: { id: string; name: string; detail: string }[];
+  weightGrams: string;
+  metal: string;
+  diamondColor: string;
+  diamondClarity: string;
   code: string;
   category: string;
   subCategory: string;
@@ -37,6 +43,11 @@ const EMPTY: FormState = {
   name: '',
   description: '',
   features: '',
+  extraFeatures: [],
+  weightGrams: '',
+  metal: '',
+  diamondColor: '',
+  diamondClarity: '',
   code: '',
   category: '',
   subCategory: '',
@@ -80,6 +91,11 @@ function fromProduct(p: Product): FormState {
     name: p.name.tr || p.name.en,
     description: p.description.tr || p.description.en,
     features: p.features ?? '',
+    extraFeatures: (p.extraFeatures ?? []).map((feature) => ({ ...feature, id: uid() })),
+    weightGrams: p.weightGrams != null ? String(p.weightGrams).replace('.', ',') : '',
+    metal: p.metal ?? '',
+    diamondColor: p.diamondColor ?? '',
+    diamondClarity: p.diamondClarity ?? '',
     code: p.code,
     category: p.category,
     subCategory: p.subCategory ?? '',
@@ -96,6 +112,12 @@ function fromProduct(p: Product): FormState {
 
 function isFormEqual(a: FormState, b: FormState): boolean {
   if (a.name.trim() !== b.name.trim()) return false;
+  if (a.weightGrams.trim().replace(',', '.') !== b.weightGrams.trim().replace(',', '.')) return false;
+  if (a.metal.trim() !== b.metal.trim() || a.diamondColor.trim() !== b.diamondColor.trim() || a.diamondClarity.trim() !== b.diamondClarity.trim()) return false;
+  const normalizedFeatures = (form: FormState) => form.extraFeatures
+    .filter((feature) => feature.name.trim() || feature.detail.trim())
+    .map((feature) => ({ name: feature.name.trim(), detail: feature.detail.trim() }));
+  if (JSON.stringify(normalizedFeatures(a)) !== JSON.stringify(normalizedFeatures(b))) return false;
   if (a.features.trim() !== b.features.trim()) return false;
   if (a.description.trim() !== b.description.trim()) return false;
   if (a.code.trim().toUpperCase() !== b.code.trim().toUpperCase()) return false;
@@ -129,12 +151,11 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
   const fileRef = useRef<HTMLInputElement>(null);
   const [savedForm, setSavedForm] = useState<FormState>(() => (product ? fromProduct(product) : EMPTY));
   const [form, setForm] = useState<FormState>(savedForm);
-  const featuresRef = useRef<HTMLTextAreaElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   useLayoutEffect(() => {
     const resize = () => {
-      for (const element of [featuresRef.current, descriptionRef.current]) {
+      for (const element of [descriptionRef.current]) {
         if (!element) continue;
         element.style.height = 'auto';
         const borders = element.offsetHeight - element.clientHeight;
@@ -144,7 +165,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
     resize();
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
-  }, [form.features, form.description]);
+  }, [form.description]);
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -179,6 +200,32 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
       return;
     }
     set('price')(val.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
+  };
+
+  const handleWeightChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (!/^\d*(,\d{0,3})?$/.test(value)) return;
+    set('weightGrams')(value.startsWith(',') ? `0${value}` : value);
+  };
+
+  const handleWeightKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.ctrlKey || e.metaKey || e.key.length !== 1) return;
+    if (!/^[0-9,]$/.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+    if (e.key === ',') {
+      const input = e.currentTarget;
+      const remaining = input.value.slice(0, input.selectionStart ?? 0) + input.value.slice(input.selectionEnd ?? 0);
+      if (remaining.includes(',')) e.preventDefault();
+    }
+  };
+
+  const handleWeightPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const next = input.value.slice(0, input.selectionStart ?? 0)
+      + e.clipboardData.getData('text') + input.value.slice(input.selectionEnd ?? 0);
+    if (!/^\d*(,\d{0,3})?$/.test(next)) e.preventDefault();
   };
 
   const handleCaratKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -270,6 +317,10 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
   const subCategories = topCategory?.children ?? [];
 
   const errors: Record<string, Validation> = {
+    weightGrams: isCaratValid(form.weightGrams.replace(',', '.')) ? null : 'validation.positive',
+    metal: v.maxLength(form.metal, 80),
+    diamondColor: v.maxLength(form.diamondColor, 80),
+    diamondClarity: v.maxLength(form.diamondClarity, 80),
     name: v.required(form.name),
     code: v.code(form.code),
     category: form.category ? null : 'validation.categoryInvalid',
@@ -280,6 +331,12 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
     stock: v.nonNegativeInt(parseIntNum(form.stock)),
     images: form.imageKeys.length > 0 ? null : 'validation.imagesRequired',
   };
+  form.extraFeatures.forEach((feature, index) => {
+    if (feature.name.trim() || feature.detail.trim()) {
+      errors[`extraFeatures[${index}].name`] = v.required(feature.name) || v.maxLength(feature.name, 80);
+      errors[`extraFeatures[${index}].detail`] = v.required(feature.detail) || v.maxLength(feature.detail, 1000);
+    }
+  });
   const hasErrors = Object.values(errors).some(Boolean);
 
   const err = (key: string): string | null => {
@@ -329,6 +386,12 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
       name: { tr: name, en: name },
       description: { tr: desc, en: desc },
       features: sanitizeText(form.features, INPUT_LIMITS.productDescription),
+      extraFeatures: form.extraFeatures.filter((feature) => feature.name.trim() || feature.detail.trim())
+        .map((feature) => ({ name: sanitizeText(feature.name, 80), detail: sanitizeText(feature.detail, 1000) })),
+      weightGrams: form.weightGrams.trim() ? Number(form.weightGrams.replace(',', '.')) : null,
+      metal: sanitizeText(form.metal, 80),
+      diamondColor: sanitizeText(form.diamondColor, 80),
+      diamondClarity: sanitizeText(form.diamondClarity, 80),
       code: form.code.trim().toLocaleUpperCase('tr-TR'),
       stock: Number(parseIntNum(form.stock)),
       category: form.category,
@@ -367,36 +430,104 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
   return (
     <form className="stack" onSubmit={submit} noValidate>
       <div className="card">
-        <h2 className="card__title">{t('admin.form.basics')}</h2>
         <div className="stack">
-          <Input
-            label={t('admin.form.code')}
-            required
-            maxLength={INPUT_LIMITS.productCode}
-            value={form.code}
-            style={{ textTransform: 'uppercase' }}
-            onChange={(e) => set('code')(e.target.value.toLocaleUpperCase('tr-TR'))}
-            error={err('code')}
-          />
-          <Input
-            label={t('admin.form.nameTr')}
-            required
-            maxLength={INPUT_LIMITS.productName}
-            value={form.name}
-            onChange={onText('name')}
-            onBlur={() => set('name')(toTitleCase(form.name))}
-            error={err('name')}
-          />
-          <Textarea
-            ref={featuresRef}
-            label={t('admin.form.features')}
-            style={{ resize: 'none', overflowY: 'hidden', boxSizing: 'border-box' }}
-            rows={3}
-            maxLength={INPUT_LIMITS.productDescription}
-            value={form.features}
-            onChange={onText('features')}
-            error={err('features')}
-          />
+          <div className="form-grid form-grid--2">
+            <Input
+              label={t('admin.form.code')}
+              required
+              maxLength={INPUT_LIMITS.productCode}
+              value={form.code}
+              style={{ textTransform: 'uppercase' }}
+              onChange={(e) => set('code')(e.target.value.toLocaleUpperCase('tr-TR'))}
+              error={err('code')}
+            />
+            <Input
+              label={t('admin.form.nameTr')}
+              required
+              maxLength={INPUT_LIMITS.productName}
+              value={form.name}
+              onChange={onText('name')}
+              onBlur={() => set('name')(toTitleCase(form.name))}
+              error={err('name')}
+            />
+            <Select
+              label={t('admin.form.category')}
+              required
+              value={form.category}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value, subCategory: '' }))}
+              error={err('category')}
+            >
+              <option value=""></option>
+              {tree.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name.tr}
+                </option>
+              ))}
+            </Select>
+            <Select label={t('admin.form.subCategory')} value={form.subCategory} onChange={onText('subCategory')} error={err('subCategory')}>
+              <option value=""></option>
+              {subCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name.tr}
+                </option>
+              ))}
+            </Select>
+            <Select
+              label={t('admin.form.goldKarat')}
+              required
+              value={form.goldKarat}
+              onChange={onText('goldKarat')}
+              error={err('goldKarat')}
+            >
+              {GOLD_KARAT_OPTIONS.map((k) => (
+                <option key={k} value={k}>
+                  {k}
+                </option>
+              ))}
+            </Select>
+            <Input
+              label={t('admin.form.carat')}
+              type="text"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={form.carat}
+              onKeyDown={handleCaratKeyDown}
+              onPaste={handleCaratPaste}
+              onChange={handleCaratChange}
+              onBlur={handleCaratBlur}
+              error={err('carat')}
+            />
+            <Input label={t('product.weightGrams')} inputMode="decimal" placeholder="5,13"
+              value={form.weightGrams} onChange={handleWeightChange} onKeyDown={handleWeightKeyDown} onPaste={handleWeightPaste}
+              onBlur={() => set('weightGrams')(form.weightGrams.replace(/,$/, ''))} maxLength={18} error={err('weightGrams')} />
+            <ComboBox label={t('product.metal')} value={form.metal} onChange={set('metal')}
+              options={[t('product.metals.whiteGold'), t('product.metals.yellowGold'), t('product.metals.greenGold'), t('product.metals.roseGold'), t('product.metals.platinum'), t('product.metals.silver')]}
+              placeholder={t('admin.form.selectOrType')} error={err('metal')} />
+            <ComboBox label={t('product.diamondColor')} value={form.diamondColor} onChange={set('diamondColor')}
+              options={DIAMOND_COLOR_OPTIONS} placeholder={t('admin.form.selectOrType')} error={err('diamondColor')} />
+            <ComboBox label={t('product.diamondClarity')} value={form.diamondClarity} onChange={set('diamondClarity')}
+              options={DIAMOND_CLARITY_OPTIONS} placeholder={t('admin.form.selectOrType')} error={err('diamondClarity')} />
+          </div>
+          <div className="product-feature-editor">
+            {form.extraFeatures.map((feature, index) => (
+              <div key={feature.id} className="product-feature-editor__row">
+                <Input label={t('admin.form.featureName')} value={feature.name} maxLength={80}
+                  onChange={(e) => set('extraFeatures')(form.extraFeatures.map((row) => row.id === feature.id ? { ...row, name: e.target.value } : row))}
+                  error={err(`extraFeatures[${index}].name`)} />
+                <Input label={t('admin.form.featureDetail')} value={feature.detail} maxLength={1000}
+                  onChange={(e) => set('extraFeatures')(form.extraFeatures.map((row) => row.id === feature.id ? { ...row, detail: e.target.value } : row))}
+                  error={err(`extraFeatures[${index}].detail`)} />
+                <Button type="button" variant="ghost" size="sm" className="product-feature-editor__remove" aria-label={t('admin.form.removeFeature')} title={t('admin.form.removeFeature')}
+                  onClick={() => set('extraFeatures')(form.extraFeatures.filter((row) => row.id !== feature.id))}>
+                  <Icon name="trash" />
+                </Button>
+              </div>
+            ))}
+            <Button type="button" variant="secondary" size="sm" className="product-feature-editor__add" disabled={form.extraFeatures.length >= 30}
+              onClick={() => set('extraFeatures')([...form.extraFeatures, { id: uid(), name: '', detail: '' }])}>
+              {t('admin.form.addFeature')}
+            </Button>
+          </div>
           <Textarea
             ref={descriptionRef}
             label={t('admin.form.descTr')}
@@ -411,61 +542,8 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
       </div>
 
       <div className="card">
-        <h2 className="card__title">{t('admin.form.classification')}</h2>
-        <div className="form-grid form-grid--2">
-          <Select
-            label={t('admin.form.category')}
-            required
-            value={form.category}
-            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value, subCategory: '' }))}
-            error={err('category')}
-          >
-            <option value=""></option>
-            {tree.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name.tr}
-              </option>
-            ))}
-          </Select>
-          <Select label={t('admin.form.subCategory')} value={form.subCategory} onChange={onText('subCategory')} error={err('subCategory')}>
-            <option value=""></option>
-            {subCategories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name.tr}
-              </option>
-            ))}
-          </Select>
-        </div>
-      </div>
-
-      <div className="card">
         <h2 className="card__title">{t('admin.form.pricing')}</h2>
-        <div className="form-grid form-grid--2">
-          <Select
-            label={t('admin.form.goldKarat')}
-            required
-            value={form.goldKarat}
-            onChange={onText('goldKarat')}
-            error={err('goldKarat')}
-          >
-            {GOLD_KARAT_OPTIONS.map((k) => (
-              <option key={k} value={k}>
-                {k}
-              </option>
-            ))}
-          </Select>
-          <Input
-            label={t('admin.form.carat')}
-            type="text"
-            inputMode="decimal"
-            placeholder="0.00"
-            value={form.carat}
-            onKeyDown={handleCaratKeyDown}
-            onPaste={handleCaratPaste}
-            onChange={handleCaratChange}
-            onBlur={handleCaratBlur}
-            error={err('carat')}
-          />
+        <div className="form-grid form-grid--3">
           <Input label={t('admin.form.price')} required type="text" inputMode="numeric" maxLength={INPUT_LIMITS.price} value={form.price} onChange={handlePriceChange} error={err('price')} />
           <Input label={t('admin.form.discount')} required type="number" min={0} max={100} step="1" inputMode="decimal" value={form.discount} onChange={onText('discount')} error={err('discount')} />
           <Input
