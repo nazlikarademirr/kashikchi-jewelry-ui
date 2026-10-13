@@ -7,7 +7,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useAsync } from '@/hooks/useAsync';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
-import { shortId } from '@/utils/format';
+import { orderCode } from '@/utils/format';
 
 export default function AdminDashboardPage() {
   const { t, price, date } = useI18n();
@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
             s.recentOrders.map((o) => (
               <Link key={o.id} to={ROUTES.adminOrder(o.id)} className="list-card">
                 <span>
-                  <strong>{t('orders.no', { no: shortId(o.id) })}</strong>
+                  <strong>{t('orders.no', { no: orderCode(o.id) })}</strong>
                   <br />
                   <span className="muted">
                     {o.customer.name} {o.customer.surname} · {date(o.createdAt)}

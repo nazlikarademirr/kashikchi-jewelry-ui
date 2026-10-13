@@ -60,6 +60,7 @@ export interface Product {
   name: LocalizedText;
   code: string;
   description: LocalizedText;
+  features?: string;
   stock: number;
   category: string;
   subCategory: string | null;
@@ -78,6 +79,7 @@ export interface ProductInput {
   name: LocalizedText;
   code: string;
   description: LocalizedText;
+  features?: string;
   stock: number;
   category: string;
   subCategory: string | null;

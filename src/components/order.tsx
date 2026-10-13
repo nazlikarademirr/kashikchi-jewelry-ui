@@ -23,37 +23,45 @@ export function OrderTimeline({ status, interactive, targetStatus, onSelectStatu
   const { t, date } = useI18n();
   const current = ORDER_STATUSES.indexOf(status);
   const target = targetStatus ? ORDER_STATUSES.indexOf(targetStatus) : current;
+  const effectiveIndex = interactive && targetStatus ? target : current;
+  const progressPercent = effectiveIndex <= 0 ? 0 : effectiveIndex === 1 ? 50 : 100;
 
   return (
-    <ol className={`timeline ${interactive ? 'timeline--interactive' : ''}`} aria-label={t('orders.progress')}>
-      {ORDER_STATUSES.map((s, i) => {
-        const isDone = i <= current;
-        const isTargeted = interactive && i > current && i <= target;
-        const isDisabled = interactive && i <= current; // geçmişe dönülemez
-        const stepDate = dates?.[s];
+    <div className={`timeline-wrap ${interactive ? 'timeline--interactive' : ''}`}>
+      <ol className="timeline" aria-label={t('orders.progress')}>
+        <div className="timeline__track" aria-hidden="true">
+          <div className="timeline__track-fill" style={{ width: `${progressPercent}%` }} />
+        </div>
+        {ORDER_STATUSES.map((s, i) => {
+          const isDone = i <= current;
+          const isTargeted = interactive && i > current && i <= target;
+          const isDisabled = interactive && i < current; // Kaydedilmiş durumdan önceye dönülemez; mevcut durum seçilebilir.
+          const stepDate = dates?.[s];
 
-        return (
-          <li
-            key={s}
-            className={`timeline__step ${isDone || isTargeted ? 'timeline__step--done' : ''} ${isDisabled ? 'timeline__step--disabled' : ''}`}
-            aria-current={i === current ? 'step' : undefined}
-            onClick={() => {
-              if (interactive && !isDisabled && onSelectStatus) {
-                onSelectStatus(s);
-              }
-            }}
-            style={{ cursor: interactive && !isDisabled ? 'pointer' : 'default' }}
-          >
-            <div>{t(`orderStatus.${s}`)}</div>
-            {stepDate && (
-              <div className="timeline__date muted" style={{ fontSize: '0.8rem', marginTop: 4 }}>
-                {date(stepDate)}
-              </div>
-            )}
-          </li>
-        );
-      })}
-    </ol>
+          return (
+            <li
+              key={s}
+              className={`timeline__step timeline__step--${i} ${isDone || isTargeted ? 'timeline__step--done' : ''} ${isDisabled ? 'timeline__step--disabled' : ''}`}
+              aria-current={i === current ? 'step' : undefined}
+              onClick={() => {
+                if (interactive && !isDisabled && onSelectStatus) {
+                  onSelectStatus(s);
+                }
+              }}
+              style={{ cursor: interactive && !isDisabled ? 'pointer' : 'default' }}
+            >
+              <div className="timeline__marker" aria-hidden="true" />
+              <div className="timeline__label">{t(`orderStatus.${s}`)}</div>
+              {stepDate && (
+                <div className="timeline__date muted" style={{ fontSize: '0.8rem', marginTop: 4 }}>
+                  {date(stepDate)}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
@@ -128,16 +136,22 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
 
   const resetTextarea = () => {
     setText('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = '56px';
+      el.style.overflowY = 'hidden';
     }
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      const borderOffset = el.offsetHeight - el.clientHeight;
+      const targetHeight = Math.min(Math.max(56, el.scrollHeight + borderOffset), 200);
+      el.style.height = `${targetHeight}px`;
+      el.style.overflowY = el.scrollHeight + borderOffset > 200 ? 'auto' : 'hidden';
     }
   };
 
@@ -177,7 +191,7 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
         })}
       </div>
       <form className="chat__form" onSubmit={send}>
-        <div className="grow">
+        <div className="chat__form-input">
           <Textarea
             ref={textareaRef}
             label={t('messages.label')}
@@ -185,7 +199,8 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
             value={text}
             maxLength={INPUT_LIMITS.message}
             onChange={handleInput}
-            style={{ overflow: 'hidden', resize: 'none' }}
+            reserveMessageSpace={false}
+            style={{ overflowY: 'hidden', resize: 'none' }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -194,9 +209,11 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
             }}
           />
         </div>
-        <Button type="submit" loading={busy} disabled={!text.trim()}>
-          {t('messages.send')}
-        </Button>
+        <div className="chat__form-actions">
+          <Button type="submit" loading={busy} disabled={!text.trim()}>
+            {t('messages.send')}
+          </Button>
+        </div>
       </form>
       {error && <Alert kind="error">{error}</Alert>}
     </div>

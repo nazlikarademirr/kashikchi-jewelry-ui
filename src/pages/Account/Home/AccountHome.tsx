@@ -10,7 +10,7 @@ import { useNotificationsBadge } from '@/contexts/NotificationsContext';
 import { useAsync } from '@/hooks/useAsync';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
-import { shortId } from '@/utils/format';
+import { orderCode } from '@/utils/format';
 
 export default function AccountHome() {
   const { t, date, price } = useI18n();
@@ -60,7 +60,7 @@ export default function AccountHome() {
         orders.data.slice(0, 3).map((o) => (
           <Link key={o.id} to={ROUTES.accountOrder(o.id)} className="list-card">
             <span>
-              <strong>{t('orders.no', { no: shortId(o.id) })}</strong>
+              <strong>{t('orders.no', { no: orderCode(o.id) })}</strong>
               <br />
               <span className="muted">{date(o.createdAt)}</span>
             </span>

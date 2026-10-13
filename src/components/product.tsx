@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LOW_STOCK_THRESHOLD, ORDER_STATUS_I18N } from '@/constants';
 import { ROUTES } from '@/constants/routes';
@@ -17,7 +17,7 @@ export function FavoriteButton({ productId, large }: { productId: string; large?
   const { isAdmin } = useAuth();
   const { has, toggle } = useFavorites();
   const requireCustomer = useRequireCustomer();
-  if (isAdmin) return null; 
+  if (isAdmin) return null;
   const active = has(productId);
   return (
     <button
@@ -68,6 +68,7 @@ export function PriceTag({ product, large }: { product: Pick<Product, 'price' | 
 
 export const ProductCard = memo(function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
   const { loc, carat, t } = useI18n();
+  const [imgFailed, setImgFailed] = useState(false);
   const img = product.images[0];
   const name = loc(product.name);
   return (
@@ -77,7 +78,7 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
       </div>
       <Link to={ROUTES.product(product.slug)} className="product-card__link" aria-label={name}>
         <div className="product-card__media">
-          {img ? (
+          {img && !imgFailed ? (
             <img
               src={mediaUrl(img.storageKey)}
               alt={name}
@@ -85,6 +86,7 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
               height={800}
               loading={priority ? 'eager' : 'lazy'}
               decoding="async"
+              onError={() => setImgFailed(true)}
             />
           ) : (
             <div className="product-card__placeholder">

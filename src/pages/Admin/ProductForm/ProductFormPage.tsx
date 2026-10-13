@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Input, Select, Textarea } from '@/components/ui/Input';
@@ -14,11 +14,12 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
 import { isAppError, type Product, type ProductInput } from '@/types';
 import { mediaUrl } from '@/utils/media';
-import { sanitizeText, v, type Validation } from '@/utils/validation';
+import { sanitizeText, toTitleCase, v, type Validation } from '@/utils/validation';
 
 interface FormState {
   name: string;
   description: string;
+  features: string;
   code: string;
   category: string;
   subCategory: string;
@@ -35,6 +36,7 @@ interface FormState {
 const EMPTY: FormState = {
   name: '',
   description: '',
+  features: '',
   code: '',
   category: '',
   subCategory: '',
@@ -77,6 +79,7 @@ function fromProduct(p: Product): FormState {
   return {
     name: p.name.tr || p.name.en,
     description: p.description.tr || p.description.en,
+    features: p.features ?? '',
     code: p.code,
     category: p.category,
     subCategory: p.subCategory ?? '',
@@ -93,6 +96,7 @@ function fromProduct(p: Product): FormState {
 
 function isFormEqual(a: FormState, b: FormState): boolean {
   if (a.name.trim() !== b.name.trim()) return false;
+  if (a.features.trim() !== b.features.trim()) return false;
   if (a.description.trim() !== b.description.trim()) return false;
   if (a.code.trim().toUpperCase() !== b.code.trim().toUpperCase()) return false;
   if (a.category !== b.category) return false;
@@ -125,6 +129,22 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
   const fileRef = useRef<HTMLInputElement>(null);
   const [savedForm, setSavedForm] = useState<FormState>(() => (product ? fromProduct(product) : EMPTY));
   const [form, setForm] = useState<FormState>(savedForm);
+  const featuresRef = useRef<HTMLTextAreaElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const resize = () => {
+      for (const element of [featuresRef.current, descriptionRef.current]) {
+        if (!element) continue;
+        element.style.height = 'auto';
+        const borders = element.offsetHeight - element.clientHeight;
+        element.style.height = `${element.scrollHeight + borders}px`;
+      }
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, [form.features, form.description]);
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -302,13 +322,14 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
     setSubmitted(true);
     setServerError(null);
     if (hasErrors || !isDirty) return;
-    const name = sanitizeText(form.name, INPUT_LIMITS.productName);
+    const name = toTitleCase(sanitizeText(form.name, INPUT_LIMITS.productName));
     const desc = sanitizeText(form.description, INPUT_LIMITS.productDescription);
     const caratNum = parseCarat(form.carat);
     const input: ProductInput = {
       name: { tr: name, en: name },
       description: { tr: desc, en: desc },
-      code: form.code.trim().toUpperCase(),
+      features: sanitizeText(form.features, INPUT_LIMITS.productDescription),
+      code: form.code.trim().toLocaleUpperCase('tr-TR'),
       stock: Number(parseIntNum(form.stock)),
       category: form.category,
       subCategory: form.subCategory || null,
@@ -353,7 +374,8 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
             required
             maxLength={INPUT_LIMITS.productCode}
             value={form.code}
-            onChange={(e) => set('code')(e.target.value.toUpperCase())}
+            style={{ textTransform: 'uppercase' }}
+            onChange={(e) => set('code')(e.target.value.toLocaleUpperCase('tr-TR'))}
             error={err('code')}
           />
           <Input
@@ -362,10 +384,23 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
             maxLength={INPUT_LIMITS.productName}
             value={form.name}
             onChange={onText('name')}
+            onBlur={() => set('name')(toTitleCase(form.name))}
             error={err('name')}
           />
           <Textarea
+            ref={featuresRef}
+            label={t('admin.form.features')}
+            style={{ resize: 'none', overflowY: 'hidden', boxSizing: 'border-box' }}
+            rows={3}
+            maxLength={INPUT_LIMITS.productDescription}
+            value={form.features}
+            onChange={onText('features')}
+            error={err('features')}
+          />
+          <Textarea
+            ref={descriptionRef}
             label={t('admin.form.descTr')}
+            style={{ resize: 'none', overflowY: 'hidden', boxSizing: 'border-box' }}
             rows={4}
             maxLength={INPUT_LIMITS.productDescription}
             value={form.description}
@@ -502,11 +537,14 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
         <h2 className="card__title">{t('admin.form.visibility')}</h2>
         <div className="form-grid form-grid--2">
           <label className="checkbox">
-            <input type="checkbox" checked={form.isActive} onChange={(e) => set('isActive')(e.target.checked)} />
+            <input type="checkbox" checked={form.isActive} onChange={(e) => {
+              const isActive = e.target.checked;
+              setForm((prev) => ({ ...prev, isActive, featured: isActive && prev.featured }));
+            }} />
             {t('admin.form.isActive')}
           </label>
           <label className="checkbox">
-            <input type="checkbox" checked={form.featured} onChange={(e) => set('featured')(e.target.checked)} />
+            <input type="checkbox" checked={form.featured} disabled={!form.isActive} onChange={(e) => set('featured')(e.target.checked)} />
             {t('admin.form.featured')}
           </label>
         </div>

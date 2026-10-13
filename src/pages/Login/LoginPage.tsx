@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthShell } from '@/components/AuthShell';
-import { Button } from '@/components/ui/Button';
+import { Button, LinkButton } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
@@ -23,7 +23,6 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [serverErrorCode, setServerErrorCode] = useState<string | null>(null);
   const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
-  const [showForgot, setShowForgot] = useState(false);
   useDocumentMeta({ title: t('auth.loginMeta'), noindex: true });
 
   const isLockedOut = Boolean(lockoutSeconds !== null && lockoutSeconds > 0);
@@ -68,7 +67,7 @@ export default function LoginPage() {
     if (identifierError || passwordError) return;
     setBusy(true);
     try {
-      await login({ email: identifierVal, password });
+      await login({ email: identifierVal.toLowerCase(), password });
       toast.success('auth.loggedIn');
     } catch (err) {
       if (isAppError(err)) {
@@ -102,8 +101,9 @@ export default function LoginPage() {
           reserveMessageSpace={2}
           maxLength={INPUT_LIMITS.email}
           value={identifier}
+          style={{ textTransform: 'lowercase' }}
           onChange={(e) => {
-            setIdentifier(e.target.value);
+            setIdentifier(e.target.value.toLowerCase());
             clearErrors();
           }}
           error={
@@ -119,7 +119,7 @@ export default function LoginPage() {
           type="password"
           autoComplete="current-password"
           required
-          reserveMessageSpace={2}
+          reserveMessageSpace={1}
           maxLength={INPUT_LIMITS.password}
           value={password}
           onChange={(e) => {
@@ -136,16 +136,16 @@ export default function LoginPage() {
               : null
           }
         />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 0, marginBottom: showForgot ? 8 : 14 }}>
-          <Button type="button" variant="ghost" size="sm" aria-expanded={showForgot} onClick={() => setShowForgot((s) => !s)} style={{ padding: '4px 8px', height: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, marginBottom: 12 }}>
+          <LinkButton
+            to={ROUTES.forgotPassword}
+            variant="ghost"
+            size="sm"
+            style={{ padding: '4px 8px', height: 'auto' }}
+          >
             {t('auth.forgot')}
-          </Button>
+          </LinkButton>
         </div>
-        {showForgot && (
-          <p className="muted" style={{ fontSize: '0.85rem', margin: '0 0 16px', textAlign: 'right' }}>
-            {t('auth.forgotSoon')}
-          </p>
-        )}
         <Button type="submit" size="lg" block loading={busy} disabled={isLockedOut}>
           {t('auth.loginSubmit')}
         </Button>

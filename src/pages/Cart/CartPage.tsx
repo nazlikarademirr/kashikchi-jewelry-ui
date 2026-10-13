@@ -17,7 +17,8 @@ import { services } from '@/services';
 import type { CartItem } from '@/types';
 import { finalPrice } from '@/utils/format';
 import { mediaUrl } from '@/utils/media';
-import { v } from '@/utils/validation';
+import { formatPhoneNumber } from '@/utils/phone';
+import { toTitleCase, v } from '@/utils/validation';
 
 function CartLine({ item }: { item: CartItem }) {
   const { t, loc, price, errorMessage } = useI18n();
@@ -28,7 +29,10 @@ function CartLine({ item }: { item: CartItem }) {
   const [confirm, setConfirm] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const p = item.product;
-  const maxQty = p.stock > 0 ? Math.min(p.stock, MAX_CART_QUANTITY) : MAX_CART_QUANTITY;
+  const maxQty = MAX_CART_QUANTITY;
+  const productQuantity = cart.items.filter((line) => line.product.id === p.id).reduce((sum, line) => sum + line.quantity, 0);
+  const madeToOrderQuantity = Math.max(0, productQuantity - p.stock);
+  const showStockNotice = madeToOrderQuantity > 0 && cart.items.find((line) => line.product.id === p.id)?.id === item.id;
   const name = loc(p.name);
 
   const adjustTextareaHeight = () => {
@@ -97,6 +101,11 @@ function CartLine({ item }: { item: CartItem }) {
           </Button>
         </div>
       </div>
+      {showStockNotice && (
+        <div className="cart-line__note">
+          <Alert kind="info">{t('cart.stockNotice', { stock: p.stock, remaining: madeToOrderQuantity })}</Alert>
+        </div>
+      )}
       <div className="cart-line__note">
         <Textarea
           ref={textareaRef}
@@ -110,7 +119,7 @@ function CartLine({ item }: { item: CartItem }) {
             setNote(e.target.value);
             e.target.style.height = 'auto';
             const borderOffset = e.target.offsetHeight - e.target.clientHeight;
-            e.target.style.height = `${e.target.scrollHeight + borderOffset}px`;
+            e.target.style.height = `${Math.max(44, e.target.scrollHeight + borderOffset)}px`;
           }}
           onBlur={() => {
             if (!isOver && note !== item.customizationNote) void run(() => cart.updateNote(item.id, note));
@@ -146,7 +155,7 @@ export default function CartPage() {
 
   const [fullName, setFullName] = useState(() => (user ? `${user.name} ${user.surname}`.trim() : ''));
   const [email, setEmail] = useState(() => user?.email ?? '');
-  const [phone, setPhone] = useState(() => user?.phone ?? '');
+  const [phone, setPhone] = useState(() => formatPhoneNumber(user?.phone ?? ''));
   const [orderNote, setOrderNote] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -158,7 +167,7 @@ export default function CartPage() {
     if (user) {
       setFullName((f) => f || `${user.name} ${user.surname}`.trim());
       setEmail((e) => e || user.email || '');
-      setPhone((p) => p || user.phone || '');
+      setPhone((p) => p || formatPhoneNumber(user.phone ?? ''));
     }
   }, [user]);
 
@@ -171,13 +180,18 @@ export default function CartPage() {
     e.preventDefault();
     setSubmitted(true);
     setServerError(null);
-    if (hasErrors) return;
+    if (hasErrors) {
+      const missingRequired = nameError === 'validation.required' || phoneError === 'validation.required';
+      toast.error(t(missingRequired ? 'checkout.requiredContact' : 'checkout.invalidContact'));
+      return;
+    }
     setBusy(true);
     try {
-      const parts = fullName.trim().split(/\s+/);
+      const formattedFullName = toTitleCase(fullName.trim());
+      const parts = formattedFullName.split(/\s+/);
       const newName = parts[0] || (user?.name ?? '');
       const newSurname = parts.slice(1).join(' ') || (user?.surname ?? '');
-      const newEmail = email.trim() || null;
+      const newEmail = email.trim().toLowerCase() || null;
       const newPhone = phone.trim();
 
       const profileChanged =
@@ -198,7 +212,6 @@ export default function CartPage() {
 
       const order = await services.orders.create({ contactPhone: newPhone, customerNote: orderNote });
       reset();
-      toast.success('checkout.success');
       navigate(ROUTES.accountOrder(order.id), { replace: true, state: { justCreated: true } });
     } catch (err) {
       setServerError(errorMessage(err));
@@ -243,6 +256,7 @@ export default function CartPage() {
                       maxLength={INPUT_LIMITS.name + INPUT_LIMITS.surname}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
+                      onBlur={() => setFullName((f) => toTitleCase(f))}
                       error={submitted && nameError ? tDynamic(nameError) : null}
                     />
                     <Input
@@ -250,7 +264,9 @@ export default function CartPage() {
                       type="email"
                       maxLength={INPUT_LIMITS.email}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      style={{ textTransform: 'lowercase' }}
+                      onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                      onBlur={() => setEmail((e) => e.trim().toLowerCase())}
                       error={submitted && emailError ? tDynamic(emailError) : null}
                     />
                   </div>
@@ -261,9 +277,9 @@ export default function CartPage() {
                       required
                       maxLength={INPUT_LIMITS.phone}
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
                       error={submitted && phoneError ? tDynamic(phoneError) : null}
-                      placeholder="+90 5xx xxx xx xx"
+                      placeholder="+90 532 123 45 67"
                     />
                   </div>
                   <div className="form-grid" style={{ marginTop: 'var(--space-4)' }}>

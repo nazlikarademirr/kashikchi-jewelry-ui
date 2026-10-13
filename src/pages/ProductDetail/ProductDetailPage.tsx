@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ImageGallery, QuantityStepper } from '@/components/ImageGallery';
-import { FavoriteButton, PriceTag, StockBadge } from '@/components/product';
+import { FavoriteButton, PriceTag } from '@/components/product';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Textarea, Input } from '@/components/ui/Input';
 import { Breadcrumb } from '@/components/ui/Misc';
 import { Modal } from '@/components/ui/Modal';
 import { ErrorState, Skeleton } from '@/components/ui/State';
-import { INPUT_LIMITS, MAX_CART_QUANTITY } from '@/constants';
+import { INPUT_LIMITS, LOW_STOCK_THRESHOLD, MAX_CART_QUANTITY } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
@@ -110,7 +110,7 @@ export default function ProductDetailPage() {
 
   const top = findTop(product.category);
   const sub = product.subCategory ? findSub(product.category, product.subCategory) : undefined;
-  const maxQty = product.stock > 0 ? Math.min(product.stock, MAX_CART_QUANTITY) : MAX_CART_QUANTITY;
+  const maxQty = MAX_CART_QUANTITY;
   const isRing = product.category === 'yuzuk';
 
   const isNoteOverLimit = note.length > NOTE_MAX;
@@ -159,16 +159,38 @@ export default function ProductDetailPage() {
           <div className="row row--between" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
             <div style={{ minWidth: 0, flex: 1, paddingRight: 'var(--space-3)' }}>
               <h1>{name}</h1>
-              <p className="product-info__code">
-                {t('product.code')}: {product.code}
-              </p>
             </div>
             <FavoriteButton productId={product.id} large />
           </div>
 
+          <p className="product-info__code">
+            {t('product.code')}: {product.code}
+          </p>
+
           <div className="row" style={{ gap: 'var(--space-4)' }}>
             <PriceTag product={product} large />
-            <StockBadge stock={product.stock} />
+          </div>
+
+          <div className="product-info__details">
+            <span className="product-info__detail">
+              <strong>{product.stock <= 0
+                ? t('product.madeToOrder')
+                : product.stock <= LOW_STOCK_THRESHOLD
+                ? t('product.lowStock', { n: product.stock })
+                : t('product.inStock')}</strong>
+            </span>
+            {product.goldKarat && (
+              <span className="product-info__detail">
+                <span className="muted">{t('product.goldKarat')}</span>
+                <strong>{product.goldKarat}</strong>
+              </span>
+            )}
+            {product.carat != null && product.carat > 0 && (
+              <span className="product-info__detail">
+                <span className="muted">{t('product.carat')}</span>
+                <strong>{carat(product.carat)} {t('product.caratUnit')}</strong>
+              </span>
+            )}
           </div>
 
           {description && (
@@ -177,40 +199,7 @@ export default function ProductDetailPage() {
             </p>
           )}
 
-          <dl className="product-info__specs">
-            <div className="spec">
-              <dt>{t('product.goldKarat')}</dt>
-              <dd>{product.goldKarat || '—'}</dd>
-            </div>
-            {product.carat != null && product.carat > 0 ? (
-              <div className="spec">
-                <dt>{t('product.carat')}</dt>
-                <dd>{carat(product.carat)} {t('product.caratUnit')}</dd>
-              </div>
-            ) : null}
-            {top ? (
-              <div className="spec">
-                <dt>{t('product.category')}</dt>
-                <dd>{loc(top.name)}</dd>
-              </div>
-            ) : null}
-            {isAdmin ? (
-              <div className="spec">
-                <dt>{t('product.subCategory')}</dt>
-                <dd>{sub ? loc(sub.name) : product.subCategory || '—'}</dd>
-              </div>
-            ) : sub ? (
-              <div className="spec">
-                <dt>{t('product.subCategory')}</dt>
-                <dd>{loc(sub.name)}</dd>
-              </div>
-            ) : (
-              <div className="spec">
-                <dt>{t('product.code')}</dt>
-                <dd>{product.code}</dd>
-              </div>
-            )}
-          </dl>
+
 
           <div className="product-info__actions">
             {!isAdmin && product.stock <= 0 && (

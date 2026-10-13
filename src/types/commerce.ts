@@ -43,6 +43,17 @@ export interface Order {
   updatedAt: string;
   inProductionAt: string | null;
   readyAt: string | null;
+  isDeleted: boolean;
+  deletedAt: string | null;
+  deletionReason: string | null;
+  deletionNote: string | null;
+}
+
+export type DeleteOrderReason = 'ORDER_CANCELLED' | 'WRONG_ORDER' | 'TEST_ORDER' | 'OTHER';
+
+export interface DeleteOrderInput {
+  reason: DeleteOrderReason;
+  note?: string;
 }
 
 export interface CreateOrderInput {
@@ -52,6 +63,7 @@ export interface CreateOrderInput {
 
 export interface OrderFilter {
   status?: OrderStatus;
+  isDeleted?: boolean;
 }
 
 export type NotificationType = 'ORDER_CREATED' | 'ORDER_STATUS_CHANGED' | 'NEW_MESSAGE';

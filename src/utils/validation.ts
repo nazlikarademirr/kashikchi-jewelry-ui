@@ -77,3 +77,11 @@ export function slugify(input: string): string {
 export function uid(): string {
   return crypto.randomUUID();
 }
+
+export function toTitleCase(input: string, locale = 'tr-TR'): string {
+  if (!input) return '';
+  return input.trim().replace(/\p{L}+/gu, (word) => {
+    if (word.length === 1) return word.toLocaleUpperCase(locale);
+    return word.slice(0, 1).toLocaleUpperCase(locale) + word.slice(1).toLocaleLowerCase(locale);
+  });
+}

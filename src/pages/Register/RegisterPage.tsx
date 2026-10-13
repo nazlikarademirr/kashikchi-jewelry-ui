@@ -10,7 +10,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { isAppError } from '@/types';
-import { sanitizeText, v } from '@/utils/validation';
+import { sanitizeText, toTitleCase, v } from '@/utils/validation';
 
 export default function RegisterPage() {
   const { t, tDynamic, errorMessage } = useI18n();
@@ -30,24 +30,23 @@ export default function RegisterPage() {
 
   const emailVal = form.email.trim();
   const phoneVal = form.phone.trim();
-  const neitherProvided = !emailVal && !phoneVal;
 
   const errors = {
     name: v.required(form.name),
     surname: v.required(form.surname),
-    email: v.optionalEmail(emailVal),
+    email: v.email(emailVal),
     phone: v.optionalPhone(phoneVal),
     password: v.password(form.password),
     passwordRepeat: v.passwordMatch(form.passwordRepeat, form.password),
   };
-  const hasErrors = Object.values(errors).some(Boolean) || neitherProvided;
+  const hasErrors = Object.values(errors).some(Boolean);
   const hasServerFieldErrors = Object.values(serverFields).some(Boolean);
 
   const fieldError = (key: keyof typeof errors) => {
     const local = submitted ? errors[key] : null;
     const remote = serverFields[key] || serverFields[key.charAt(0).toUpperCase() + key.slice(1)];
     const code = local ?? (remote || null);
-    if (!code || code === 'validation.emailOrPhoneRequired') return null;
+    if (!code) return null;
     return tDynamic(code);
   };
 
@@ -59,9 +58,9 @@ export default function RegisterPage() {
     setBusy(true);
     try {
       await register({
-        name: sanitizeText(form.name, INPUT_LIMITS.name),
-        surname: sanitizeText(form.surname, INPUT_LIMITS.surname),
-        email: emailVal ? emailVal.toLowerCase() : undefined,
+        name: toTitleCase(sanitizeText(form.name, INPUT_LIMITS.name)),
+        surname: toTitleCase(sanitizeText(form.surname, INPUT_LIMITS.surname)),
+        email: emailVal.toLowerCase(),
         phone: phoneVal || undefined,
         password: form.password,
       });
@@ -86,6 +85,7 @@ export default function RegisterPage() {
             maxLength={INPUT_LIMITS.name}
             value={form.name}
             onChange={set('name')}
+            onBlur={() => setForm((f) => ({ ...f, name: toTitleCase(f.name) }))}
             error={fieldError('name')}
           />
           <Input
@@ -96,6 +96,7 @@ export default function RegisterPage() {
             maxLength={INPUT_LIMITS.surname}
             value={form.surname}
             onChange={set('surname')}
+            onBlur={() => setForm((f) => ({ ...f, surname: toTitleCase(f.surname) }))}
             error={fieldError('surname')}
           />
         </div>
@@ -103,10 +104,16 @@ export default function RegisterPage() {
           label={t('auth.email')}
           type="email"
           autoComplete="email"
+          required
           reserveMessageSpace
           maxLength={INPUT_LIMITS.email}
           value={form.email}
-          onChange={set('email')}
+          style={{ textTransform: 'lowercase' }}
+          onChange={(e) => {
+            setForm((f) => ({ ...f, email: e.target.value.toLowerCase() }));
+            setServerFields((s) => (s.email ? { ...s, email: '' } : s));
+          }}
+          onBlur={() => setForm((f) => ({ ...f, email: f.email.trim().toLowerCase() }))}
           error={fieldError('email')}
         />
         <Input
@@ -119,13 +126,6 @@ export default function RegisterPage() {
           onChange={set('phone')}
           error={fieldError('phone')}
         />
-        <p
-          className={submitted && neitherProvided ? 'field__error' : 'muted'}
-          style={{ fontSize: '0.82rem', margin: '-6px 0 12px' }}
-          role={submitted && neitherProvided ? 'alert' : undefined}
-        >
-          {t('auth.emailOrPhoneHint')}
-        </p>
         <Input
           label={t('auth.password')}
           type="password"

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { DeleteOrderModal } from '@/components/DeleteOrderModal';
 import { OrderStatusBadge } from '@/components/product';
+import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Input';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/State';
 import { ORDER_STATUSES } from '@/constants';
@@ -9,12 +11,13 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useAsync } from '@/hooks/useAsync';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
-import type { OrderStatus } from '@/types';
-import { shortId } from '@/utils/format';
+import type { Order, OrderStatus } from '@/types';
+import { orderCode } from '@/utils/format';
 
 export default function AdminOrdersPage() {
   const { t, price, date } = useI18n();
   const [status, setStatus] = useState<OrderStatus | ''>('');
+  const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
   const orders = useAsync(() => services.orders.list(status ? { status } : undefined), [status]);
   useDocumentMeta({ title: t('admin.orders.title'), noindex: true });
 
@@ -58,7 +61,7 @@ export default function AdminOrdersPage() {
                 <th scope="col">{t('admin.orders.colDate')}</th>
                 <th scope="col">{t('admin.orders.colTotal')}</th>
                 <th scope="col">{t('admin.orders.colStatus')}</th>
-                <th scope="col">
+                <th scope="col" style={{ textAlign: 'right' }}>
                   <span className="sr-only">{t('admin.orders.view')}</span>
                 </th>
               </tr>
@@ -67,7 +70,7 @@ export default function AdminOrdersPage() {
               {orders.data.map((o) => (
                 <tr key={o.id}>
                   <td className="nowrap">
-                    <strong>#{shortId(o.id)}</strong>
+                    <strong>{orderCode(o.id)}</strong>
                   </td>
                   <td>
                     {o.customer.name} {o.customer.surname}
@@ -77,8 +80,20 @@ export default function AdminOrdersPage() {
                   <td>
                     <OrderStatusBadge status={o.status} />
                   </td>
-                  <td>
-                    <Link to={ROUTES.adminOrder(o.id)}>{t('admin.orders.view')}</Link>
+                  <td className="nowrap" style={{ textAlign: 'right' }}>
+                    <div className="row" style={{ justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+                      <Link to={ROUTES.adminOrder(o.id)} className="btn btn--sm btn--ghost">
+                        {t('admin.orders.view')}
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        style={{ color: 'var(--danger)' }}
+                        onClick={() => setDeleteTarget(o)}
+                      >
+                        {t('deleteOrder.deleteBtn')}
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -86,6 +101,16 @@ export default function AdminOrdersPage() {
           </table>
         </div>
       )}
+
+      <DeleteOrderModal
+        open={!!deleteTarget}
+        orderId={deleteTarget?.id ?? null}
+        orderNo={deleteTarget ? orderCode(deleteTarget.id) : undefined}
+        onClose={() => setDeleteTarget(null)}
+        onDeleted={() => {
+          orders.reload();
+        }}
+      />
     </>
   );
 }

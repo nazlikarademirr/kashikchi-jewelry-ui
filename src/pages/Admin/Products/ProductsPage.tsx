@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { StockBadge } from '@/components/product';
 import { Button, LinkButton } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Misc';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/State';
@@ -92,12 +92,15 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="nowrap">{p.code}</td>
                   <td>
-                    <StockBadge stock={p.stock} />
+                    {p.stock}
                   </td>
                   <td className="nowrap">
                     {p.discount > 0 ? (
                       <>
-                        {price(finalPrice(p))} <span className="muted">(%{p.discount})</span>
+                        {price(finalPrice(p))}{' '}
+                        <span className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <span>(%{p.discount}</span><span style={{ display: 'inline-flex', alignItems: 'center' }}><Icon name="arrowDown" size={16} />)</span>
+                        </span>
                       </>
                     ) : (
                       price(p.price)

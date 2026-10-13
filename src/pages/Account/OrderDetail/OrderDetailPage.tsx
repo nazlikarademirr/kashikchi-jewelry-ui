@@ -2,14 +2,14 @@ import { useLocation, useParams } from 'react-router-dom';
 import { MessagePanel, OrderItemsList, OrderTimeline } from '@/components/order';
 import { OrderStatusBadge } from '@/components/product';
 import { LinkButton } from '@/components/ui/Button';
-import { Breadcrumb } from '@/components/ui/Misc';
+import { Badge, Breadcrumb } from '@/components/ui/Misc';
 import { Alert, ErrorState, Skeleton } from '@/components/ui/State';
 import { ROUTES } from '@/constants/routes';
 import { useI18n } from '@/contexts/I18nContext';
 import { useAsync } from '@/hooks/useAsync';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
-import { shortId } from '@/utils/format';
+import { orderCode } from '@/utils/format';
 
 export default function AccountOrderDetailPage() {
   const { id = '' } = useParams();
@@ -18,7 +18,7 @@ export default function AccountOrderDetailPage() {
   const { t, date, price } = useI18n();
   const order = useAsync(() => services.orders.get(id), [id]);
   const o = order.data;
-  useDocumentMeta({ title: o ? t('orders.no', { no: shortId(o.id) }) : t('orders.title'), noindex: true });
+  useDocumentMeta({ title: o ? t('orders.no', { no: orderCode(o.id) }) : t('orders.title'), noindex: true });
 
   if (order.loading) return <Skeleton style={{ height: 320 }} />;
   if (order.error || !o) {
@@ -30,7 +30,7 @@ export default function AccountOrderDetailPage() {
       <Breadcrumb
         items={[
           { label: t('orders.title'), to: ROUTES.accountOrders },
-          { label: t('orders.no', { no: shortId(o.id) }) },
+          { label: t('orders.no', { no: orderCode(o.id) }) },
         ]}
       />
       {justCreated && (
@@ -38,20 +38,35 @@ export default function AccountOrderDetailPage() {
           {t('checkout.orderCreatedBanner')}
         </Alert>
       )}
-      <div className="dash__head">
+      {o.isDeleted && (
+        <Alert kind="warning">
+          <strong>{t('orders.cancelledNotice')}</strong>
+        </Alert>
+      )}
+      <div className="dash__head order-detail__head">
         <div>
-          <h1>{t('orders.no', { no: shortId(o.id) })}</h1>
-          <p className="muted" style={{ margin: 0 }}>
-            {t('orders.date')}: {date(o.createdAt, true)}
-          </p>
+          <h1 className="order-detail__title">
+            <span>{orderCode(o.id)}</span>
+            <span className="order-detail__date muted">- {date(o.createdAt, true)}</span>
+          </h1>
         </div>
-        <OrderStatusBadge status={o.status} />
+        {o.isDeleted ? (
+          <Badge kind="danger" dot>{t('orderStatus.CANCELLED')}</Badge>
+        ) : (
+          <OrderStatusBadge status={o.status} />
+        )}
       </div>
 
       <div className="card">
         <h2 className="card__title">{t('orders.progress')}</h2>
-        <OrderTimeline status={o.status} />
-        <p style={{ margin: 0 }}>{t(`orders.statusText.${o.status}`)}</p>
+        {o.isDeleted ? (
+          <p style={{ margin: 0, color: 'var(--danger)' }}>{t('orders.cancelledNotice')}</p>
+        ) : (
+          <>
+            <OrderTimeline status={o.status} />
+            <p style={{ margin: 0 }}>{t(`orders.statusText.${o.status}`)}</p>
+          </>
+        )}
       </div>
 
       <div className="card">

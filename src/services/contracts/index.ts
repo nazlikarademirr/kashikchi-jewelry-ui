@@ -5,6 +5,7 @@ import type {
   CategoryInput,
   CreateOrderInput,
   DashboardStats,
+  DeleteOrderInput,
   LoginInput,
   Message,
   MessageThread,
@@ -28,6 +29,8 @@ export interface AuthService {
   logout(): Promise<void>;
   me(): Promise<User | null>;
   updateProfile(input: UpdateProfileInput): Promise<User>;
+  forgotPassword(email: string): Promise<void>;
+  resetPassword(input: { email: string; token: string; newPassword: string }): Promise<void>;
 }
 
 export interface CategoryService {
@@ -65,10 +68,12 @@ export interface CartService {
 }
 
 export interface OrderService {
-    create(input: CreateOrderInput): Promise<Order>;
-    list(filter?: OrderFilter): Promise<Order[]>;
+  create(input: CreateOrderInput): Promise<Order>;
+  list(filter?: OrderFilter): Promise<Order[]>;
+  listDeleted(): Promise<Order[]>;
   get(id: string): Promise<Order>;
   updateStatus(id: string, status: OrderStatus): Promise<Order>;
+  delete(id: string, input: DeleteOrderInput): Promise<Order>;
 }
 
 export interface NotificationService {

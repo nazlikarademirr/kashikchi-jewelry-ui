@@ -12,6 +12,7 @@ import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
 import type { Notification } from '@/types';
 import type { TranslationKey } from '@/locales';
+import { orderCode } from '@/utils/format';
 
 export default function NotificationsPage() {
   const { t, tDynamic, date, errorMessage } = useI18n();
@@ -47,8 +48,13 @@ export default function NotificationsPage() {
       toast.error(errorMessage(e));
       return;
     }
-    if (n.orderId) navigate(isAdmin ? ROUTES.adminOrder(n.orderId) : ROUTES.accountOrder(n.orderId));
-    else list.reload();
+    if (n.type === 'NEW_MESSAGE') {
+      navigate(isAdmin ? ROUTES.adminMessages : ROUTES.accountMessages);
+    } else if (n.orderId) {
+      navigate(isAdmin ? ROUTES.adminOrder(n.orderId) : ROUTES.accountOrder(n.orderId));
+    } else {
+      list.reload();
+    }
   };
 
   const markReadOnly = async (n: Notification) => {
@@ -102,34 +108,62 @@ export default function NotificationsPage() {
             <li key={n.id}>
               <div
                 className={`list-card ${n.isRead ? '' : 'list-card--unread'}`}
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'space-between',
                   background: n.isRead ? 'transparent' : undefined,
-                  opacity: n.isRead ? 0.65 : 1,
-                  cursor: 'pointer'
+                  opacity: n.isRead ? 0.7 : 1,
+                  cursor: 'pointer',
+                  flexWrap: 'nowrap',
+                  gap: '1rem'
                 }}
                 onClick={() => void open(n)}
               >
-                <div style={{ flex: 1 }}>
-                  <strong>{text(n)}</strong>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong>{n.orderId ? `${orderCode(n.orderId)} - ` : ''}{text(n)}</strong>
                   <br />
                   <span className="muted" style={{ fontSize: '0.86rem' }}>
                     {date(n.createdAt, true)}
                   </span>
                 </div>
                 {!n.isRead ? (
-                  <button 
+                  <button
                     type="button"
-                    className="icon-btn" 
+                    className="icon-btn"
+                    title={t('notifications.markRead')}
+                    aria-label={t('notifications.markRead')}
                     onClick={(e) => { e.stopPropagation(); void markReadOnly(n); }}
-                    style={{ color: 'var(--primary-text)', marginLeft: '1rem', background: 'transparent', border: 'none' }}
+                    style={{
+                      color: 'var(--primary-text)',
+                      background: 'transparent',
+                      border: 'none',
+                      flexShrink: 0,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      padding: 6,
+                      borderRadius: '50%'
+                    }}
                   >
-                    <Icon name="checkDouble" />
+                    <Icon name="checkDouble" size={20} strokeWidth={2.2} />
                   </button>
                 ) : (
-                  <Icon name="checkDouble" style={{ color: 'inherit', marginLeft: '1rem', flex: 'none', opacity: 0.5 }} />
+                  <span
+                    style={{
+                      color: 'var(--text-muted)',
+                      flexShrink: 0,
+                      opacity: 0.45,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 6
+                    }}
+                    title={t('notifications.markedAll')}
+                  >
+                    <Icon name="checkDouble" size={18} strokeWidth={2} />
+                  </span>
                 )}
               </div>
             </li>

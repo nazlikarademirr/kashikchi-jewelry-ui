@@ -22,11 +22,12 @@ const PATHS = {
   gem: 'M6 4h12l3 5-9 11L3 9l3-5Zm-3 5h18M9 4l3 5 3-5M9 9l3 11 3-11',
   clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-14v5l3 2',
   check: 'm5 12.500 4.500 4.500L19 7.500',
-  checkDouble: 'M18 6 7 17l-5-5m20-7-7.5 7.5L13 16',
+  checkDouble: 'M2 13.5l4 4M7.5 13.5l4.5 4.5L22 6M12 11.5L17.5 6',
   alert: 'M12 4 2.500 20h19L12 4Zm0 6v4.500m0 2.500h.01',
   inbox: 'M3 13l3-8h12l3 8v6H3v-6Zm0 0h5l1 2h6l1-2h5',
   arrowRight: 'M5 12h14m-5-5 5 5-5 5',
   arrowLeft: 'M19 12H5m5-5-5 5 5 5',
+  arrowDown: 'M12 5v14m-5-5 5 5 5-5',
   chevronDown: 'm6 9 6 6 6-6',
   plus: 'M12 5v14M5 12h14',
   edit: 'M4 20h4L19 9l-4-4L4 16v4Zm9-13 4 4',
@@ -47,7 +48,7 @@ interface Props extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   size?: number;
 }
 
-export function Icon({ name, size, ...rest }: Props) {
+export function Icon({ name, size = 20, ...rest }: Props) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -55,7 +56,7 @@ export function Icon({ name, size, ...rest }: Props) {
       height={size}
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.6}
+      strokeWidth={1.8}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"

@@ -27,6 +27,12 @@ export const apiServices: Services = {
       const user = await http<User>('/auth/profile', { method: 'PUT', body: input });
       return user;
     },
+    forgotPassword: async (email: string) => {
+      await http('/auth/forgot-password', { method: 'POST', body: { email } });
+    },
+    resetPassword: async (input: { email: string; token: string; newPassword: string }) => {
+      await http('/auth/reset-password', { method: 'POST', body: input });
+    },
   },
   categories: {
     getTree: () => http<Category[]>('/categories'),
@@ -66,8 +72,10 @@ export const apiServices: Services = {
   orders: {
     create: (input) => http<Order>('/orders', { method: 'POST', body: input }),
     list: (filter) => http<Order[]>('/orders', { query: { ...filter } }),
+    listDeleted: () => http<Order[]>('/admin/orders/deleted'),
     get: (id) => http<Order>(`/orders/${id}`),
     updateStatus: (id, status) => http<Order>(`/admin/orders/${id}/status`, { method: 'PATCH', body: { status } }),
+    delete: (id, input) => http<Order>(`/admin/orders/${id}`, { method: 'DELETE', body: input }),
   },
   notifications: {
     list: () => http<Notification[]>('/notifications'),
@@ -80,7 +88,7 @@ export const apiServices: Services = {
     list: (orderId) => http<Message[]>(`/orders/${orderId}/messages`),
     send: (orderId, message) => http<Message>(`/orders/${orderId}/messages`, { method: 'POST', body: { message } }),
     markRead: (orderId) => http(`/orders/${orderId}/messages/read`, { method: 'POST' }),
-    
+
     subscribe: (_orderId, onChange) => {
       const timer = window.setInterval(onChange, 8000);
       return () => window.clearInterval(timer);

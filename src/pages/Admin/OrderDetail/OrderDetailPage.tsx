@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { DeleteOrderModal } from '@/components/DeleteOrderModal';
 import { MessagePanel, OrderItemsList, OrderTimeline } from '@/components/order';
-import { OrderStatusBadge } from '@/components/product';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Breadcrumb } from '@/components/ui/Misc';
-import { ErrorState, Skeleton } from '@/components/ui/State';
+import { Alert, ErrorState, Skeleton } from '@/components/ui/State';
 import { ROUTES } from '@/constants/routes';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -12,7 +12,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
 import type { OrderStatus } from '@/types';
-import { shortId } from '@/utils/format';
+import { orderCode } from '@/utils/format';
 
 export default function AdminOrderDetailPage() {
   const { id = '' } = useParams();
@@ -21,8 +21,9 @@ export default function AdminOrderDetailPage() {
   const order = useAsync(() => services.orders.get(id), [id]);
   const [status, setStatus] = useState<OrderStatus>('ORDER_RECEIVED');
   const [busy, setBusy] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const o = order.data;
-  useDocumentMeta({ title: o ? t('orders.no', { no: shortId(o.id) }) : t('admin.orders.title'), noindex: true });
+  useDocumentMeta({ title: o ? t('orders.no', { no: orderCode(o.id) }) : t('admin.orders.title'), noindex: true });
 
   useEffect(() => {
     if (o) setStatus(o.status);
@@ -48,40 +49,74 @@ export default function AdminOrderDetailPage() {
     <div className="stack">
       <Breadcrumb
         items={[
-          { label: t('admin.orders.title'), to: ROUTES.adminOrders },
-          { label: t('orders.no', { no: shortId(o.id) }) },
+          {
+            label: o.isDeleted ? t('admin.deletedOrders.title') : t('admin.orders.title'),
+            to: o.isDeleted ? ROUTES.adminDeletedOrders : ROUTES.adminOrders,
+          },
+          { label: t('orders.no', { no: orderCode(o.id) }) },
         ]}
       />
-      <div className="dash__head">
+
+      {o.isDeleted && (
+        <Alert kind="warning">
+          <strong>
+            {t('deleteOrder.deletedBanner', {
+              date: o.deletedAt ? date(o.deletedAt, true) : '',
+              reason: o.deletionReason ? t(`deleteOrder.reasons.${o.deletionReason}` as Parameters<typeof t>[0]) : '',
+            })}
+          </strong>
+          {o.deletionNote && <div style={{ marginTop: 4 }}>{o.deletionNote}</div>}
+        </Alert>
+      )}
+
+      <div className="dash__head order-detail__head">
         <div>
-          <h1>{t('orders.no', { no: shortId(o.id) })}</h1>
-          <p className="muted" style={{ margin: 0 }}>
-            {t('orders.date')}: {date(o.createdAt, true)}
-          </p>
+          <h1 className="order-detail__title">
+            <span>{orderCode(o.id)}</span>
+            <span className="order-detail__date muted">- {date(o.createdAt, true)}</span>
+          </h1>
         </div>
-        <OrderStatusBadge status={o.status} />
+        <div className="row" style={{ alignItems: 'center', gap: 'var(--space-2)' }}>
+          {!o.isDeleted && (
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => setShowDeleteModal(true)}
+              >
+                {t('admin.order.deleteOrderBtn')}
+              </Button>
+          )}
+        </div>
       </div>
 
       <div className="split">
         <div className="stack">
           <div className="card">
             <h2 className="card__title">{t('orders.progress')}</h2>
-            <OrderTimeline 
-              status={o.status} 
-              interactive 
-              targetStatus={status} 
-              onSelectStatus={setStatus} 
-              dates={{
-                ORDER_RECEIVED: o.createdAt,
-                IN_PRODUCTION: o.inProductionAt,
-                READY: o.readyAt,
-              }}
-            />
-            <div className="row" style={{ justifyContent: 'flex-end', marginTop: 16 }}>
-              <Button onClick={() => void apply()} loading={busy} disabled={status === o.status}>
-                {t('admin.order.apply')}
-              </Button>
-            </div>
+            {o.isDeleted ? (
+              <Alert kind="warning">
+                {t('orders.cancelledNotice')}
+              </Alert>
+            ) : (
+              <>
+                <OrderTimeline
+                  status={o.status}
+                  interactive
+                  targetStatus={status}
+                  onSelectStatus={setStatus}
+                  dates={{
+                    ORDER_RECEIVED: o.createdAt,
+                    IN_PRODUCTION: o.inProductionAt,
+                    READY: o.readyAt,
+                  }}
+                />
+                <div className="row" style={{ justifyContent: 'flex-end', marginTop: 16 }}>
+                  <Button onClick={() => void apply()} loading={busy} disabled={status === o.status}>
+                    {t('admin.order.apply')}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="card">
@@ -123,10 +158,20 @@ export default function AdminOrderDetailPage() {
       </div>
 
       <div>
-        <LinkButton to={ROUTES.adminOrders} variant="ghost">
-          {t('orders.backToOrders')}
+        <LinkButton to={o.isDeleted ? ROUTES.adminDeletedOrders : ROUTES.adminOrders} variant="ghost">
+          {o.isDeleted ? t('admin.deletedOrders.title') : t('orders.backToOrders')}
         </LinkButton>
       </div>
+
+      <DeleteOrderModal
+        open={showDeleteModal}
+        orderId={o.id}
+        orderNo={orderCode(o.id)}
+        onClose={() => setShowDeleteModal(false)}
+        onDeleted={() => {
+          order.reload();
+        }}
+      />
     </div>
   );
 }

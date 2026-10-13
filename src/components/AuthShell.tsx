@@ -17,7 +17,7 @@ const SLIDES = [
   '/slides/new_slide_8_1791370516232.jpg',
 ];
 
-export function AuthShell({ children }: { children: ReactNode }) {
+export function AuthShell({ children, cardClassName }: { children: ReactNode; cardClassName?: string }) {
   const { t } = useI18n();
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -30,8 +30,8 @@ export function AuthShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="auth">
-      <aside 
-        className="auth__aside" 
+      <aside
+        className="auth__aside"
         aria-hidden="false"
         style={{
           position: 'relative',
@@ -61,7 +61,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
         <p style={{ position: 'relative', zIndex: 1, color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 2px rgba(0,0,0,0.5)', fontSize: '1.25rem', lineHeight: '1.6', maxWidth: '600px', fontWeight: 300, letterSpacing: '0.02em' }}>{t('auth.asideText')}</p>
       </aside>
       <div className="auth__main">
-        <div className="auth__card">{children}</div>
+        <div className={`auth__card ${cardClassName ?? ''}`.trim()}>{children}</div>
       </div>
     </div>
   );

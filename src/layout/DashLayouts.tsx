@@ -63,6 +63,7 @@ export function AdminLayout() {
         { to: ROUTES.adminStock, label: 'admin.nav.stock' },
         { to: ROUTES.adminCategories, label: 'admin.nav.categories' },
         { to: ROUTES.adminProfile, label: 'admin.nav.profile' },
+        { to: ROUTES.adminDeletedOrders, label: 'admin.nav.deletedOrders' },
       ]}
     />
   );

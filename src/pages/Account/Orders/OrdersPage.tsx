@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom';
 import { OrderStatusBadge } from '@/components/product';
 import { LinkButton } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Misc';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/State';
 import { ROUTES } from '@/constants/routes';
 import { useI18n } from '@/contexts/I18nContext';
 import { useAsync } from '@/hooks/useAsync';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
-import { shortId } from '@/utils/format';
+import { orderCode } from '@/utils/format';
 
 export default function AccountOrdersPage() {
   const { t, date, price } = useI18n();
@@ -35,13 +36,22 @@ export default function AccountOrdersPage() {
         orders.data.map((o) => (
           <Link key={o.id} to={ROUTES.accountOrder(o.id)} className="list-card">
             <span>
-              <strong>{t('orders.no', { no: shortId(o.id) })}</strong>
+              <strong>{t('orders.no', { no: orderCode(o.id) })}</strong>
               <br />
               <span className="muted">
                 {date(o.createdAt)} · {o.items.length}
               </span>
+              {o.isDeleted && (
+                <span style={{ display: 'block', marginTop: 4, color: 'var(--danger)', fontSize: '0.85rem' }}>
+                  {t('orders.cancelledNotice')}
+                </span>
+              )}
             </span>
-            <OrderStatusBadge status={o.status} />
+            {o.isDeleted ? (
+              <Badge kind="danger" dot>{t('orderStatus.CANCELLED')}</Badge>
+            ) : (
+              <OrderStatusBadge status={o.status} />
+            )}
             <strong>{price(o.totalPrice)}</strong>
           </Link>
         ))

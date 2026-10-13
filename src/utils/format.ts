@@ -39,3 +39,7 @@ export function isMadeToOrder(p: Pick<Product, 'stock'>): boolean {
 export function shortId(id: string): string {
   return id.replace(/-/g, '').slice(0, 8).toUpperCase();
 }
+
+export function orderCode(id: string): string {
+  return `SP${shortId(id)}`;
+}

@@ -22,6 +22,7 @@ export function ImageGallery({ product }: { product: Product }) {
     );
   }
   const current = images[Math.min(index, images.length - 1)];
+  const [failedKeys, setFailedKeys] = useState<Record<string, boolean>>({});
   const go = (d: number) => setIndex((i) => (i + d + images.length) % images.length);
 
   return (
@@ -36,15 +37,23 @@ export function ImageGallery({ product }: { product: Product }) {
       }}
     >
       <div className="gallery__main">
-        <img
-          key={current.id}
-          className="fade-in"
-          src={mediaUrl(current.storageKey)}
-          alt={t('product.imageN', { name, n: index + 1, total: images.length })}
-          width={800}
-          height={800}
-          decoding="async"
-        />
+        {!failedKeys[current.storageKey] ? (
+          <img
+            key={current.id}
+            className="fade-in"
+            src={mediaUrl(current.storageKey)}
+            alt={t('product.imageN', { name, n: index + 1, total: images.length })}
+            width={800}
+            height={800}
+            decoding="async"
+            onError={() => setFailedKeys((prev) => ({ ...prev, [current.storageKey]: true }))}
+          />
+        ) : (
+          <div className="gallery__placeholder">
+            <Icon name="image" size={40} style={{ opacity: 0.4 }} />
+            <span>{t('product.comingSoon')}</span>
+          </div>
+        )}
         {images.length > 1 && (
           <>
             <button type="button" className="gallery__nav gallery__nav--prev" onClick={() => go(-1)} aria-label={t('common.prev')}>

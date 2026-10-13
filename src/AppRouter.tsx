@@ -15,6 +15,8 @@ const FavoritesPage = lazy(() => import('@/pages/Favorites/FavoritesPage'));
 const CartPage = lazy(() => import('@/pages/Cart/CartPage'));
 const LoginPage = lazy(() => import('@/pages/Login/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/Register/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPassword/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPassword/ResetPasswordPage'));
 const LegalPage = lazy(() => import('@/pages/Legal/LegalPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFound/NotFoundPage'));
 
@@ -32,6 +34,7 @@ const AdminProductForm = lazy(() => import('@/pages/Admin/ProductForm/ProductFor
 const AdminStock = lazy(() => import('@/pages/Admin/Stock/StockPage'));
 const AdminOrders = lazy(() => import('@/pages/Admin/Orders/OrdersPage'));
 const AdminOrderDetail = lazy(() => import('@/pages/Admin/OrderDetail/OrderDetailPage'));
+const AdminDeletedOrders = lazy(() => import('@/pages/Admin/DeletedOrders/DeletedOrdersPage'));
 
 export function AppRoutes() {
   return (
@@ -49,6 +52,8 @@ export function AppRoutes() {
           <Route element={<GuestOnly />}>
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
           </Route>
 
           {}
@@ -77,6 +82,7 @@ export function AppRoutes() {
               <Route path="stock" element={<AdminStock />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="orders/:id" element={<AdminOrderDetail />} />
+              <Route path="deleted-orders" element={<AdminDeletedOrders />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="messages" element={<MessagesPage />} />
               <Route path="profile" element={<AccountProfile />} />

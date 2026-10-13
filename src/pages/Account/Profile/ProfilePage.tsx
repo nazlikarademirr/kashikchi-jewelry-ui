@@ -7,7 +7,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { isAppError } from '@/types';
-import { sanitizeText, v } from '@/utils/validation';
+import { sanitizeText, toTitleCase, v } from '@/utils/validation';
 
 export default function ProfilePage() {
   const { t, tDynamic, errorMessage } = useI18n();
@@ -90,8 +90,8 @@ export default function ProfilePage() {
     setBusy(true);
     try {
       await updateProfile({
-        name: sanitizeText(form.name, INPUT_LIMITS.name),
-        surname: sanitizeText(form.surname, INPUT_LIMITS.surname),
+        name: toTitleCase(sanitizeText(form.name, INPUT_LIMITS.name)),
+        surname: toTitleCase(sanitizeText(form.surname, INPUT_LIMITS.surname)),
         email: emailVal.toLowerCase() || null,
         phone: phoneVal || null,
         password: isChangingPassword ? form.newPassword : null,
@@ -128,6 +128,7 @@ export default function ProfilePage() {
               maxLength={INPUT_LIMITS.name}
               value={form.name}
               onChange={set('name')}
+              onBlur={() => setForm((f) => ({ ...f, name: toTitleCase(f.name) }))}
               error={fieldError('name')}
             />
             <Input
@@ -138,6 +139,7 @@ export default function ProfilePage() {
               maxLength={INPUT_LIMITS.surname}
               value={form.surname}
               onChange={set('surname')}
+              onBlur={() => setForm((f) => ({ ...f, surname: toTitleCase(f.surname) }))}
               error={fieldError('surname')}
             />
           </div>
@@ -150,7 +152,12 @@ export default function ProfilePage() {
               reserveMessageSpace
               maxLength={INPUT_LIMITS.email}
               value={form.email}
-              onChange={set('email')}
+              style={{ textTransform: 'lowercase' }}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, email: e.target.value.toLowerCase() }));
+                setServerFields((s) => (s.email ? { ...s, email: '' } : s));
+              }}
+              onBlur={() => setForm((f) => ({ ...f, email: f.email.trim().toLowerCase() }))}
               error={fieldError('email')}
             />
             <Input
