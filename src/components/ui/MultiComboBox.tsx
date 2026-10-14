@@ -1,9 +1,17 @@
 import { useId, useRef, useState } from 'react';
 import { Icon } from './Icon';
 
+export interface MultiComboBoxOption {
+  value: string;
+  label: string;
+  depth?: number;
+  children?: string[];
+  parentId?: string;
+}
+
 export function MultiComboBox({ label, placeholder, emptyText, options, value, onChange, disabled = false }: {
   label: string; placeholder: string; emptyText: string;
-  options: { value: string; label: string; depth?: number }[]; value: string[];
+  options: MultiComboBoxOption[]; value: string[];
   onChange: (value: string[]) => void; disabled?: boolean;
 }) {
   const id = useId();
@@ -12,8 +20,52 @@ export function MultiComboBox({ label, placeholder, emptyText, options, value, o
   const [search, setSearch] = useState('');
   const [active, setActive] = useState(-1);
   const visible = options.filter(option => option.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
-  const selectedText = options.filter(option => value.includes(option.value)).map(option => option.label).join(', ');
-  const toggle = (key: string) => onChange(value.includes(key) ? value.filter(item => item !== key) : [...value, key]);
+  const selectedText = options
+    .filter(option => {
+      if (!value.includes(option.value)) return false;
+      if (option.parentId && value.includes(option.parentId)) return false;
+      return true;
+    })
+    .map(option => option.label)
+    .join(', ');
+
+  const toggle = (key: string) => {
+    const target = options.find(o => o.value === key);
+    if (!target) return;
+
+    let next: string[];
+    if (target.children && target.children.length > 0) {
+      const isCurrentlySelected = value.includes(key);
+      if (isCurrentlySelected) {
+        const toRemove = new Set([key, ...target.children]);
+        next = value.filter(v => !toRemove.has(v));
+      } else {
+        const toAdd = [key, ...target.children];
+        next = Array.from(new Set([...value, ...toAdd]));
+      }
+    } else {
+      const isCurrentlySelected = value.includes(key);
+      if (isCurrentlySelected) {
+        next = value.filter(v => v !== key && v !== target.parentId);
+      } else {
+        const withChild = Array.from(new Set([...value, key]));
+        if (target.parentId) {
+          const parentOption = options.find(o => o.value === target.parentId);
+          const allChildren = parentOption?.children ?? [];
+          const allSelected = allChildren.length > 0 && allChildren.every(cId => withChild.includes(cId));
+          if (allSelected) {
+            next = Array.from(new Set([...withChild, target.parentId]));
+          } else {
+            next = withChild;
+          }
+        } else {
+          next = withChild;
+        }
+      }
+    }
+    onChange(next);
+  };
+
   return (
     <div className="field">
       <label className="field__label" htmlFor={id}>{label}</label>

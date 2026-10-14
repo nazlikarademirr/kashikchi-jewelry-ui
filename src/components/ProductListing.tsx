@@ -5,7 +5,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useAsync } from '@/hooks/useAsync';
 import { services } from '@/services';
 import type { ProductSort } from '@/types';
-import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { ProductGrid } from './product';
 import { Input, Select } from './ui/Input';
 import { Pagination } from './ui/Misc';
@@ -27,7 +27,23 @@ export function ProductListing({ category, subCategory, categoryFilter = false }
   const sort = (SORTS as string[]).includes(params.get('sort') ?? '') ? (params.get('sort') as ProductSort) : 'newest';
   const page = Math.max(1, Number(params.get('page')) || 1);
   const q = params.get('q') ?? '';
-  const selectedCategories = categoryFilter ? [...new Set(params.getAll('categories'))] : [];
+  const selectedCategories = useMemo(() => {
+    if (!categoryFilter) return [];
+    const raw = [...new Set(params.getAll('categories'))];
+    if (!raw.length || !tree.length) return raw;
+    const set = new Set(raw);
+    tree.forEach((item) => {
+      const childIds = item.children.map((c) => c.id);
+      if (childIds.length > 0) {
+        if (set.has(item.id)) {
+          childIds.forEach((id) => set.add(id));
+        } else if (childIds.every((id) => set.has(id))) {
+          set.add(item.id);
+        }
+      }
+    });
+    return Array.from(set);
+  }, [categoryFilter, params, tree]);
   const categoryKey = selectedCategories.join(',');
   const minPriceText = params.get('minPrice') ?? '';
   const maxPriceText = params.get('maxPrice') ?? '';
@@ -128,8 +144,8 @@ export function ProductListing({ category, subCategory, categoryFilter = false }
           {categoryFilter && <MultiComboBox label={t('listing.categories')} placeholder={t('listing.categoriesPlaceholder')}
             emptyText={t('listing.categoriesEmpty')} disabled={categoriesLoading}
             options={tree.flatMap(item => [
-              { value: item.id, label: loc(item.name), depth: 0 },
-              ...item.children.map(child => ({ value: child.id, label: loc(child.name), depth: 1 })),
+              { value: item.id, label: loc(item.name), depth: 0, children: item.children.map(child => child.id) },
+              ...item.children.map(child => ({ value: child.id, label: loc(child.name), depth: 1, parentId: item.id })),
             ])}
             value={selectedCategories} onChange={updateCategories} />}
           <Select label={t('listing.sort')} value={sort} onChange={(e) => update('sort', e.target.value === 'newest' ? '' : e.target.value)}>
