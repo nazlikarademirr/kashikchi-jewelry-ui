@@ -749,6 +749,18 @@
 .dash__main { min-width: 0; }
 .dash__head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-5); }
 .dash__head h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); margin: 0; }
+.dash__head-filter { min-width: 220px; }
+.dash__head-filter .field { margin-bottom: 0; }
+.dash__head-filter .select:hover,
+.dash__head-filter .select:focus,
+.dash__head-filter .select:focus-visible {
+  outline: none;
+  border-color: var(--border);
+  box-shadow: none;
+}
+@media (max-width: 640px) {
+  .dash__head-filter { width: 100%; min-width: 0; }
+}
 .order-detail__head { align-items: center; }
 .order-detail__title { display: flex; align-items: center; flex-wrap: wrap; column-gap: 12px; }
 .order-detail__date { font-family: var(--font-sans); font-size: 1rem; font-weight: 400; }

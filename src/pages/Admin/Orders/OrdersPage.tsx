@@ -30,11 +30,14 @@ export default function AdminOrdersPage() {
             {t('admin.orders.subtitle')}
           </p>
         </div>
-      </div>
 
-      <div className="toolbar">
-        <div className="toolbar__filters">
-          <Select label={t('admin.orders.filter')} value={status} onChange={(e) => setStatus(e.target.value as OrderStatus | '')}>
+        <div className="dash__head-filter">
+          <Select
+            label={t('admin.orders.filter')}
+            value={status}
+            onChange={(e) => setStatus(e.target.value as OrderStatus | '')}
+            reserveMessageSpace={false}
+          >
             <option value="">{t('admin.orders.all')}</option>
             {ORDER_STATUSES.map((s) => (
               <option key={s} value={s}>
