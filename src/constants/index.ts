@@ -30,7 +30,7 @@ export const INPUT_LIMITS = {
   price: 15,
   carat: 10,
   note: 1000,
-  message: 2000,
+  message: 500,
   search: 80,
   ringSize: 10,
 } as const;
