@@ -25,7 +25,6 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<AppError | null>(null);
   const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
-  const [showForgotNotice, setShowForgotNotice] = useState(false);
   useDocumentMeta({ title: t('auth.loginMeta'), noindex: true });
 
   const isLockedOut = Boolean(lockoutSeconds !== null && lockoutSeconds > 0);
@@ -123,36 +122,19 @@ export default function LoginPage() {
               : null
           }
         />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, marginBottom: showForgotNotice ? 6 : 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, marginBottom: 12 }}>
           <Button
             type="button"
             onClick={() => {
-              setShowForgotNotice(true);
               toast.show('info', t('auth.forgotSoon'));
             }}
             variant="ghost"
             size="sm"
-            aria-expanded={showForgotNotice}
             style={{ padding: '4px 8px', height: 'auto' }}
           >
             {t('auth.forgot')}
           </Button>
         </div>
-        {showForgotNotice && (
-          <p
-            className="muted"
-            role="status"
-            style={{
-              fontSize: '0.85rem',
-              margin: '0 0 12px',
-              textAlign: 'right',
-              color: 'var(--velvet)',
-              lineHeight: 1.4,
-            }}
-          >
-            {t('auth.forgotSoon')}
-          </p>
-        )}
         <Button type="submit" size="lg" block loading={busy} disabled={isLockedOut}>
           {t('auth.loginSubmit')}
         </Button>
