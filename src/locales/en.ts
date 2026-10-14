@@ -146,6 +146,16 @@ export const en: Dictionary = {
   },
 
   listing: {
+    priceRange: "Price ($)",
+    caratRange: "Total Carat (ct)",
+    clearFilters: "Clear filters",
+    min: "Min",
+    max: "Max",
+    minPrice: "Minimum price",
+    maxPrice: "Maximum price",
+    minCarat: "Minimum total carat",
+    maxCarat: "Maximum total carat",
+    invalidRange: "The maximum value cannot be less than the minimum.",
     search: "Search",
     searchPlaceholder: "Product name or code",
     sort: "Sort",

@@ -144,6 +144,16 @@ export const tr = {
   },
 
   listing: {
+    priceRange: "Fiyat ($)",
+    caratRange: "Toplam Karat (ct)",
+    clearFilters: "Filtreleri temizle",
+    min: "En az",
+    max: "En çok",
+    minPrice: "En düşük fiyat",
+    maxPrice: "En yüksek fiyat",
+    minCarat: "En düşük toplam karat",
+    maxCarat: "En yüksek toplam karat",
+    invalidRange: "En yüksek değer, en düşük değerden küçük olamaz.",
     search: "Ara",
     searchPlaceholder: "Ürün adı veya kodu",
     sort: "Sırala",

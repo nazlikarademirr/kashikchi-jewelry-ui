@@ -1,4 +1,4 @@
-import { NavLink, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { ProductListing } from '@/components/ProductListing';
 import { Breadcrumb } from '@/components/ui/Misc';
 import { LinkButton } from '@/components/ui/Button';
@@ -47,19 +47,7 @@ export default function CategoryPage() {
           <h1>{sub ? loc(sub.name) : loc(top.name)}</h1>
         </div>
       </div>
-      <div className="container section section--tight">
-        {top.children.length > 0 && (
-          <nav className="chips" aria-label={t('listing.subCategories')}>
-            <NavLink to={ROUTES.category(top.id)} end className={({ isActive }) => `chip ${isActive ? 'active' : ''}`}>
-              {t('listing.all')}
-            </NavLink>
-            {top.children.map((s) => (
-              <NavLink key={s.id} to={ROUTES.category(top.id, s.id)} className={({ isActive }) => `chip ${isActive ? 'active' : ''}`}>
-                {loc(s.name)}
-              </NavLink>
-            ))}
-          </nav>
-        )}
+      <div className="container section section--tight catalog-section">
         <ProductListing category={top.id} subCategory={sub?.id} />
       </div>
     </>

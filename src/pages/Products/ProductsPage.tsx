@@ -17,7 +17,7 @@ export default function ProductsPage() {
           <p>{t('listing.allDescription')}</p>
         </div>
       </div>
-      <div className="container section--tight section">
+      <div className="container section--tight section catalog-section">
         <ProductListing />
         <noscript>
           <LinkButton to={ROUTES.home}>{t('common.backHome')}</LinkButton>
