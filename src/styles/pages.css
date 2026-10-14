@@ -393,6 +393,14 @@
 .catalog-toolbar .field__label { color: var(--text-muted); font-size: 0.83rem; letter-spacing: 0.02em; }
 .catalog-toolbar .input,
 .catalog-toolbar .select { background: var(--bg); border-color: var(--border); }
+.catalog-toolbar .input:focus,
+.catalog-toolbar .input:focus-visible,
+.catalog-toolbar .select:focus,
+.catalog-toolbar .select:focus-visible {
+  outline: none;
+  border-color: var(--primary-text);
+  box-shadow: none;
+}
 .catalog-toolbar .toolbar__range-inputs {
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
@@ -403,7 +411,17 @@
   transition: border-color var(--t-fast);
 }
 .catalog-toolbar .toolbar__range-inputs:focus-within { border-color: var(--primary-text); }
-.catalog-toolbar .toolbar__range-inputs .input { min-height: 46px; border: 0; background: transparent; text-align: center; padding-inline: var(--space-2); }
+.catalog-toolbar .toolbar__range-inputs .input,
+.catalog-toolbar .toolbar__range-inputs .input:focus,
+.catalog-toolbar .toolbar__range-inputs .input:focus-visible {
+  min-height: 46px;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent;
+  text-align: center;
+  padding-inline: var(--space-2);
+}
 .toolbar__range-separator { color: var(--border-strong); padding-inline: 4px; }
 .catalog-toolbar .toolbar__range[aria-invalid='true'] .toolbar__range-inputs { border-color: var(--danger); }
 .catalog-toolbar__meta {
