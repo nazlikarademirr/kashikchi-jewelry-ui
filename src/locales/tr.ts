@@ -648,5 +648,7 @@ export const tr = {
     success: "Sipariş başarıyla silindi.",
     deletedBadge: "İptal Edildi",
     deletedBanner: "Bu sipariş {date} tarihinde silinmiştir. Sebep: {reason}.",
+    deletedDate: "Bu sipariş {date} tarihinde silinmiştir.",
+    deletedReason: "Sebep: {reason}.",
   },
 };

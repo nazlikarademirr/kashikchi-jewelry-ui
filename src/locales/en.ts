@@ -650,5 +650,7 @@ export const en: Dictionary = {
     success: "Order deleted successfully.",
     deletedBadge: "Cancelled",
     deletedBanner: "This order was deleted on {date}. Reason: {reason}.",
+    deletedDate: "This order was deleted on {date}.",
+    deletedReason: "Reason: {reason}.",
   },
 };

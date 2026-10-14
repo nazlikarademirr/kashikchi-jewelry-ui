@@ -57,18 +57,6 @@ export default function AdminOrderDetailPage() {
         ]}
       />
 
-      {o.isDeleted && (
-        <Alert kind="warning">
-          <strong>
-            {t('deleteOrder.deletedBanner', {
-              date: o.deletedAt ? date(o.deletedAt, true) : '',
-              reason: o.deletionReason ? t(`deleteOrder.reasons.${o.deletionReason}` as Parameters<typeof t>[0]) : '',
-            })}
-          </strong>
-          {o.deletionNote && <div style={{ marginTop: 4 }}>{o.deletionNote}</div>}
-        </Alert>
-      )}
-
       <div className="dash__head order-detail__head">
         <div>
           <h1 className="order-detail__title">
@@ -95,7 +83,19 @@ export default function AdminOrderDetailPage() {
             <h2 className="card__title">{t('orders.progress')}</h2>
             {o.isDeleted ? (
               <Alert kind="warning">
-                {t('orders.cancelledNotice')}
+                <div>
+                  {t('deleteOrder.deletedDate', {
+                    date: o.deletedAt ? date(o.deletedAt, true) : '',
+                  })}
+                </div>
+                <div style={{ marginTop: 4 }}>
+                  {t('deleteOrder.deletedReason', {
+                    reason: o.deletionReason
+                      ? t(`deleteOrder.reasons.${o.deletionReason}` as Parameters<typeof t>[0])
+                      : '',
+                  })}
+                  {o.deletionNote ? ` - ${o.deletionNote}` : ''}
+                </div>
               </Alert>
             ) : (
               <>
