@@ -89,7 +89,11 @@ function fromProduct(p: Product): FormState {
     name: p.name.tr || p.name.en,
     description: p.description.tr || p.description.en,
     features: p.features ?? '',
-    extraFeatures: (p.extraFeatures ?? []).map((feature) => ({ ...feature, id: uid() })),
+    extraFeatures: (p.extraFeatures ?? []).map((feature) => ({
+      ...feature,
+      detail: (feature.detail ?? '').replace(/\./g, ','),
+      id: uid(),
+    })),
     weightGrams: p.weightGrams != null ? String(p.weightGrams).replace('.', ',') : '',
     metal: p.metal ?? '',
     diamondColor: p.diamondColor ?? '',
@@ -113,7 +117,7 @@ function isFormEqual(a: FormState, b: FormState): boolean {
   if (a.metal.trim() !== b.metal.trim() || a.diamondColor.trim() !== b.diamondColor.trim() || a.diamondClarity.trim() !== b.diamondClarity.trim()) return false;
   const normalizedFeatures = (form: FormState) => form.extraFeatures
     .filter((feature) => feature.name.trim() || feature.detail.trim())
-    .map((feature) => ({ name: feature.name.trim(), detail: feature.detail.trim() }));
+    .map((feature) => ({ name: feature.name.trim(), detail: feature.detail.trim().replace(/\./g, ',') }));
   if (JSON.stringify(normalizedFeatures(a)) !== JSON.stringify(normalizedFeatures(b))) return false;
   if (a.features.trim() !== b.features.trim()) return false;
   if (a.description.trim() !== b.description.trim()) return false;
@@ -232,6 +236,37 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
 
   const handleCaratBlur = () => set('carat')(form.carat.replace(/,$/, ''));
 
+  const handleDetailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+    // Nokta girişini engelle
+    if (e.key === '.' || e.key === 'Decimal') {
+      e.preventDefault();
+      return;
+    }
+    // Noktalama işareti olarak yalnızca virgül girişine izin ver
+    if (!/^[\p{L}\p{N}\s,]$/u.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleDetailChange = (id: string, rawValue: string) => {
+    const cleaned = rawValue.replace(/\./g, ',').replace(/[^\p{L}\p{N}\s,]/gu, '');
+    set('extraFeatures')(form.extraFeatures.map((row) => (row.id === id ? { ...row, detail: cleaned } : row)));
+  };
+
+  const handleDetailPaste = (e: React.ClipboardEvent<HTMLInputElement>, id: string) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text');
+    if (!text) return;
+    const cleaned = text.replace(/\./g, ',').replace(/[^\p{L}\p{N}\s,]/gu, '');
+    const input = e.currentTarget;
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? 0;
+    const current = input.value;
+    const next = current.slice(0, start) + cleaned + current.slice(end);
+    set('extraFeatures')(form.extraFeatures.map((row) => (row.id === id ? { ...row, detail: next } : row)));
+  };
+
   const topCategory = tree.find((c) => c.id === form.category);
   const subCategories = topCategory?.children ?? [];
 
@@ -305,7 +340,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
       description: { tr: desc, en: desc },
       features: sanitizeText(form.features, INPUT_LIMITS.productDescription),
       extraFeatures: form.extraFeatures.filter((feature) => feature.name.trim() || feature.detail.trim())
-        .map((feature) => ({ name: toTitleCase(sanitizeText(feature.name, 80)), detail: sanitizeText(feature.detail, 1000) })),
+        .map((feature) => ({ name: toTitleCase(sanitizeText(feature.name, 80)), detail: sanitizeText(feature.detail, 1000).replace(/\./g, ',') })),
       weightGrams: form.weightGrams.trim() ? Number(form.weightGrams.replace(',', '.')) : null,
       metal: sanitizeText(form.metal, 80),
       diamondColor: sanitizeText(form.diamondColor, 80),
@@ -433,7 +468,10 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
                   onBlur={() => set('extraFeatures')(form.extraFeatures.map((row) => row.id === feature.id ? { ...row, name: toTitleCase(row.name) } : row))}
                   error={err(`extraFeatures[${index}].name`)} />
                 <Input label={t('admin.form.featureDetail')} value={feature.detail} maxLength={1000}
-                  onChange={(e) => set('extraFeatures')(form.extraFeatures.map((row) => row.id === feature.id ? { ...row, detail: e.target.value } : row))}
+                  placeholder="0,20 ct"
+                  onKeyDown={handleDetailKeyDown}
+                  onPaste={(e) => handleDetailPaste(e, feature.id)}
+                  onChange={(e) => handleDetailChange(feature.id, e.target.value)}
                   error={err(`extraFeatures[${index}].detail`)} />
                 <Button type="button" variant="ghost" size="sm" className="product-feature-editor__remove" aria-label={t('admin.form.removeFeature')} title={t('admin.form.removeFeature')}
                   onClick={() => set('extraFeatures')(form.extraFeatures.filter((row) => row.id !== feature.id))}>

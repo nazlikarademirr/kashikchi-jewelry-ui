@@ -199,7 +199,7 @@ export default function ProductDetailPage() {
             {extraFeatures.map((feature, index) => (
               <span className="product-info__detail product-info__detail--extra" key={`${feature.name}-${index}`}>
                 <span className="muted">{feature.name}</span>
-                <strong>{feature.detail}</strong>
+                <strong>{feature.detail ? feature.detail.replace(/\./g, ',') : ''}</strong>
               </span>
             ))}
           </div>
