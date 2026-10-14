@@ -73,7 +73,7 @@ export function DeleteOrderModal({
     <Modal
       open={open}
       onClose={() => !busy && onClose()}
-      title={orderNo ? `${t('deleteOrder.modalTitle')} - #${orderNo}` : t('deleteOrder.modalTitle')}
+      title={orderNo ? `${t('deleteOrder.modalTitle')} - ${orderNo}` : t('deleteOrder.modalTitle')}
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <Alert kind="warning">

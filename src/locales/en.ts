@@ -65,6 +65,10 @@ export const en: Dictionary = {
   },
 
   errors: {
+    GOOGLE_LOGIN_FAILED: "Google sign-in could not be verified. Please try again.",
+    GOOGLE_NOT_CONFIGURED: "Google sign-in has not been configured in this environment yet.",
+    GOOGLE_LOGIN_CANCELLED: "Google sign-in was cancelled. You can try again.",
+    GOOGLE_ACCOUNT_CONFLICT: "Sign in with your password to the existing account. Your Google account could not be linked automatically.",
     UNKNOWN: "An unexpected error occurred. Please try again shortly.",
     FORBIDDEN: "You do not have permission for this action.",
     FORBIDDEN_TITLE: "You cannot access this page",
@@ -267,6 +271,9 @@ export const en: Dictionary = {
     loginMeta: "Sign in",
     loginTitle: "Welcome",
     loginSubmit: "Sign In",
+    googleUnavailable: "Google sign-in is unavailable. Please try again or sign in with your email.",
+    googleOr: "or",
+    googleSignIn: "Sign in with Google",
     forgot: "Forgot Password",
     forgotSoon: "Password reset is not yet available. You can call our store for assistance.",
     forgotMeta: "Forgot Password",

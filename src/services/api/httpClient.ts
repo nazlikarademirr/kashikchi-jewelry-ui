@@ -3,6 +3,8 @@ import { expireSession, readSession, saveSession } from './authSession';
 
 const BASE_URL = ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api').replace(/\/$/, '');
 
+export function apiUrl(path: string): URL { return new URL(`${BASE_URL}${path}`, window.location.origin); }
+
 export function setTokens(access: string | null, refresh: string | null, sessionExpiresAt?: string) {
   if (!access || !refresh) { saveSession(null); return; }
   const expiresAt = sessionExpiresAt ? Date.parse(sessionExpiresAt) : readSession()?.expiresAt;
@@ -21,6 +23,13 @@ export interface RequestOptions {
 }
 
 let refreshPromise: Promise<string | null> | null = null;
+
+function accessTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) as { exp?: number };
+    return typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now();
+  } catch { return false; }
+}
 
 async function refreshTokens(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
@@ -66,7 +75,12 @@ export async function http<T = void>(path: string, opts: RequestOptions = {}, is
   const headers: Record<string, string> = { Accept: 'application/json' };
   
   expireSession();
-  const session = readSession();
+  let session = readSession();
+  // Herkese açık sayfalarda da kullanım sırasında süresi dolan access token yenilenir.
+  if (!isRetry && !path.startsWith('/auth/') && session && accessTokenExpired(session.accessToken)) {
+    await refreshTokens();
+    session = readSession();
+  }
   if (session) headers['Authorization'] = `Bearer ${session.accessToken}`;
 
   let body: BodyInit | undefined;
@@ -84,7 +98,7 @@ export async function http<T = void>(path: string, opts: RequestOptions = {}, is
   }
 
   if (res.status === 401) {
-    const isAuthPath = path.startsWith('/auth/login') || path.startsWith('/auth/register');
+    const isAuthPath = path.startsWith('/auth/login') || path.startsWith('/auth/register') || path.startsWith('/auth/google');
     if (!isAuthPath) {
       if (!isRetry && readSession()?.refreshToken) {
         const newToken = await refreshTokens();

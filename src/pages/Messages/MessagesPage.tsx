@@ -23,6 +23,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
       threads.reload();
       void refresh();
     }, 20_000);

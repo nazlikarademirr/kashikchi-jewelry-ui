@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthShell } from '@/components/AuthShell';
+import { GoogleSignIn } from '@/components/GoogleSignIn';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/State';
@@ -92,7 +93,7 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthShell>
+    <AuthShell cardClassName="auth__card--login">
       <h1 style={{ marginBottom: 24 }}>{t('auth.loginTitle')}</h1>
       {location.state?.sessionExpired && <Alert kind="warning">{t('auth.sessionExpired')}</Alert>}
       <form className="form-grid" onSubmit={submit} noValidate style={{ display: 'grid', gap: 0 }}>
@@ -153,6 +154,7 @@ export default function LoginPage() {
           {t('auth.loginSubmit')}
         </Button>
       </form>
+      <GoogleSignIn />
       <p className="auth__foot">
         {t('auth.noAccount')} <Link to={ROUTES.register}>{t('auth.registerLink')}</Link>
       </p>

@@ -20,6 +20,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       setUnreadCount(0);
       return;
     }
+    if (document.visibilityState === 'hidden') return;
     try {
       setUnreadCount(await services.notifications.unreadCount());
     } catch {

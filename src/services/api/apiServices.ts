@@ -1,10 +1,27 @@
 import type { Category, CartItem, Message, MessageThread, Notification, Order, Paged, Product, User, DashboardStats } from '@/types';
 import type { Services } from '../contracts';
-import { http, setTokens } from './httpClient';
+import { apiUrl, http, setTokens } from './httpClient';
 import { readSession } from './authSession';
+
 
 export const apiServices: Services = {
   auth: {
+    googleConfig: () => http('/auth/google/config'),
+    googleStart: async () => {
+      const bytes = crypto.getRandomValues(new Uint8Array(32));
+      const encode = (data: Uint8Array) => btoa(String.fromCharCode(...data)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      const proof = encode(bytes);
+      const challenge = encode(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(proof))));
+      sessionStorage.setItem('kj:google-proof', proof);
+      const url = apiUrl('/auth/google/start');
+      url.searchParams.set('proofChallenge', challenge);
+      window.location.assign(url.toString());
+    },
+    googleComplete: async (ticket, proof) => {
+      const res = await http<{ user: User; accessToken: string; refreshToken: string; sessionExpiresAt: string }>('/auth/google/complete', { method: 'POST', body: { ticket, proof } });
+      setTokens(res.accessToken, res.refreshToken, res.sessionExpiresAt);
+      return res.user;
+    },
     login: async (input) => {
       const res = await http<{ user: User; accessToken: string; refreshToken: string; sessionExpiresAt: string }>('/auth/login', { method: 'POST', body: input });
       setTokens(res.accessToken, res.refreshToken, res.sessionExpiresAt);
@@ -90,7 +107,9 @@ export const apiServices: Services = {
     markRead: (orderId) => http(`/orders/${orderId}/messages/read`, { method: 'POST' }),
 
     subscribe: (_orderId, onChange) => {
-      const timer = window.setInterval(onChange, 8000);
+      const timer = window.setInterval(() => {
+        if (document.visibilityState !== 'hidden') onChange();
+      }, 8000);
       return () => window.clearInterval(timer);
     },
   },

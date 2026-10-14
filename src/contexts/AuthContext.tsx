@@ -13,6 +13,7 @@ interface AuthValue {
   isAdmin: boolean;
   isCustomer: boolean;
   login: (input: LoginInput) => Promise<User>;
+  googleComplete: (ticket: string, proof: string) => Promise<User>;
   register: (input: RegisterInput) => Promise<User>;
   updateProfile: (input: UpdateProfileInput) => Promise<User>;
   logout: () => Promise<void>;
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       reload();
     };
-    const onResume = () => { if (document.visibilityState !== 'hidden') schedule(); };
+    const onResume = () => { if (document.visibilityState !== 'hidden') reload(); };
     window.addEventListener(SESSION_EXPIRED, expired);
     window.addEventListener(SESSION_CHANGED, schedule);
     window.addEventListener('storage', onStorage);
@@ -93,6 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return u;
   }, []);
 
+  const googleComplete = useCallback(async (ticket: string, proof: string) => {
+    const u = await services.auth.googleComplete(ticket, proof);
+    setUser(u);
+    return u;
+  }, []);
+
   const updateProfile = useCallback(async (input: UpdateProfileInput) => {
     const u = await services.auth.updateProfile(input);
     if (!expireSession() && readSession()) setUser(u);
@@ -112,11 +119,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin: user?.role === 1,
       isCustomer: user?.role === 0,
       login,
+      googleComplete,
       register,
       updateProfile,
       logout,
     }),
-    [user, loading, login, register, updateProfile, logout],
+    [user, loading, login, googleComplete, register, updateProfile, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

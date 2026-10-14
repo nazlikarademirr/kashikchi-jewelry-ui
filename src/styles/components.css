@@ -449,6 +449,34 @@
 .chat__form-input .field {
   margin-bottom: 0;
 }
+
+.auth__google--ready { margin-top: var(--space-3); }
+.auth__google-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+.auth__google-divider::before,
+.auth__google-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: var(--border);
+}
+.auth__google-login {
+  --btn-bg: var(--bg);
+  --btn-fg: var(--primary-text);
+  --btn-border: var(--primary-text);
+}
+.auth__google-login:hover:not(:disabled) {
+  --btn-bg: var(--primary-soft);
+  --btn-fg: var(--primary-text);
+  --btn-border: var(--primary-text);
+}
+.auth__google-login svg { width: 20px; height: 20px; flex-shrink: 0; }
 .chat__form .textarea {
   min-height: 56px;
   height: 56px;

@@ -24,6 +24,9 @@ import type {
 
 
 export interface AuthService {
+  googleConfig(): Promise<{ enabled: boolean }>;
+  googleStart(): Promise<void>;
+  googleComplete(ticket: string, proof: string): Promise<User>;
   login(input: LoginInput): Promise<User>;
   register(input: RegisterInput): Promise<User>;
   logout(): Promise<void>;

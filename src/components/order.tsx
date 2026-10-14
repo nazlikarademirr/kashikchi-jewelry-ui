@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/State';
@@ -78,19 +78,18 @@ export function OrderItemsList({ order }: { order: Order }) {
           )}
           <div>
             <strong>{loc(i.productName)}</strong>
+            <div className="muted" style={{ fontSize: '0.85rem' }}>{i.productCode}</div>
             <div className="muted" style={{ fontSize: '0.85rem' }}>
-              {i.productCode} · {t('orders.quantityPrice', { qty: i.quantity, price: price(i.unitPrice) })}
+              {t('orders.quantityPrice', { qty: i.quantity, price: price(i.unitPrice) })}
             </div>
-            {i.customizationNote && (
-              <div style={{ marginTop: 6 }}>
-                <span className="muted" style={{ fontSize: '0.82rem' }}>
-                  {t('orders.customization')}
-                </span>
-                <div className="note-box">{i.customizationNote}</div>
-              </div>
-            )}
           </div>
           <strong>{price(i.unitPrice * i.quantity)}</strong>
+          {i.customizationNote && (
+            <div className="order-item__note">
+              <span className="muted" style={{ fontSize: '0.82rem' }}>{t('orders.customization')}</span>
+              <div className="note-box">{i.customizationNote}</div>
+            </div>
+          )}
         </li>
       ))}
     </ul>
@@ -106,30 +105,36 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const scrollToEndRef = useRef(true);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (scrollToEnd = false) => {
     try {
       const list = await services.messages.list(orderId);
+      if (scrollToEnd) scrollToEndRef.current = true;
       setMessages(list);
       if (list.some((m) => !m.isRead && m.senderUserId !== user?.id)) {
         await services.messages.markRead(orderId);
         void refresh();
       }
     } catch {
-      setMessages([]);
+      setMessages((current) => current ?? []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, user?.id]);
 
   useEffect(() => {
+    scrollToEndRef.current = true;
     setMessages(null);
     void load();
     return services.messages.subscribe(orderId, () => void load());
   }, [orderId, load]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && messages !== null && scrollToEndRef.current) {
+      el.scrollTop = el.scrollHeight;
+      scrollToEndRef.current = false;
+    }
   }, [messages]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -147,7 +152,8 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
     setText(e.target.value);
     const el = textareaRef.current;
     if (el) {
-      el.style.height = 'auto';
+      el.style.overflowY = 'hidden';
+      el.style.height = '56px';
       const borderOffset = el.offsetHeight - el.clientHeight;
       const targetHeight = Math.min(Math.max(56, el.scrollHeight + borderOffset), 200);
       el.style.height = `${targetHeight}px`;
@@ -158,13 +164,13 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
   const send = async (e?: React.SyntheticEvent) => {
     if (e) e.preventDefault();
     const body = sanitizeText(text, INPUT_LIMITS.message);
-    if (!body) return;
+    if (!body || busy) return;
     setBusy(true);
     setError(null);
     try {
       await services.messages.send(orderId, body);
       resetTextarea();
-      await load();
+      await load(true);
       onSent?.();
     } catch (err) {
       setError(errorMessage(err));
@@ -197,6 +203,7 @@ export function MessagePanel({ orderId, onSent }: { orderId: string; onSent?: ()
             label={t('messages.label')}
             placeholder={t('messages.placeholder')}
             value={text}
+            rows={1}
             maxLength={INPUT_LIMITS.message}
             onChange={handleInput}
             reserveMessageSpace={false}

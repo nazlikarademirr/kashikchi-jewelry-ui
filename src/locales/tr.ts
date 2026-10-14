@@ -63,6 +63,10 @@ export const tr = {
   },
 
   errors: {
+    GOOGLE_LOGIN_FAILED: "Google ile giriş doğrulanamadı. Lütfen tekrar deneyin.",
+    GOOGLE_NOT_CONFIGURED: "Google ile giriş bu ortamda henüz yapılandırılmamış.",
+    GOOGLE_LOGIN_CANCELLED: "Google ile giriş iptal edildi. Tekrar deneyebilirsiniz.",
+    GOOGLE_ACCOUNT_CONFLICT: "Bu e-posta adresiyle kayıtlı hesaba şifrenizle giriş yapın. Google hesabı otomatik olarak bağlanamadı.",
     UNKNOWN: "Beklenmeyen bir hata oldu. Lütfen biraz sonra tekrar deneyin.",
     FORBIDDEN: "Bu işlem için yetkiniz bulunmuyor.",
     FORBIDDEN_TITLE: "Bu sayfaya erişemezsiniz",
@@ -265,6 +269,9 @@ export const tr = {
     loginMeta: "Giriş yap",
     loginTitle: "Hoş Geldiniz",
     loginSubmit: "Giriş Yap",
+    googleUnavailable: "Google ile giriş şu anda kullanılamıyor. Lütfen tekrar deneyin veya e-posta ile giriş yapın.",
+    googleOr: "veya",
+    googleSignIn: "Google ile oturum açın",
     forgot: "Şifremi Unuttum",
     forgotSoon: "Şifre yenileme henüz kullanılamıyor. Yardım için mağazamızı arayabilirsiniz.",
     forgotMeta: "Şifremi Unuttum",
