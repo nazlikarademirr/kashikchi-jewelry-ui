@@ -19,7 +19,7 @@ export function formatDate(iso: string, locale: Locale, withTime = false): strin
 }
 
 export function formatCarat(carat: number): string {
-  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(carat);
+  return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 3, useGrouping: false }).format(carat);
 }
 
 export function localized(text: LocalizedText | undefined, locale: Locale): string {

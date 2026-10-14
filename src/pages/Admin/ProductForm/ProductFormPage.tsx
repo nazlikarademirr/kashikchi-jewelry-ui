@@ -70,14 +70,14 @@ const parseIntNum = (s: string): number | '' => {
 };
 
 const parseCarat = (s: string): number | null => {
-  const clean = s.trim();
+  const clean = s.trim().replace(',', '.');
   if (clean === '') return null;
   const n = Number(clean);
   return Number.isFinite(n) ? n : null;
 };
 
 const isCaratValid = (s: string): boolean => {
-  const clean = s.trim();
+  const clean = s.trim().replace(',', '.');
   if (clean === '') return true;
   if (!/^\d+(\.\d{1,3})?$/.test(clean)) return false;
   const n = Number(clean);
@@ -98,7 +98,7 @@ function fromProduct(p: Product): FormState {
     category: p.category,
     subCategory: p.subCategory ?? '',
     goldKarat: p.goldKarat || '14K',
-    carat: p.carat != null ? String(p.carat) : '',
+    carat: p.carat != null ? String(p.carat).replace('.', ',') : '',
     price: p.price ? p.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '',
     discount: String(p.discount),
     imageKeys: p.images.map((i) => i.storageKey),
@@ -224,90 +224,13 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
     if (!/^\d*(,\d{0,3})?$/.test(next)) e.preventDefault();
   };
 
-  const handleCaratKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (
-      e.key === 'Backspace' ||
-      e.key === 'Delete' ||
-      e.key === 'Tab' ||
-      e.key === 'Escape' ||
-      e.key === 'Enter' ||
-      e.key === 'ArrowLeft' ||
-      e.key === 'ArrowRight' ||
-      e.key === 'ArrowUp' ||
-      e.key === 'ArrowDown' ||
-      e.key === 'Home' ||
-      e.key === 'End' ||
-      e.ctrlKey ||
-      e.metaKey
-    ) {
-      return;
-    }
-
-    if (e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') {
-      e.preventDefault();
-      return;
-    }
-
-    if (e.key === '.') {
-      const input = e.currentTarget;
-      const val = input.value;
-      const start = input.selectionStart ?? 0;
-      const end = input.selectionEnd ?? 0;
-      const selectedText = val.slice(start, end);
-      if (val.includes('.') && !selectedText.includes('.')) {
-        e.preventDefault();
-      }
-      return;
-    }
-
-    if (!/^[0-9]$/.test(e.key)) {
-      e.preventDefault();
-    }
-  };
-
-  const handleCaratPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const paste = e.clipboardData.getData('text');
-    if (/[,eE+-]/.test(paste) || !/^[0-9.]*$/.test(paste)) {
-      e.preventDefault();
-      return;
-    }
-    const input = e.currentTarget;
-    const val = input.value;
-    const start = input.selectionStart ?? 0;
-    const end = input.selectionEnd ?? 0;
-    const existingWithoutSelected = val.slice(0, start) + val.slice(end);
-    const totalDots = (existingWithoutSelected.match(/\./g) || []).length + (paste.match(/\./g) || []).length;
-    if (totalDots > 1) {
-      e.preventDefault();
-      return;
-    }
-  };
-
   const handleCaratChange = (e: ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/[,eE+-]/g, '').replace(/[^0-9.]/g, '');
-
-    if (val.startsWith('.')) {
-      val = '0' + val;
-    }
-
-    const parts = val.split('.');
-    if (parts.length > 2) {
-      val = parts[0] + '.' + parts.slice(1).join('');
-    }
-    if (parts.length >= 2 && parts[1].length > 3) {
-      val = parts[0] + '.' + parts[1].slice(0, 3);
-    }
-    if (val.length > INPUT_LIMITS.carat) {
-      val = val.slice(0, INPUT_LIMITS.carat);
-    }
-    set('carat')(val);
+    const value = e.target.value;
+    if (!/^\d*(,\d{0,3})?$/.test(value) || value.length > INPUT_LIMITS.carat) return;
+    set('carat')(value.startsWith(',') ? `0${value}` : value);
   };
 
-  const handleCaratBlur = () => {
-    if (form.carat.endsWith('.')) {
-      set('carat')(form.carat.slice(0, -1));
-    }
-  };
+  const handleCaratBlur = () => set('carat')(form.carat.replace(/,$/, ''));
 
   const topCategory = tree.find((c) => c.id === form.category);
   const subCategories = topCategory?.children ?? [];
@@ -483,10 +406,10 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
               label={t('admin.form.carat')}
               type="text"
               inputMode="decimal"
-              placeholder="0.00"
+              placeholder="0,00"
               value={form.carat}
-              onKeyDown={handleCaratKeyDown}
-              onPaste={handleCaratPaste}
+              onKeyDown={handleWeightKeyDown}
+              onPaste={handleWeightPaste}
               onChange={handleCaratChange}
               onBlur={handleCaratBlur}
               error={err('carat')}

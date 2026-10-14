@@ -5,12 +5,12 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useAsync } from '@/hooks/useAsync';
 import { services } from '@/services';
 import type { ProductSort } from '@/types';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from 'react';
 import { ProductGrid } from './product';
 import { Input, Select } from './ui/Input';
 import { Pagination } from './ui/Misc';
 import { EmptyState, ErrorState, ProductGridSkeleton } from './ui/State';
-import { parseRangeNumber } from '@/utils/productRange';
+import { formatPriceRange, parsePriceRangeNumber, parseRangeNumber } from '@/utils/productRange';
 import { Button } from './ui/Button';
 import { Icon } from './ui/Icon';
 import { MultiComboBox } from './ui/MultiComboBox';
@@ -31,10 +31,10 @@ export function ProductListing({ category, subCategory, categoryFilter = false }
   const categoryKey = selectedCategories.join(',');
   const minPriceText = params.get('minPrice') ?? '';
   const maxPriceText = params.get('maxPrice') ?? '';
-  const minCaratText = params.get('minCarat') ?? '';
-  const maxCaratText = params.get('maxCarat') ?? '';
-  const minPrice = parseRangeNumber(useDebounce(minPriceText, 350));
-  const maxPrice = parseRangeNumber(useDebounce(maxPriceText, 350));
+  const minCaratText = (params.get('minCarat') ?? '').replace('.', ',');
+  const maxCaratText = (params.get('maxCarat') ?? '').replace('.', ',');
+  const minPrice = parsePriceRangeNumber(useDebounce(minPriceText, 350));
+  const maxPrice = parsePriceRangeNumber(useDebounce(maxPriceText, 350));
   const minCarat = parseRangeNumber(useDebounce(minCaratText, 350));
   const maxCarat = parseRangeNumber(useDebounce(maxCaratText, 350));
   const priceInvalid = minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice;
@@ -73,7 +73,26 @@ export function ProductListing({ category, subCategory, categoryFilter = false }
   };
 
   const updateRange = (key: string, value: string) => {
-    if (/^\d*(?:[.,]\d*)?$/.test(value) && value.length <= 16) update(key, value);
+    if (/^\d*(?:,\d{0,3})?$/.test(value) && value.length <= INPUT_LIMITS.carat) update(key, value.startsWith(',') ? `0${value}` : value);
+  };
+
+  const updatePriceRange = (key: string, event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    if (!/^[\d.]*$/.test(input.value)) return;
+    const raw = input.value.replace(/\./g, '');
+    if (raw.length > 15) return;
+    const digitsBeforeCursor = input.value.slice(0, input.selectionStart ?? input.value.length).replace(/\./g, '').length;
+    const formatted = formatPriceRange(raw);
+    update(key, raw);
+    requestAnimationFrame(() => {
+      let cursor = 0;
+      let digits = 0;
+      while (cursor < formatted.length && digits < digitsBeforeCursor) {
+        if (/\d/.test(formatted[cursor])) digits++;
+        cursor++;
+      }
+      if (document.activeElement === input) input.setSelectionRange(cursor, cursor);
+    });
   };
 
   const updateCategories = (values: string[]) => {
@@ -123,9 +142,9 @@ export function ProductListing({ category, subCategory, categoryFilter = false }
           <fieldset className="toolbar__range" aria-invalid={priceInvalid}>
             <legend className="field__label">{t('listing.priceRange')}</legend>
             <div className="toolbar__range-inputs">
-              <Input label={t('listing.minPrice')} placeholder={t('listing.min')} inputMode="decimal" value={minPriceText} onChange={(e) => updateRange('minPrice', e.target.value)} reserveMessageSpace={false} autoComplete="off" />
+              <Input label={t('listing.minPrice')} placeholder={t('listing.min')} inputMode="numeric" value={formatPriceRange(minPriceText)} onChange={(e) => updatePriceRange('minPrice', e)} reserveMessageSpace={false} autoComplete="off" />
               <span className="toolbar__range-separator" aria-hidden="true">–</span>
-              <Input label={t('listing.maxPrice')} placeholder={t('listing.max')} inputMode="decimal" value={maxPriceText} onChange={(e) => updateRange('maxPrice', e.target.value)} reserveMessageSpace={false} autoComplete="off" />
+              <Input label={t('listing.maxPrice')} placeholder={t('listing.max')} inputMode="numeric" value={formatPriceRange(maxPriceText)} onChange={(e) => updatePriceRange('maxPrice', e)} reserveMessageSpace={false} autoComplete="off" />
             </div>
           </fieldset>
           <fieldset className="toolbar__range" aria-invalid={caratInvalid}>
