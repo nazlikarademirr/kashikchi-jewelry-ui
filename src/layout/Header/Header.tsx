@@ -92,9 +92,15 @@ export function CategoryNav() {
     <nav className="main-nav" aria-label={t('a11y.mainNav')}>
       <ul className="main-nav__list">
         <li className="nav-item">
-          <NavLink to={ROUTES.home} end className={navCls}>
+          <NavLink to={ROUTES.home} end className={navCls} onClick={(e) => e.currentTarget.blur()}>
             {t('nav.home')}
+            <Icon name="chevronDown" size={12} />
           </NavLink>
+          <div className="nav-dropdown">
+            <NavLink to={ROUTES.products} onClick={(e) => e.currentTarget.blur()}>
+              {t('nav.allProducts')}
+            </NavLink>
+          </div>
         </li>
         {tree.map((c) => (
           <li className="nav-item" key={c.id}>
