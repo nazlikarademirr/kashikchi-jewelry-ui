@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ORDER_STATUS_I18N } from '@/constants';
 import { ROUTES } from '@/constants/routes';
@@ -11,6 +11,7 @@ import { finalPrice } from '@/utils/format';
 import { mediaUrl } from '@/utils/media';
 import { Icon } from './ui/Icon';
 import { Badge } from './ui/Misc';
+
 
 export function FavoriteButton({ productId, large }: { productId: string; large?: boolean }) {
   const { t } = useI18n();
@@ -63,7 +64,14 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
   const { loc, carat, t } = useI18n();
   const [imgFailed, setImgFailed] = useState(false);
   const img = product.images[0];
+  const [imgSrc, setImgSrc] = useState(() => (img ? mediaUrl(img.storageKey) : ''));
   const name = loc(product.name);
+
+  useEffect(() => {
+    setImgFailed(false);
+    setImgSrc(img ? mediaUrl(img.storageKey) : '');
+  }, [img?.storageKey]);
+
   return (
     <article className="product-card">
       <div className="product-card__fav">
@@ -71,15 +79,21 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
       </div>
       <Link to={ROUTES.product(product.slug)} className="product-card__link" aria-label={name}>
         <div className="product-card__media">
-          {img && !imgFailed ? (
+          {img && !imgFailed && imgSrc ? (
             <img
-              src={mediaUrl(img.storageKey)}
+              src={imgSrc}
               alt={name}
               width={640}
               height={800}
               loading={priority ? 'eager' : 'lazy'}
               decoding="async"
-              onError={() => setImgFailed(true)}
+              onError={() => {
+                if (imgSrc && !imgSrc.startsWith('/images/') && img?.storageKey) {
+                  setImgSrc(`/images/${img.storageKey}`);
+                } else {
+                  setImgFailed(true);
+                }
+              }}
             />
           ) : (
             <div className="product-card__placeholder">

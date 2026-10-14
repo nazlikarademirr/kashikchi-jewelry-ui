@@ -52,6 +52,9 @@ export function ImageGallery({ product }: { product: Product }) {
   const { t, loc } = useI18n();
   const [index, setIndex] = useState(0);
   const [failedKeys, setFailedKeys] = useState<Record<string, boolean>>({});
+  const [fallbackUrls, setFallbackUrls] = useState<Record<string, string>>({});
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+
   const images = product.images;
   const name = loc(product.name);
   if (images.length === 0) {
@@ -69,6 +72,17 @@ export function ImageGallery({ product }: { product: Product }) {
   const current = images[Math.min(index, images.length - 1)];
   const go = (d: number) => setIndex((i) => (i + d + images.length) % images.length);
 
+  const getSrc = (storageKey: string) => fallbackUrls[storageKey] || mediaUrl(storageKey);
+
+  const handleImgError = (storageKey: string) => {
+    const activeSrc = getSrc(storageKey);
+    if (activeSrc && !activeSrc.startsWith('/images/')) {
+      setFallbackUrls((prev) => ({ ...prev, [storageKey]: `/images/${storageKey}` }));
+    } else {
+      setFailedKeys((prev) => ({ ...prev, [storageKey]: true }));
+    }
+  };
+
   return (
     <div
       className="gallery"
@@ -80,13 +94,31 @@ export function ImageGallery({ product }: { product: Product }) {
         if (e.key === 'ArrowRight') go(1);
       }}
     >
-      <div className="gallery__main">
+      <div
+        className="gallery__main"
+        onTouchStart={(e) => {
+          if (e.touches.length === 1) {
+            touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          }
+        }}
+        onTouchEnd={(e) => {
+          if (!touchStart.current || images.length <= 1) return;
+          const touchEnd = e.changedTouches[0];
+          const dx = touchEnd.clientX - touchStart.current.x;
+          const dy = touchEnd.clientY - touchStart.current.y;
+          touchStart.current = null;
+          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+            if (dx < 0) go(1);
+            else go(-1);
+          }
+        }}
+      >
         {!failedKeys[current.storageKey] ? (
           <ImageZoom
             key={current.id}
-            src={mediaUrl(current.storageKey)}
+            src={getSrc(current.storageKey)}
             alt={t('product.imageN', { name, n: index + 1, total: images.length })}
-            onError={() => setFailedKeys((prev) => ({ ...prev, [current.storageKey]: true }))}
+            onError={() => handleImgError(current.storageKey)}
           />
         ) : (
           <div className="gallery__placeholder">
@@ -116,12 +148,18 @@ export function ImageGallery({ product }: { product: Product }) {
               aria-label={t('product.showImage', { n: i + 1 })}
               onClick={() => setIndex(i)}
             >
-              <img src={mediaUrl(img.storageKey)} alt="" loading="lazy" width={120} height={120} />
+              <img
+                src={getSrc(img.storageKey)}
+                alt=""
+                loading="lazy"
+                width={120}
+                height={120}
+                onError={() => handleImgError(img.storageKey)}
+              />
             </button>
           ))}
         </div>
       )}
-
     </div>
   );
 }
