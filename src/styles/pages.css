@@ -375,18 +375,20 @@
 .catalog-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-5);
   padding: 0;
   border: 0;
   background: transparent;
 }
 .catalog-toolbar .toolbar__filters {
   display: grid;
-  grid-template-columns: 1.15fr 1fr 1.1fr 1.1fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: end;
   gap: var(--space-5);
 }
-.catalog-toolbar--categories .toolbar__filters { grid-template-columns: 1.1fr 1fr 1fr 1.1fr 1.1fr; }
+.catalog-toolbar--categories .toolbar__filters { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .catalog-toolbar .field,
+.catalog-toolbar .combobox,
 .catalog-toolbar .toolbar__range { min-width: 0; width: 100%; }
 .catalog-toolbar .field__label { color: var(--text-muted); font-size: 0.83rem; letter-spacing: 0.02em; }
 .catalog-toolbar .input,
@@ -406,11 +408,13 @@
 .catalog-toolbar .toolbar__range[aria-invalid='true'] .toolbar__range-inputs { border-color: var(--danger); }
 .catalog-toolbar__meta {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   gap: var(--space-3);
   min-height: 48px;
+  width: 140px;
   min-width: 140px;
+  flex-shrink: 0;
 }
 .catalog-toolbar__count {
   margin: 0;
@@ -420,7 +424,7 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.catalog-toolbar__meta .btn { min-height: 48px; width: 40px; padding: 0; }
+.catalog-toolbar__meta .btn { min-height: 48px; width: 40px; padding: 0; flex-shrink: 0; }
 .catalog-toolbar__meta .btn svg { width: 20px; height: 20px; }
 @media (max-width: 1050px) {
   .catalog-toolbar .toolbar__filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -432,7 +436,7 @@
   .toolbar__range { width: 100%; }
   .catalog-toolbar { grid-template-columns: minmax(0, 1fr); padding: 0; }
   .catalog-toolbar .toolbar__filters { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
-  .catalog-toolbar__meta { min-width: 0; }
+  .catalog-toolbar__meta { min-width: 0; width: auto; justify-content: space-between; }
 }
 .product-detail-page {
   min-height: calc(100vh - var(--header-h));
