@@ -144,6 +144,9 @@ export const tr = {
   },
 
   listing: {
+    categories: "Kategori",
+    categoriesPlaceholder: "Seçin veya arayın",
+    categoriesEmpty: "Kategori bulunamadı.",
     priceRange: "Fiyat ($)",
     caratRange: "Toplam Karat (ct)",
     clearFilters: "Filtreleri temizle",

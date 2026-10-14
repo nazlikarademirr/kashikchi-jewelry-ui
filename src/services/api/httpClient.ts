@@ -12,7 +12,7 @@ export function setTokens(access: string | null, refresh: string | null, session
   saveSession({ accessToken: access, refreshToken: refresh, expiresAt });
 }
 
-type Query = Record<string, string | number | boolean | undefined | null>;
+type Query = Record<string, string | number | boolean | string[] | undefined | null>;
 
 export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -68,7 +68,8 @@ async function refreshTokens(): Promise<string | null> {
 export async function http<T = void>(path: string, opts: RequestOptions = {}, isRetry = false): Promise<T> {
   const url = new URL(`${BASE_URL}${path}`, window.location.origin);
   Object.entries(opts.query ?? {}).forEach(([k, val]) => {
-    if (val !== undefined && val !== null && val !== '') url.searchParams.set(k, String(val));
+    if (Array.isArray(val)) val.forEach(value => url.searchParams.append(k, value));
+    else if (val !== undefined && val !== null && val !== '') url.searchParams.set(k, String(val));
   });
 
   const method = opts.method ?? 'GET';

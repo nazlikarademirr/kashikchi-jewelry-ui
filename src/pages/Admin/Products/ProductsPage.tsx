@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { ConfirmDialog } from '@/components/ui/Modal';
-import { Badge } from '@/components/ui/Misc';
+import { Badge, Pagination } from '@/components/ui/Misc';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/State';
 import { ROUTES } from '@/constants/routes';
+import { PRODUCT_PAGE_SIZE } from '@/constants';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useAsync } from '@/hooks/useAsync';
@@ -18,7 +19,8 @@ import { mediaUrl } from '@/utils/media';
 export default function AdminProductsPage() {
   const { t, loc, price, carat } = useI18n();
   const toast = useToast();
-  const list = useAsync(() => services.products.list({ includeInactive: true, pageSize: 100, sort: 'newest' }), []);
+  const [page, setPage] = useState(1);
+  const list = useAsync(() => services.products.list({ includeInactive: true, page, pageSize: PRODUCT_PAGE_SIZE, sort: 'newest' }), [page]);
   const [target, setTarget] = useState<Product | null>(null);
   const [busy, setBusy] = useState(false);
   useDocumentMeta({ title: t('admin.products.title'), noindex: true });
@@ -121,6 +123,10 @@ export default function AdminProductsPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {!list.loading && !list.error && list.data && (
+        <Pagination page={list.data.page} pageSize={list.data.pageSize} total={list.data.total} onChange={setPage} />
       )}
 
       <ConfirmDialog

@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
-import { isAppError } from '@/types';
+import { AppError, isAppError } from '@/types';
 import { v } from '@/utils/validation';
 
 export default function LoginPage() {
@@ -23,28 +23,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [serverErrorCode, setServerErrorCode] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<AppError | null>(null);
   const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
   useDocumentMeta({ title: t('auth.loginMeta'), noindex: true });
 
   const isLockedOut = Boolean(lockoutSeconds !== null && lockoutSeconds > 0);
+  const visibleError = serverError?.code === 'TOO_MANY_ATTEMPTS' && !isLockedOut ? null : serverError;
+  const serverErrorCode = visibleError?.code;
+  const serverErrorText = visibleError ? errorMessage(visibleError) : null;
 
   // Kilitlenme durumunda saniyeyi geriye doğru sayma
   useEffect(() => {
-    if (lockoutSeconds === null || lockoutSeconds <= 0) return;
+    if (!isLockedOut) return;
     const interval = window.setInterval(() => {
       setLockoutSeconds((prev) => (prev !== null && prev > 1 ? prev - 1 : null));
     }, 1000);
     return () => window.clearInterval(interval);
-  }, [lockoutSeconds !== null && lockoutSeconds > 0]);
-
-  useEffect(() => {
-    if (lockoutSeconds === null && serverErrorCode === 'TOO_MANY_ATTEMPTS') {
-      setServerError(null);
-      setServerErrorCode(null);
-    }
-  }, [lockoutSeconds, serverErrorCode]);
+  }, [isLockedOut]);
 
   const identifierVal = identifier.trim();
   const identifierError = !identifierVal
@@ -56,10 +51,7 @@ export default function LoginPage() {
 
   const clearErrors = () => {
     if (isLockedOut) return;
-    if (serverError || serverErrorCode) {
-      setServerError(null);
-      setServerErrorCode(null);
-    }
+    setServerError(null);
   };
 
   const submit = async (e: FormEvent) => {
@@ -73,21 +65,11 @@ export default function LoginPage() {
       await login({ email: identifierVal.toLowerCase(), password });
       toast.success('auth.loggedIn');
     } catch (err) {
-      if (isAppError(err)) {
-        setServerErrorCode(err.code);
-        if (err.code === 'TOO_MANY_ATTEMPTS') {
-          const secs = err.retryAfter && err.retryAfter > 0 ? err.retryAfter : 60;
-          setLockoutSeconds(secs);
-          setServerError(tDynamic('errors.TOO_MANY_ATTEMPTS', { seconds: secs }));
-        } else {
-          setLockoutSeconds(null);
-          setServerError(errorMessage(err));
-        }
-      } else {
-        setServerErrorCode(null);
-        setLockoutSeconds(null);
-        setServerError(errorMessage(err));
-      }
+      const failure = isAppError(err) ? err : new AppError('UNKNOWN');
+      setServerError(failure);
+      setLockoutSeconds(failure.code === 'TOO_MANY_ATTEMPTS'
+        ? (failure.retryAfter && failure.retryAfter > 0 ? failure.retryAfter : 60)
+        : null);
       setBusy(false);
     }
   };
@@ -114,7 +96,7 @@ export default function LoginPage() {
             submitted && identifierError
               ? tDynamic(identifierError)
               : serverErrorCode === 'USER_NOT_FOUND'
-              ? serverError
+              ? serverErrorText
               : null
           }
         />
@@ -136,7 +118,7 @@ export default function LoginPage() {
               : serverErrorCode === 'TOO_MANY_ATTEMPTS' && isLockedOut
               ? tDynamic('errors.TOO_MANY_ATTEMPTS', { seconds: lockoutSeconds ?? 60 })
               : serverErrorCode && serverErrorCode !== 'USER_NOT_FOUND'
-              ? serverError
+              ? serverErrorText
               : null
           }
         />

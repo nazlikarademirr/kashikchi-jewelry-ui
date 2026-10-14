@@ -5,7 +5,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useAsync } from '@/hooks/useAsync';
 import { services } from '@/services';
 import type { ProductSort } from '@/types';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ProductGrid } from './product';
 import { Input, Select } from './ui/Input';
 import { Pagination } from './ui/Misc';
@@ -13,17 +13,22 @@ import { EmptyState, ErrorState, ProductGridSkeleton } from './ui/State';
 import { parseRangeNumber } from '@/utils/productRange';
 import { Button } from './ui/Button';
 import { Icon } from './ui/Icon';
+import { MultiComboBox } from './ui/MultiComboBox';
+import { useCategories } from '@/contexts/CategoriesContext';
 
 const SORTS: ProductSort[] = ['newest', 'priceAsc', 'priceDesc', 'caratAsc', 'caratDesc'];
 
-export function ProductListing({ category, subCategory }: { category?: string; subCategory?: string }) {
-  const { t } = useI18n();
+export function ProductListing({ category, subCategory, categoryFilter = false }: { category?: string; subCategory?: string; categoryFilter?: boolean }) {
+  const { t, loc } = useI18n();
+  const { tree, loading: categoriesLoading } = useCategories();
   const [params, setParams] = useSearchParams();
   const paramsRef = useRef(params);
-  paramsRef.current = params;
+  useLayoutEffect(() => { paramsRef.current = params; }, [params]);
   const sort = (SORTS as string[]).includes(params.get('sort') ?? '') ? (params.get('sort') as ProductSort) : 'newest';
   const page = Math.max(1, Number(params.get('page')) || 1);
   const q = params.get('q') ?? '';
+  const selectedCategories = categoryFilter ? [...new Set(params.getAll('categories'))] : [];
+  const categoryKey = selectedCategories.join(',');
   const minPriceText = params.get('minPrice') ?? '';
   const maxPriceText = params.get('maxPrice') ?? '';
   const minCaratText = params.get('minCarat') ?? '';
@@ -54,8 +59,8 @@ export function ProductListing({ category, subCategory }: { category?: string; s
   const { data, error, loading, reload } = useAsync(
     () => invalidRange
       ? Promise.resolve({ items: [], total: 0, page: 1, pageSize: PRODUCT_PAGE_SIZE })
-      : services.products.list({ category, subCategory, search: q, sort, page, pageSize: PRODUCT_PAGE_SIZE, minPrice, maxPrice, minCarat, maxCarat }),
-    [category, subCategory, q, sort, page, minPrice, maxPrice, minCarat, maxCarat, invalidRange],
+      : services.products.list({ category, subCategory, categories: selectedCategories, search: q, sort, page, pageSize: PRODUCT_PAGE_SIZE, minPrice, maxPrice, minCarat, maxCarat }),
+    [category, subCategory, categoryKey, q, sort, page, minPrice, maxPrice, minCarat, maxCarat, invalidRange],
   );
 
   const update = (key: string, value: string) => {
@@ -71,10 +76,18 @@ export function ProductListing({ category, subCategory }: { category?: string; s
     if (/^\d*(?:[.,]\d*)?$/.test(value) && value.length <= 16) update(key, value);
   };
 
-  const hasFilters = Boolean(search || sort !== 'newest' || minPriceText || maxPriceText || minCaratText || maxCaratText);
+  const updateCategories = (values: string[]) => {
+    const next = new URLSearchParams(paramsRef.current);
+    next.delete('categories');
+    values.forEach(value => next.append('categories', value));
+    next.delete('page');
+    paramsRef.current = next;
+    setParams(next);
+  };
+  const hasFilters = Boolean(selectedCategories.length || search || sort !== 'newest' || minPriceText || maxPriceText || minCaratText || maxCaratText);
   const clearFilters = () => {
     const next = new URLSearchParams(paramsRef.current);
-    for (const key of ['q', 'sort', 'minPrice', 'maxPrice', 'minCarat', 'maxCarat', 'page']) next.delete(key);
+    for (const key of ['q', 'sort', 'categories', 'minPrice', 'maxPrice', 'minCarat', 'maxCarat', 'page']) next.delete(key);
     paramsRef.current = next;
     setSearch('');
     setParams(next);
@@ -82,7 +95,7 @@ export function ProductListing({ category, subCategory }: { category?: string; s
 
   return (
     <>
-      <div className="toolbar catalog-toolbar">
+      <div className={`toolbar catalog-toolbar${categoryFilter ? ' catalog-toolbar--categories' : ''}`}>
         <div className="toolbar__filters">
           <Input
             label={t('listing.search')}
@@ -93,6 +106,13 @@ export function ProductListing({ category, subCategory }: { category?: string; s
             maxLength={INPUT_LIMITS.search}
             autoComplete="off"
           />
+          {categoryFilter && <MultiComboBox label={t('listing.categories')} placeholder={t('listing.categoriesPlaceholder')}
+            emptyText={t('listing.categoriesEmpty')} disabled={categoriesLoading}
+            options={tree.flatMap(item => [
+              { value: item.id, label: loc(item.name), depth: 0 },
+              ...item.children.map(child => ({ value: child.id, label: loc(child.name), depth: 1 })),
+            ])}
+            value={selectedCategories} onChange={updateCategories} />}
           <Select label={t('listing.sort')} value={sort} onChange={(e) => update('sort', e.target.value === 'newest' ? '' : e.target.value)}>
             {SORTS.map((s) => (
               <option key={s} value={s}>

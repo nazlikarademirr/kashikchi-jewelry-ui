@@ -108,6 +108,7 @@ export interface ProductInput {
 export type ProductSort = 'newest' | 'priceAsc' | 'priceDesc' | 'caratAsc' | 'caratDesc';
 
 export interface ProductQuery {
+  categories?: string[];
   minPrice?: number;
   maxPrice?: number;
   minCarat?: number;

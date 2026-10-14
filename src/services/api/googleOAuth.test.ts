@@ -31,7 +31,10 @@ it('keeps the login proof in this tab and sends only its hash in the redirect', 
 it('uses the completion response to establish the normal application session', async () => {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const user = { id: 'google-user' };
-  const fetchMock = vi.fn(async (_url: URL | string) => Response.json({ user, accessToken: 'access', refreshToken: 'refresh', sessionExpiresAt: expiresAt }));
+  const fetchMock = vi.fn(async (url: URL | string) => {
+    expect(String(url)).toContain('/auth/google/complete');
+    return Response.json({ user, accessToken: 'access', refreshToken: 'refresh', sessionExpiresAt: expiresAt });
+  });
   vi.stubGlobal('fetch', fetchMock);
   expect(await apiServices.auth.googleComplete('ticket', 'proof')).toEqual(user);
   expect(String(fetchMock.mock.calls[0][0])).toContain('/auth/google/complete');

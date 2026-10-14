@@ -54,7 +54,7 @@ export const STORAGE_KEYS = {
   locale: 'kj.locale',
 } as const;
 
-export const PRODUCT_PAGE_SIZE = 8;
+export const PRODUCT_PAGE_SIZE = 50;
 
 export const LEGAL_DOCS = ['privacy', 'returns'] as const;
 export type LegalDoc = typeof LEGAL_DOCS[number];
