@@ -1,7 +1,6 @@
 import { useLocation, useParams } from 'react-router-dom';
 import { MessagePanel, OrderItemsList, OrderTimeline } from '@/components/order';
 import { OrderStatusBadge } from '@/components/product';
-import { LinkButton } from '@/components/ui/Button';
 import { Badge, Breadcrumb } from '@/components/ui/Misc';
 import { Alert, ErrorState, Skeleton } from '@/components/ui/State';
 import { ROUTES } from '@/constants/routes';
@@ -87,12 +86,6 @@ export default function AccountOrderDetailPage() {
       <div className="card">
         <h2 className="card__title">{t('orders.messagesTitle')}</h2>
         <MessagePanel orderId={o.id} />
-      </div>
-
-      <div>
-        <LinkButton to={ROUTES.accountOrders} variant="ghost">
-          {t('orders.backToOrders')}
-        </LinkButton>
       </div>
     </div>
   );

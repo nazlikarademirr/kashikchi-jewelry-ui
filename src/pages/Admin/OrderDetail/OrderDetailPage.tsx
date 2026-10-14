@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { DeleteOrderModal } from '@/components/DeleteOrderModal';
 import { MessagePanel, OrderItemsList, OrderTimeline } from '@/components/order';
-import { Button, LinkButton } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Breadcrumb } from '@/components/ui/Misc';
 import { Alert, ErrorState, Skeleton } from '@/components/ui/State';
 import { ROUTES } from '@/constants/routes';
@@ -155,12 +155,6 @@ export default function AdminOrderDetailPage() {
             <MessagePanel orderId={o.id} />
           </div>
         </div>
-      </div>
-
-      <div>
-        <LinkButton to={o.isDeleted ? ROUTES.adminDeletedOrders : ROUTES.adminOrders} variant="ghost">
-          {o.isDeleted ? t('admin.deletedOrders.title') : t('orders.backToOrders')}
-        </LinkButton>
       </div>
 
       <DeleteOrderModal

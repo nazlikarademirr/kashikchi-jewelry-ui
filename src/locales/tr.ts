@@ -473,7 +473,7 @@ export const tr = {
     subtitle: "Siparişlerinizle ilgili son gelişmeler.",
     emptyTitle: "Yeni bildiriminiz yok.",
     emptyText: "Sipariş durumu değiştiğinde veya yeni mesaj geldiğinde burada görünür.",
-    markAll: "Tümünü okundu say",
+    markAll: "Tümünü Okundu Yap",
     markedAll: "Bildirimler okundu olarak işaretlendi",
     markRead: "Okundu olarak işaretle",
     unreadN: "{n} okunmamış bildirim",
