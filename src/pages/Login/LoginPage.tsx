@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthShell } from '@/components/AuthShell';
 import { GoogleSignIn } from '@/components/GoogleSignIn';
 import { Button } from '@/components/ui/Button';
@@ -13,10 +13,12 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { AppError, isAppError } from '@/types';
+import { getPostLoginRedirect } from '@/utils/navigation';
 import { v } from '@/utils/validation';
 
 export default function LoginPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t, tDynamic, errorMessage } = useI18n();
   const { login } = useAuth();
   const toast = useToast();
@@ -65,8 +67,10 @@ export default function LoginPage() {
     if (identifierError || passwordError) return;
     setBusy(true);
     try {
-      await login({ email: identifier, password });
+      const u = await login({ email: identifier, password });
       toast.success('auth.loggedIn');
+      const target = getPostLoginRedirect(location.state, u.role);
+      navigate(target, { replace: true });
     } catch (err) {
       const failure = isAppError(err) ? err : new AppError('UNKNOWN');
       setServerError(failure);
@@ -193,7 +197,7 @@ export default function LoginPage() {
       </form>
       <GoogleSignIn />
       <p className="auth__foot">
-        {t('auth.noAccount')} <Link to={ROUTES.register}>{t('auth.registerLink')}</Link>
+        {t('auth.noAccount')} <Link to={ROUTES.register} state={location.state}>{t('auth.registerLink')}</Link>
       </p>
     </AuthShell>
   );

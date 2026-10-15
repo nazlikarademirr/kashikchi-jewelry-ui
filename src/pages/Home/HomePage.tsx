@@ -18,33 +18,103 @@ const HERO_SLIDES = [
   '/images/hero-slide-4.jpg',
 ];
 
+const EARRINGS_CATEGORY_ID = '10000000-0000-4000-8000-000000000003';
+
 const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  yuzuk: '/images/ring-solitaire.jpg',
-  ring: '/images/ring-solitaire.jpg',
-  kolye: '/images/necklace-solitaire.jpg',
-  necklace: '/images/necklace-solitaire.jpg',
+  // Küpe / Earrings
+  küpe: '/images/earrings.jpg',
   kupe: '/images/earrings.jpg',
   earring: '/images/earrings.jpg',
+  earrings: '/images/earrings.jpg',
+  // Yüzük / Rings
+  yüzük: '/images/ring-solitaire.jpg',
+  yuzuk: '/images/ring-solitaire.jpg',
+  ring: '/images/ring-solitaire.jpg',
+  rings: '/images/ring-solitaire.jpg',
+  // Kolye / Necklaces
+  kolye: '/images/necklace-solitaire.jpg',
+  necklace: '/images/necklace-solitaire.jpg',
+  necklaces: '/images/necklace-solitaire.jpg',
+  // Bileklik / Bracelets
   bileklik: '/images/bracelet-tennis.jpg',
   bracelet: '/images/bracelet-tennis.jpg',
+  bracelets: '/images/bracelet-tennis.jpg',
+  // Alyans / Wedding bands
   alyans: '/images/wedding-bands.jpg',
   wedding: '/images/wedding-bands.jpg',
+  // Erkek / Men
   erkek: '/images/mens-jewelry.jpg',
   men: '/images/mens-jewelry.jpg',
+  // Setler / Sets
   setler: '/images/set-bridal.jpg',
   set: '/images/set-bridal.jpg',
+  sets: '/images/set-bridal.jpg',
+  // Koleksiyonlar / Collections
+  koleksiyon: '/images/collections-showcase.jpg',
   koleksiyonlar: '/images/collections-showcase.jpg',
   collection: '/images/collections-showcase.jpg',
+  collections: '/images/collections-showcase.jpg',
 };
 
-function resolveCategoryImage(c: { id: string; imageKey?: string | null; name: { tr: string; en: string } }): string {
-  if (c.imageKey) return c.imageKey;
+function normalizeCategoryText(str: string): string {
+  return (str || '')
+    .toLowerCase()
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .trim();
+}
+
+function isEarringsCategory(c: { id: string; name?: { tr?: string; en?: string } }): boolean {
+  if (c.id === EARRINGS_CATEGORY_ID) return true;
   const tr = (c.name?.tr || '').toLowerCase();
   const en = (c.name?.en || '').toLowerCase();
-  for (const [key, path] of Object.entries(CATEGORY_FALLBACK_IMAGES)) {
-    if (tr.includes(key) || en.includes(key)) return path;
+  const normTr = normalizeCategoryText(tr);
+  const normEn = normalizeCategoryText(en);
+  return (
+    tr.includes('küpe') ||
+    normTr.includes('kupe') ||
+    en.includes('earring') ||
+    normEn.includes('earring')
+  );
+}
+
+function resolveCategoryImage(c: { id: string; imageKey?: string | null; name: { tr: string; en: string } }): string {
+  // Küpe kategorisi için koruma: asla yüzük veya geçersiz resim gösterilemez
+  if (isEarringsCategory(c)) {
+    const key = (c.imageKey || '').toLowerCase();
+    const isRingImg = key.replace(/earrings?/g, '').includes('ring') || key.includes('yuzuk') || key.includes('solitaire');
+    if (c.imageKey && !isRingImg && c.imageKey !== '/images/hero_diamond.jpg') {
+      return c.imageKey;
+    }
+    return '/images/earrings.jpg';
   }
-  return '/images/ring-solitaire.jpg';
+
+  if (c.imageKey && c.imageKey.trim().length > 0 && c.imageKey !== '/images/hero_diamond.jpg') {
+    return c.imageKey;
+  }
+
+  const tr = (c.name?.tr || '').toLowerCase();
+  const en = (c.name?.en || '').toLowerCase();
+  const normTr = normalizeCategoryText(tr);
+  const normEn = normalizeCategoryText(en);
+
+  for (const [key, path] of Object.entries(CATEGORY_FALLBACK_IMAGES)) {
+    const normKey = normalizeCategoryText(key);
+    if (
+      tr.includes(key) ||
+      normTr.includes(normKey) ||
+      en.includes(key) ||
+      normEn.includes(normKey)
+    ) {
+      return path;
+    }
+  }
+
+  return '/images/collections-showcase.jpg';
 }
 
 export default function HomePage() {
@@ -59,7 +129,7 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  const featured = useAsync(() => services.products.list({ featured: true, pageSize: 6 }), []);
+  const featured = useAsync(() => services.products.list({ featured: true, pageSize: 20 }), []);
   useDocumentMeta({ title: t('home.metaTitle'), description: t('home.metaDescription') });
 
   return (
@@ -126,7 +196,7 @@ export default function HomePage() {
                 {t('home.viewAll')}
               </LinkButton>
             </div>
-            <ProductGrid products={featured.data.items} columns={3} />
+            <ProductGrid products={featured.data.items} columns={4} />
           </div>
         </section>
       )}

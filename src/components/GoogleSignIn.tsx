@@ -1,15 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { services } from '@/services';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/State';
+import { getPostLoginRedirect } from '@/utils/navigation';
 
 export function GoogleSignIn() {
   const { googleComplete } = useAuth();
   const { errorMessage, t, tError } = useI18n();
   const toast = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,15 +38,19 @@ export function GoogleSignIn() {
         else {
           setBusy(true);
           completion.current ??= googleComplete(ticket, proof);
-          void completion.current.then(() => {
-            if (active) toast.success('auth.loggedIn');
+          void completion.current.then((u) => {
+            if (active) {
+              toast.success('auth.loggedIn');
+              const target = getPostLoginRedirect(location.state, u.role);
+              navigate(target, { replace: true });
+            }
           }).catch((err) => { if (active) setError(errorMessage(err)); })
             .finally(() => { sessionStorage.removeItem('kj:google-proof'); if (active) setBusy(false); });
         }
       }
     }
     return () => { active = false; };
-  }, [callback, googleComplete, errorMessage, t, tError, toast]);
+  }, [callback, googleComplete, errorMessage, t, tError, toast, location.state, navigate]);
 
   const start = async () => {
     if (busy) return;

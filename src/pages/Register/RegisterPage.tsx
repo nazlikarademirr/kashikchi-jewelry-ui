@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthShell } from '@/components/AuthShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -11,9 +11,12 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { isAppError } from '@/types';
+import { getPostLoginRedirect } from '@/utils/navigation';
 import { sanitizeText, toTitleCase, v } from '@/utils/validation';
 
 export default function RegisterPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { t, tDynamic, errorMessage } = useI18n();
   const { register } = useAuth();
   const toast = useToast();
@@ -59,7 +62,7 @@ export default function RegisterPage() {
     if (hasErrors) return;
     setBusy(true);
     try {
-      await register({
+      const u = await register({
         name: toTitleCase(sanitizeText(form.name, INPUT_LIMITS.name)),
         surname: toTitleCase(sanitizeText(form.surname, INPUT_LIMITS.surname)),
         email: emailVal.toLowerCase(),
@@ -67,6 +70,8 @@ export default function RegisterPage() {
         password: form.password,
       });
       toast.success('auth.registered');
+      const target = getPostLoginRedirect(location.state, u.role);
+      navigate(target, { replace: true });
     } catch (err) {
       if (isAppError(err) && err.fieldErrors && Object.values(err.fieldErrors).some(Boolean)) {
         setServerFields(err.fieldErrors);
@@ -163,7 +168,7 @@ export default function RegisterPage() {
         </Button>
       </form>
       <p className="auth__foot">
-        {t('auth.haveAccount')} <Link to={ROUTES.login}>{t('auth.loginLink')}</Link>
+        {t('auth.haveAccount')} <Link to={ROUTES.login} state={location.state}>{t('auth.loginLink')}</Link>
       </p>
     </AuthShell>
   );

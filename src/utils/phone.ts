@@ -1,9 +1,5 @@
 import { COUNTRY_CODES } from '@/constants/countries';
 
-/**
- * Formats digits typed by user into grouped chunks.
- * e.g. for TR: 535 535 53 35 (3 - 3 - 2 - 2)
- */
 export function formatNationalNumber(input: string, dialCode = '+90'): string {
   let digits = input.replace(/\D/g, '');
   if (!digits) return '';
@@ -67,9 +63,6 @@ export function parsePhoneNumber(fullValue: string): { dialCode: string; nationa
   };
 }
 
-/**
- * Formats phone number as '+90 535 535 53 35' while typing or displaying.
- */
 export function formatPhoneNumber(value: string): string {
   const { dialCode, nationalNumber } = parsePhoneNumber(value);
   if (!nationalNumber) return '';

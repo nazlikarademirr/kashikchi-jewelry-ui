@@ -358,6 +358,20 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
     };
     setBusy(true);
     try {
+      if (form.featured && form.isActive && (!product || !product.featured)) {
+        try {
+          const featuredCheck = await services.products.list({ featured: true, pageSize: 25 });
+          if (featuredCheck.total >= 20 || featuredCheck.items.length >= 20) {
+            setServerFields((prev) => ({ ...prev, featured: 'validation.maxFeaturedProducts' }));
+            setServerError(t('validation.maxFeaturedProducts'));
+            setBusy(false);
+            return;
+          }
+        } catch {
+          // If check fails, allow backend to validate
+        }
+      }
+
       if (product) {
         const updated = await services.products.update(product.id, input);
         const updatedForm = fromProduct(updated);
@@ -373,7 +387,14 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
         navigate(ROUTES.adminProductEdit(created.id));
       }
     } catch (er) {
-      if (isAppError(er) && er.fieldErrors) setServerFields(er.fieldErrors);
+      if (isAppError(er) && er.fieldErrors) {
+        setServerFields(er.fieldErrors);
+        if (er.fieldErrors.featured) {
+          setServerError(tDynamic(er.fieldErrors.featured));
+          setBusy(false);
+          return;
+        }
+      }
       setServerError(errorMessage(er));
       setBusy(false);
     }
@@ -562,14 +583,23 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
             <input type="checkbox" checked={form.isActive} onChange={(e) => {
               const isActive = e.target.checked;
               setForm((prev) => ({ ...prev, isActive, featured: isActive && prev.featured }));
+              setServerFields((s) => ({ ...s, featured: '' }));
             }} />
             {t('admin.form.isActive')}
           </label>
           <label className="checkbox">
-            <input type="checkbox" checked={form.featured} disabled={!form.isActive} onChange={(e) => set('featured')(e.target.checked)} />
+            <input type="checkbox" checked={form.featured} disabled={!form.isActive} onChange={(e) => {
+              set('featured')(e.target.checked);
+              setServerFields((s) => ({ ...s, featured: '' }));
+            }} />
             {t('admin.form.featured')}
           </label>
         </div>
+        {err('featured') && (
+          <span className="field__error" role="alert" style={{ display: 'block', marginTop: 8 }}>
+            {err('featured')}
+          </span>
+        )}
       </div>
 
       {serverError && <Alert kind="error">{serverError}</Alert>}

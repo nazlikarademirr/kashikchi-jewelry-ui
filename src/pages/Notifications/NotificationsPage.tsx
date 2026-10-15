@@ -17,10 +17,10 @@ import { orderCode } from '@/utils/format';
 export default function NotificationsPage() {
   const { t, tDynamic, date, errorMessage } = useI18n();
   const { isAdmin } = useAuth();
-  const { refresh } = useNotificationsBadge();
+  const { refresh, revision } = useNotificationsBadge();
   const toast = useToast();
   const navigate = useNavigate();
-  const list = useAsync(() => services.notifications.list(), []);
+  const list = useAsync(() => services.notifications.list(), [revision]);
   useDocumentMeta({ title: t('notifications.title'), noindex: true });
 
   const text = (n: Notification): string => {
@@ -49,7 +49,9 @@ export default function NotificationsPage() {
       return;
     }
     if (n.type === 'NEW_MESSAGE') {
-      navigate(isAdmin ? ROUTES.adminMessages : ROUTES.accountMessages);
+      const messagesPath = isAdmin ? ROUTES.adminMessages : ROUTES.accountMessages;
+      const query = n.orderId ? `?${new URLSearchParams({ orderId: n.orderId })}` : '';
+      navigate(`${messagesPath}${query}`);
     } else if (n.orderId) {
       navigate(isAdmin ? ROUTES.adminOrder(n.orderId) : ROUTES.accountOrder(n.orderId));
     } else {
@@ -95,7 +97,7 @@ export default function NotificationsPage() {
           </Button>
         )}
       </div>
-      {list.loading ? (
+      {list.loading && !list.data ? (
         <div className="stack">
           <Skeleton style={{ height: 64 }} />
           <Skeleton style={{ height: 64 }} />

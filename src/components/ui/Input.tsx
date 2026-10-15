@@ -83,7 +83,7 @@ export function Field({
   const { t } = useI18n();
   const descId = error ? `${id}-err` : hint ? `${id}-hint` : undefined;
   const lines = typeof reserveMessageSpace === 'number' ? reserveMessageSpace : reserveMessageSpace ? 1 : 0;
-  const minHeightStyle = lines > 1 ? { minHeight: `${(lines * 1.35).toFixed(2)}em` } : undefined;
+  const minHeightStyle = lines > 1 ? { minHeight: `calc(var(--field-message-lines, ${lines}) * 1.35em)` } : undefined;
 
   return (
     <div className="field">

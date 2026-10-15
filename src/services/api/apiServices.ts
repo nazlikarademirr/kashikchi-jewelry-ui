@@ -71,6 +71,8 @@ export const apiServices: Services = {
     create: (input) => http<Product>('/admin/products', { method: 'POST', body: input }),
     update: (id, input) => http<Product>(`/admin/products/${id}`, { method: 'PUT', body: input }),
     setActive: (id, isActive) => http<Product>(`/admin/products/${id}/active`, { method: 'PATCH', body: { isActive } }),
+    updateFeatured: (productIds) => http<Product[]>('/admin/products/featured', { method: 'PUT', body: { productIds } }),
+    setFeatured: (id, featured) => http<Product>(`/admin/products/${id}/featured`, { method: 'PATCH', body: { featured } }),
   },
   favorites: {
     list: () => http<Product[]>('/favorites'),

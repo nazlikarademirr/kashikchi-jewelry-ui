@@ -1,13 +1,16 @@
+import { normalizeAddressTitle } from '@/utils/address';
 import { useState, useEffect, type FormEvent } from 'react';
 import { INPUT_LIMITS } from '@/constants';
+import { AddressFields } from '@/components/Address/AddressFields';
 import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
-import { isAppError } from '@/types';
+import { isAppError, type UserAddress } from '@/types';
 import { sanitizeText, toTitleCase, v } from '@/utils/validation';
 
 export default function ProfilePage() {
@@ -24,6 +27,7 @@ export default function ProfilePage() {
     confirmPassword: '',
   });
 
+  const [addresses, setAddresses] = useState<UserAddress[]>(() => user?.addresses ?? []);
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -40,6 +44,7 @@ export default function ProfilePage() {
         email: user.email ?? '',
         phone: user.phone ?? '',
       }));
+      setAddresses(user.addresses ?? []);
     }
   }, [user]);
 
@@ -49,16 +54,47 @@ export default function ProfilePage() {
     setServerError(null);
   };
 
+  const clearAddressServerErrors = () => {
+    setServerFields((prev) => Object.fromEntries(Object.entries(prev).filter(([key]) => !key.startsWith('addresses['))));
+  };
+
+  const addAddress = () => {
+    clearAddressServerErrors();
+    setAddresses((prev) => [
+      ...prev,
+      {
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `addr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        title: '',
+        country: 'Türkiye',
+        city: '',
+        district: '',
+        fullAddress: '',
+      },
+    ]);
+  };
+
+  const updateAddress = (index: number, updated: UserAddress) => {
+    setAddresses((prev) => prev.map((addr, i) => (i === index ? updated : addr)));
+    clearAddressServerErrors();
+  };
+
+  const removeAddress = (index: number) => {
+    clearAddressServerErrors();
+    setAddresses((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const emailVal = form.email.trim();
   const phoneVal = form.phone.trim();
 
   const isChangingPassword = Boolean(form.newPassword || form.confirmPassword);
+  const addressesChanged = JSON.stringify(addresses) !== JSON.stringify(user?.addresses ?? []);
   const isDirty = Boolean(user && (
     toTitleCase(sanitizeText(form.name, INPUT_LIMITS.name)) !== toTitleCase(user.name ?? '')
     || toTitleCase(sanitizeText(form.surname, INPUT_LIMITS.surname)) !== toTitleCase(user.surname ?? '')
     || emailVal.toLowerCase() !== (user.email ?? '').trim().toLowerCase()
     || phoneVal !== (user.phone ?? '').trim()
     || isChangingPassword
+    || addressesChanged
   ));
   const newPasswordError = isChangingPassword ? v.password(form.newPassword) : null;
   const confirmPasswordError = isChangingPassword
@@ -78,6 +114,20 @@ export default function ProfilePage() {
     confirmPassword: confirmPasswordError,
   };
 
+  const addressErrors = addresses.map((addr, index) => ({
+    title: !addr.title?.trim() ? 'validation.required'
+      : addresses.some((other, otherIndex) => otherIndex !== index && normalizeAddressTitle(other.title) === normalizeAddressTitle(addr.title))
+        ? 'validation.addressTitleTaken' : serverFields[`addresses[${index}].title`] || null,
+    country: null,
+    city: !addr.city?.trim() ? 'validation.required' : null,
+    district: !addr.district?.trim() ? 'validation.required' : null,
+    fullAddress: !addr.fullAddress?.trim() ? 'validation.required' : null,
+  }));
+
+  const hasAddressErrors = addressErrors.some((err) =>
+    Boolean(err.title || err.city || err.district || err.fullAddress)
+  );
+
   const hasErrors = Object.values(errors).some(Boolean);
   const hasServerFieldErrors = Object.values(serverFields).some(Boolean);
 
@@ -93,7 +143,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setSubmitted(true);
     setServerError(null);
-    if (hasErrors || !isDirty || busy) return;
+    if (hasErrors || hasAddressErrors || !isDirty || busy) return;
 
     setBusy(true);
     try {
@@ -103,9 +153,11 @@ export default function ProfilePage() {
         email: emailVal.toLowerCase(),
         phone: phoneVal || null,
         password: isChangingPassword ? form.newPassword : null,
+        addresses,
       });
       setForm({ name: updated.name ?? '', surname: updated.surname ?? '', email: updated.email ?? '',
         phone: updated.phone ?? '', newPassword: '', confirmPassword: '' });
+      setAddresses(updated.addresses ?? []);
       setSubmitted(false);
       setServerFields({});
       toast.success('account.profileSaved');
@@ -188,6 +240,54 @@ export default function ProfilePage() {
               }}
               error={fieldError('phone')}
             />
+          </div>
+
+          <div style={{ margin: '16px 0 20px', borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+              <div>
+                <h2 style={{ fontSize: '1.2rem', marginBottom: 4, color: 'var(--text)' }}>
+                  {t('address.myAddresses')}
+                </h2>
+                <p className="muted" style={{ fontSize: '0.86rem', margin: 0 }}>
+                  {t('address.myAddressesSubtitle')}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={addAddress}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <Icon name="plus" size={16} />
+                <span>{t('address.addAddress')}</span>
+              </Button>
+            </div>
+
+            {addresses.length === 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 144, padding: '24px 16px', textAlign: 'center', background: 'var(--surface-2)', borderRadius: 'var(--r-control)', border: '1px dashed var(--border)', margin: '8px 0 16px' }}>
+                <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
+                  {t('address.noAddressesYet')}
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', margin: '12px 0 16px' }}>
+                {addresses.map((addr, index) => (
+                  <div key={addr.id || index} className="address-card">
+                    <AddressFields
+                      value={addr}
+                      onChange={(updated) => updateAddress(index, updated)}
+                      onDelete={() => removeAddress(index)}
+                      error={submitted ? addressErrors[index] : undefined}
+                      required
+                      showTitle
+                      reserveMessageSpace
+                      titleMessageLines={3}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={{ margin: '8px 0 20px', borderTop: '1px solid var(--border)', paddingTop: 20 }}>

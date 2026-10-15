@@ -89,11 +89,10 @@ export default function AdminOrderDetailPage() {
                   })}
                 </div>
                 <div style={{ marginTop: 4 }}>
-                  {t('deleteOrder.deletedReason', {
-                    reason: o.deletionReason
-                      ? t(`deleteOrder.reasons.${o.deletionReason}` as Parameters<typeof t>[0])
-                      : '',
-                  })}
+                  <strong>{t('deleteOrder.deletedReasonLabel')}</strong>{' '}
+                  {o.deletionReason
+                    ? t(`deleteOrder.reasons.${o.deletionReason}` as Parameters<typeof t>[0])
+                    : ''}.
                   {o.deletionNote ? ` - ${o.deletionNote}` : ''}
                 </div>
               </Alert>
@@ -149,6 +148,18 @@ export default function AdminOrderDetailPage() {
               <span className="muted">{t('orders.customerNote')}</span>
               <div className="note-box">{o.customerNote || t('orders.noNote')}</div>
             </div>
+            {o.deliveryAddress && (
+              <div style={{ marginTop: 16 }}>
+                <span className="muted">{t('address.deliveryAddress')}</span>
+                <div className="note-box" style={{ marginTop: 4 }}>
+                  <strong>{o.deliveryAddress.title}</strong>
+                  <div>{o.deliveryAddress.fullAddress}</div>
+                  <div className="muted" style={{ fontSize: '0.85rem', marginTop: 2 }}>
+                    {o.deliveryAddress.district ? `${o.deliveryAddress.district} / ` : ''}{o.deliveryAddress.city} - {o.deliveryAddress.country}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           <div className="card">
             <h2 className="card__title">{t('admin.order.messagesTitle')}</h2>

@@ -31,6 +31,7 @@ const AdminDashboard = lazy(() => import('@/pages/Admin/Dashboard/DashboardPage'
 const AdminCategories = lazy(() => import('@/pages/Admin/Categories/CategoriesPage'));
 const AdminProducts = lazy(() => import('@/pages/Admin/Products/ProductsPage'));
 const AdminProductForm = lazy(() => import('@/pages/Admin/ProductForm/ProductFormPage'));
+const AdminFeaturedProducts = lazy(() => import('@/pages/Admin/Featured/FeaturedProductsPage'));
 const AdminOrders = lazy(() => import('@/pages/Admin/Orders/OrdersPage'));
 const AdminOrderDetail = lazy(() => import('@/pages/Admin/OrderDetail/OrderDetailPage'));
 const AdminDeletedOrders = lazy(() => import('@/pages/Admin/DeletedOrders/DeletedOrdersPage'));
@@ -75,6 +76,7 @@ export function AppRoutes() {
               <Route path="products" element={<AdminProducts />} />
               <Route path="products/new" element={<AdminProductForm />} />
               <Route path="products/:id/edit" element={<AdminProductForm />} />
+              <Route path="featured" element={<AdminFeaturedProducts />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="orders/:id" element={<AdminOrderDetail />} />
               <Route path="deleted-orders" element={<AdminDeletedOrders />} />

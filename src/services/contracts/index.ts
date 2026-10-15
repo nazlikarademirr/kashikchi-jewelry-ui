@@ -51,6 +51,8 @@ export interface ProductService {
   create(input: ProductInput): Promise<Product>;
   update(id: string, input: ProductInput): Promise<Product>;
   setActive(id: string, isActive: boolean): Promise<Product>;
+  updateFeatured(productIds: string[]): Promise<Product[]>;
+  setFeatured(id: string, featured: boolean): Promise<Product>;
 }
 
 export interface FavoriteService {

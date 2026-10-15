@@ -16,6 +16,7 @@ interface AuthValue {
   googleComplete: (ticket: string, proof: string) => Promise<User>;
   register: (input: RegisterInput) => Promise<User>;
   updateProfile: (input: UpdateProfileInput) => Promise<User>;
+  reloadUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -106,6 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return u;
   }, []);
 
+  const reloadUser = useCallback(async () => {
+    const updated = await services.auth.me();
+    if (!expireSession() && readSession()) setUser(updated);
+  }, []);
+
   const logout = useCallback(async () => {
     await services.auth.logout();
     setUser(null);
@@ -122,9 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       googleComplete,
       register,
       updateProfile,
+      reloadUser,
       logout,
     }),
-    [user, loading, login, googleComplete, register, updateProfile, logout],
+    [user, loading, login, googleComplete, register, updateProfile, reloadUser, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

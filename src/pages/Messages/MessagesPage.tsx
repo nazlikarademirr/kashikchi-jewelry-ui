@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { MessagePanel } from '@/components/order';
 import { OrderStatusBadge } from '@/components/product';
 import { Icon } from '@/components/ui/Icon';
@@ -14,12 +14,27 @@ import { services } from '@/services';
 import { orderCode } from '@/utils/format';
 
 export default function MessagesPage() {
-  const { t, date } = useI18n();
+  const { t } = useI18n();
   const { isAdmin } = useAuth();
   const { refresh } = useNotificationsBadge();
   const threads = useAsync(() => services.messages.listThreads(), []);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selected = searchParams.get('orderId');
+  const selectedThreadRef = useRef<HTMLDivElement>(null);
+  const selectedThreadExists = threads.data?.some((th) => th.orderId === selected) ?? false;
+  const setSelected = (orderId: string | null) => {
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous);
+      if (orderId) next.set('orderId', orderId);
+      else next.delete('orderId');
+      return next;
+    }, { replace: true });
+  };
   useDocumentMeta({ title: t('messages.title'), noindex: true });
+
+  useEffect(() => {
+    if (selectedThreadExists) selectedThreadRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [selected, selectedThreadExists]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -49,7 +64,7 @@ export default function MessagesPage() {
           {threads.data.map((th) => {
             const isOpen = selected === th.orderId;
             return (
-              <div key={th.orderId} className={`thread-item ${isOpen ? 'thread-item--open' : ''}`} role="listitem">
+              <div key={th.orderId} ref={isOpen ? selectedThreadRef : null} className={`thread-item ${isOpen ? 'thread-item--open' : ''}`} role="listitem">
                 <div
                   className="thread-item__header"
                   role="button"
@@ -68,10 +83,12 @@ export default function MessagesPage() {
                       <span className="thread-item__chevron" aria-hidden="true">
                         <Icon name="chevronDown" size={18} />
                       </span>
-                      <span className="thread-item__title">
-                        {`${orderCode(th.orderId)} - ${th.customerName}`}
-                      </span>
-                      <OrderStatusBadge status={th.orderStatus} />
+                      <div className="thread-item__summary">
+                        <span className="thread-item__title">
+                          {`${orderCode(th.orderId)} - ${th.customerName}`}
+                        </span>
+                        <OrderStatusBadge status={th.orderStatus} />
+                      </div>
                       {th.unreadCount > 0 && (
                         <span className="badge badge--primary">{th.unreadCount}</span>
                       )}
@@ -86,16 +103,6 @@ export default function MessagesPage() {
                     </div>
                   </div>
 
-                  <div className="thread-item__preview">
-                    <span className="thread-item__preview-text">
-                      {th.lastMessage ? th.lastMessage.message : t('messages.noMessagesYet')}
-                    </span>
-                    {th.lastMessage && (
-                      <span className="muted" style={{ fontSize: '0.8rem', flexShrink: 0 }}>
-                        {date(th.lastMessage.createdAt, true)}
-                      </span>
-                    )}
-                  </div>
                 </div>
 
                 {isOpen && (

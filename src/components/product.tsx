@@ -121,9 +121,10 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
   );
 });
 
-export function ProductGrid({ products, columns }: { products: Product[]; columns?: 3 }) {
+export function ProductGrid({ products, columns }: { products: Product[]; columns?: 3 | 4 }) {
+  const colClass = columns === 3 ? 'product-grid--3' : columns === 4 ? 'product-grid--4' : '';
   return (
-    <div className={`product-grid ${columns === 3 ? 'product-grid--3' : ''}`}>
+    <div className={`product-grid ${colClass}`.trim()}>
       {products.map((p, i) => (
         <ProductCard key={p.id} product={p} priority={i < 4} />
       ))}

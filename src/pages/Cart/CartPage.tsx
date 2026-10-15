@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { QuantityStepper } from '@/components/ImageGallery';
 import { PriceTag } from '@/components/product';
 import { Button, LinkButton } from '@/components/ui/Button';
-import { Input, Textarea } from '@/components/ui/Input';
+import { Input, Select, Textarea } from '@/components/ui/Input';
 import { PhoneInput } from '@/components/ui/PhoneInput';
+import { AddressFields } from '@/components/Address/AddressFields';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { Alert, EmptyState, Skeleton } from '@/components/ui/State';
 import { INPUT_LIMITS, MAX_CART_QUANTITY } from '@/constants';
@@ -15,7 +16,9 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 import { services } from '@/services';
-import type { CartItem } from '@/types';
+import { isAppError, type CartItem, type UserAddress } from '@/types';
+import { getDeliveryAddressErrors } from '@/utils/address';
+import { getCheckoutProfileUpdate } from '@/utils/checkout';
 import { finalPrice } from '@/utils/format';
 import { mediaUrl } from '@/utils/media';
 import { formatPhoneNumber } from '@/utils/phone';
@@ -140,7 +143,7 @@ function CartLine({ item }: { item: CartItem }) {
 
 export default function CartPage() {
   const { t, tDynamic, price, errorMessage } = useI18n();
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, reloadUser } = useAuth();
   const { items, loading, total, count, reset } = useCart();
   const toast = useToast();
   const navigate = useNavigate();
@@ -149,9 +152,57 @@ export default function CartPage() {
   const [email, setEmail] = useState(() => user?.email ?? '');
   const [phone, setPhone] = useState(() => formatPhoneNumber(user?.phone ?? ''));
   const [orderNote, setOrderNote] = useState('');
+  const orderNoteRef = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const field = orderNoteRef.current;
+    if (!field) return;
+    const resize = () => {
+      field.style.height = 'auto';
+      field.style.height = `${field.scrollHeight + field.offsetHeight - field.clientHeight}px`;
+    };
+    resize();
+    let width = field.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (field.clientWidth !== width) {
+        width = field.clientWidth;
+        resize();
+      }
+    });
+    observer.observe(field);
+    return () => observer.disconnect();
+  }, [orderNote, loading, items.length]);
+
+  const userAddresses = user?.addresses ?? [];
+  const [address, setAddress] = useState<UserAddress>(() => {
+    return {
+      id: '',
+      title: '',
+      country: 'Türkiye',
+      city: '',
+      district: '',
+      fullAddress: '',
+    };
+  });
+  const [selectedSavedId, setSelectedSavedId] = useState('__pickup__');
+  const needsDeliveryAddress = selectedSavedId !== '' && selectedSavedId !== '__pickup__';
+  const isSavedAddress = selectedSavedId !== '' && selectedSavedId !== '__new__' && selectedSavedId !== '__pickup__';
+
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [addressServerErrors, setAddressServerErrors] = useState<Record<string, string>>({});
+  const isNewAddress = selectedSavedId === '__new__';
+
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
+  const [contactServerErrors, setContactServerErrors] = useState<Record<string, string>>({});
+
+  const selectDelivery = (choice: string) => {
+    setSelectedSavedId(choice);
+    setSaveAddress(false);
+    setAddressServerErrors({});
+    const saved = userAddresses.find((item) => item.id === choice);
+    setAddress(saved ? { ...saved } : { id: '', title: '', country: 'Türkiye', city: '', district: '', fullAddress: '' });
+  };
 
   useDocumentMeta({ title: t('cart.title'), noindex: true });
 
@@ -168,45 +219,55 @@ export default function CartPage() {
   const phoneError = v.phone(phone);
   const hasErrors = Boolean(nameError || emailError || phoneError);
 
+  const addressErrors = getDeliveryAddressErrors(address, userAddresses, needsDeliveryAddress, isNewAddress && saveAddress);
+  const hasAddressError = Object.values(addressErrors).some(Boolean);
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setSubmitted(true);
-    setServerError(null);
+    setContactServerErrors({});
     if (hasErrors) {
       const missingRequired = nameError === 'validation.required' || phoneError === 'validation.required';
       toast.error(t(missingRequired ? 'checkout.requiredContact' : 'checkout.invalidContact'));
       return;
     }
+    if (!selectedSavedId || hasAddressError) return;
     setBusy(true);
     try {
-      const formattedFullName = toTitleCase(fullName.trim());
-      const parts = formattedFullName.split(/\s+/);
-      const newName = parts[0] || (user?.name ?? '');
-      const newSurname = parts.slice(1).join(' ') || (user?.surname ?? '');
-      const newEmail = email.trim().toLowerCase() || null;
       const newPhone = phone.trim();
+      const profileUpdate = getCheckoutProfileUpdate(user, fullName, email, phone);
+      if (profileUpdate) await updateProfile(profileUpdate);
 
-      const profileChanged =
-        user &&
-        (newName !== user.name ||
-          newSurname !== user.surname ||
-          newEmail !== (user.email ?? null) ||
-          newPhone !== (user.phone ?? ''));
-
-      if (profileChanged && updateProfile) {
-        await updateProfile({
-          name: newName,
-          surname: newSurname,
-          email: newEmail,
-          phone: newPhone || null,
-        });
+      const order = await services.orders.create({
+        contactPhone: newPhone,
+        customerNote: orderNote,
+        deliveryAddress: needsDeliveryAddress ? address : null,
+        saveDeliveryAddress: isNewAddress && saveAddress,
+      });
+      if (isNewAddress && saveAddress) {
+        await reloadUser().catch(() => { /* The order and address were saved; a refresh must not retry the order. */ });
       }
-
-      const order = await services.orders.create({ contactPhone: newPhone, customerNote: orderNote });
       reset();
       navigate(ROUTES.accountOrder(order.id), { replace: true, state: { justCreated: true } });
     } catch (err) {
-      setServerError(errorMessage(err));
+      if (isAppError(err) && err.fieldErrors) {
+        const fields: Record<string, string> = {};
+        const contacts: Record<string, string> = {};
+        for (const [key, message] of Object.entries(err.fieldErrors)) {
+          if (key.startsWith('deliveryAddress.')) fields[key.slice('deliveryAddress.'.length)] = message;
+          else if (key === 'name' || key === 'surname') contacts.fullName = message;
+          else if (key === 'email') contacts.email = message;
+          else if (key === 'phone' || key === 'contactPhone') contacts.phone = message;
+        }
+        if (Object.keys(contacts).length > 0) {
+          setContactServerErrors(contacts);
+          toast.error(tDynamic(Object.values(contacts)[0]));
+        }
+        if (Object.keys(fields).length > 0) setAddressServerErrors(fields);
+        if (Object.keys(fields).length > 0 || Object.keys(contacts).length > 0) return;
+      }
+      toast.error(errorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -247,9 +308,9 @@ export default function CartPage() {
                       required
                       maxLength={INPUT_LIMITS.name + INPUT_LIMITS.surname}
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      onChange={(e) => { setFullName(e.target.value); setContactServerErrors((prev) => ({ ...prev, fullName: '' })); }}
                       onBlur={() => setFullName((f) => toTitleCase(f))}
-                      error={submitted && nameError ? tDynamic(nameError) : null}
+                      error={submitted && (nameError || contactServerErrors.fullName) ? tDynamic(nameError || contactServerErrors.fullName) : null}
                     />
                     <Input
                       label={t('auth.email')}
@@ -257,9 +318,9 @@ export default function CartPage() {
                       maxLength={INPUT_LIMITS.email}
                       value={email}
                       style={{ textTransform: 'lowercase' }}
-                      onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                      onChange={(e) => { setEmail(e.target.value.toLowerCase()); setContactServerErrors((prev) => ({ ...prev, email: '' })); }}
                       onBlur={() => setEmail((e) => e.trim().toLowerCase())}
-                      error={submitted && emailError ? tDynamic(emailError) : null}
+                      error={submitted && (emailError || contactServerErrors.email) ? tDynamic(emailError || contactServerErrors.email) : null}
                     />
                   </div>
                   <div className="form-grid" style={{ marginTop: 'var(--space-4)' }}>
@@ -267,19 +328,94 @@ export default function CartPage() {
                       label={t('checkout.phone')}
                       required
                       value={phone}
-                      onChange={(val) => setPhone(val)}
-                      error={submitted && phoneError ? tDynamic(phoneError) : null}
+                      onChange={(val) => { setPhone(val); setContactServerErrors((prev) => ({ ...prev, phone: '' })); }}
+                      error={submitted && (phoneError || contactServerErrors.phone) ? tDynamic(phoneError || contactServerErrors.phone) : null}
                     />
                   </div>
                   <div className="form-grid" style={{ marginTop: 'var(--space-4)' }}>
                     <Textarea
+                      ref={orderNoteRef}
+                      className="checkout__note-input"
                       label={t('checkout.note')}
                       rows={3}
-                      maxLength={INPUT_LIMITS.note}
+                      maxLength={500}
                       value={orderNote}
-                      onChange={(e) => setOrderNote(e.target.value)}
+                      onChange={(e) => setOrderNote(e.target.value.slice(0, 500))}
                       hint={t('checkout.noteHint')}
                     />
+                  </div>
+
+                  <div style={{ margin: 'var(--space-6) 0 var(--space-2)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-4)' }}>
+                    <h2 className="card__title" style={{ marginBottom: 6 }}>{t('address.sectionTitle')}</h2>
+                    <p className="address-notice">
+                      {t('address.shippingNotice')}
+                    </p>
+
+                    <fieldset className="checkout__delivery-choice" disabled={busy}>
+                      <legend className="sr-only">{t('address.deliveryChoice')}</legend>
+                      <Select
+                        label={t('address.savedAddresses')}
+                        value={isSavedAddress ? selectedSavedId : ''}
+                        disabled={busy || userAddresses.length === 0}
+                        onChange={(e) => selectDelivery(e.target.value)}
+                        error={submitted && !selectedSavedId ? t('validation.deliveryChoiceRequired') : null}
+                      >
+                        <option value="">
+                          {userAddresses.length > 0 ? t('address.selectSavedAddress') : t('address.noSavedAddresses')}
+                        </option>
+                        {userAddresses.map((saved) => (
+                          <option key={saved.id} value={saved.id}>{saved.title}</option>
+                        ))}
+                      </Select>
+                      <label className="checkout__delivery-option">
+                        <input type="radio" name="checkout-delivery-mode" value="__new__"
+                          checked={isNewAddress} onChange={() => selectDelivery('__new__')} />
+                        <span>{t('address.enterNewAddress')}</span>
+                      </label>
+                      <label className="checkout__delivery-option">
+                        <input type="radio" name="checkout-delivery-mode" value="__pickup__"
+                          checked={selectedSavedId === '__pickup__'} onChange={() => selectDelivery('__pickup__')} />
+                        <span>{t('address.collectMyself')}</span>
+                      </label>
+                    </fieldset>
+
+                    {needsDeliveryAddress && (
+                      <>
+                        <AddressFields
+                          value={address}
+                          onChange={(updated) => {
+                            setAddress(updated);
+                            setAddressServerErrors({});
+                            if (selectedSavedId && selectedSavedId !== '__new__') {
+                              const currentSaved = userAddresses.find((a) => a.id === selectedSavedId);
+                              if (
+                                currentSaved &&
+                                (currentSaved.title !== updated.title ||
+                                  currentSaved.country !== updated.country ||
+                                  currentSaved.city !== updated.city ||
+                                  currentSaved.district !== updated.district ||
+                                  currentSaved.fullAddress !== updated.fullAddress)
+                              ) {
+                                setSelectedSavedId('__new__');
+                              }
+                            }
+                          }}
+                          error={submitted ? { ...addressErrors, ...addressServerErrors } : undefined}
+                          showTitle
+                          required
+                          disabled={busy}
+                          reserveMessageSpace
+                          titleMessageLines={3}
+                        />
+                        {isNewAddress && (
+                          <label className="checkbox">
+                            <input type="checkbox" checked={saveAddress} disabled={busy}
+                              onChange={(e) => { setSaveAddress(e.target.checked); setAddressServerErrors({}); }} />
+                            <span>{t('address.saveToAccount')}</span>
+                          </label>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -295,7 +431,6 @@ export default function CartPage() {
                   <span>{price(total)}</span>
                 </div>
                 <Alert kind="info">{t('checkout.noPayment')}</Alert>
-                {serverError && <Alert kind="error">{serverError}</Alert>}
                 <LinkButton to={ROUTES.products} variant="ghost" block>
                   {t('cart.continueShopping')}
                 </LinkButton>

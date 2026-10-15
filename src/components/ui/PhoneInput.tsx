@@ -12,6 +12,9 @@ import { COUNTRY_CODES } from '@/constants/countries';
 import { formatNationalNumber, parsePhoneNumber } from '@/utils/phone';
 import { Field, type FieldProps } from './Input';
 
+const DIAL_CODES = [...new Set(COUNTRY_CODES.map((country) => country.dialCode))]
+  .sort((a, b) => Number(a) - Number(b));
+
 export interface PhoneInputProps extends FieldProps {
   value: string;
   onChange: (value: string) => void;
@@ -106,9 +109,9 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
               disabled={disabled}
               aria-label="Ülke Alan Kodu"
             >
-              {COUNTRY_CODES.map((c) => (
-                <option key={`${c.code}-${c.dialCode}`} value={c.dialCode}>
-                  {c.flag} {c.dialCode} ({c.name})
+              {DIAL_CODES.map((code) => (
+                <option key={code} value={code}>
+                  {code}
                 </option>
               ))}
             </select>
@@ -130,7 +133,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
             onBlur={onBlur}
             disabled={disabled}
             autoComplete={autoComplete}
-            placeholder={dialCode === '+90' ? '535 535 53 35' : '535 535 53 35'}
+            placeholder={dialCode === '+90' ? '555 123 45 67' : '555 123 45 67'}
             maxLength={18}
           />
         </div>

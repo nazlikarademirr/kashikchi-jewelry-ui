@@ -28,6 +28,7 @@ const PATHS = {
   arrowRight: 'M5 12h14m-5-5 5 5-5 5',
   arrowLeft: 'M19 12H5m5-5-5 5 5 5',
   arrowDown: 'M12 5v14m-5-5 5 5 5-5',
+  arrowUp: 'M12 19V5m-5 5 5-5 5 5',
   chevronDown: 'm6 9 6 6 6-6',
   plus: 'M12 5v14M5 12h14',
   edit: 'M4 20h4L19 9l-4-4L4 16v4Zm9-13 4 4',

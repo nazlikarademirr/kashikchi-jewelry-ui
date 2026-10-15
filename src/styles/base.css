@@ -106,8 +106,24 @@ button:disabled { cursor: not-allowed; }
 ul, ol { margin: 0; padding: 0; list-style: none; }
 
 :focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+input,
+textarea,
+select {
+  outline: none;
+}
+
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 ::selection { background: var(--primary); color: var(--text-on-primary); }

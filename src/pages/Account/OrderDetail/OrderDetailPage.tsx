@@ -1,5 +1,5 @@
 import { useLocation, useParams } from 'react-router-dom';
-import { MessagePanel, OrderItemsList, OrderTimeline } from '@/components/order';
+import { MessagePanel, OrderItemsList } from '@/components/order';
 import { OrderStatusBadge } from '@/components/product';
 import { Badge, Breadcrumb } from '@/components/ui/Misc';
 import { Alert, ErrorState, Skeleton } from '@/components/ui/State';
@@ -56,36 +56,37 @@ export default function AccountOrderDetailPage() {
         )}
       </div>
 
-      <div className="card">
-        <h2 className="card__title">{t('orders.progress')}</h2>
-        {o.isDeleted ? (
-          <p style={{ margin: 0, color: 'var(--danger)' }}>{t('orders.cancelledNotice')}</p>
-        ) : (
-          <>
-            <OrderTimeline status={o.status} />
-            <p style={{ margin: 0 }}>{t(`orders.statusText.${o.status}`)}</p>
-          </>
-        )}
-      </div>
-
-      <div className="card">
-        <h2 className="card__title">{t('orders.items')}</h2>
-        <OrderItemsList order={o} />
-        <div className="summary__row summary__total" style={{ marginTop: 16 }}>
-          <span>{t('orders.total')}</span>
-          <span>{price(o.totalPrice)}</span>
-        </div>
-        {o.customerNote && (
-          <div style={{ marginTop: 16 }}>
-            <span className="muted">{t('orders.customerNote')}</span>
-            <div className="note-box">{o.customerNote}</div>
+      <div className="order-detail__overview">
+        <div className="card">
+          <h2 className="card__title">{t('orders.items')}</h2>
+          <OrderItemsList order={o} />
+          <div className="summary__row summary__total" style={{ marginTop: 16 }}>
+            <span>{t('orders.total')}</span>
+            <span>{price(o.totalPrice)}</span>
           </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h2 className="card__title">{t('orders.messagesTitle')}</h2>
-        <MessagePanel orderId={o.id} />
+          {o.customerNote && (
+            <div style={{ marginTop: 16 }}>
+              <span className="muted">{t('orders.customerNote')}</span>
+              <div className="note-box">{o.customerNote}</div>
+            </div>
+          )}
+          {o.deliveryAddress && (
+            <div style={{ marginTop: 16 }}>
+              <span className="muted">{t('address.deliveryAddress')}</span>
+              <div className="note-box" style={{ marginTop: 4 }}>
+                <strong>{o.deliveryAddress.title}</strong>
+                <div>{o.deliveryAddress.fullAddress}</div>
+                <div className="muted" style={{ fontSize: '0.85rem', marginTop: 2 }}>
+                  {o.deliveryAddress.district ? `${o.deliveryAddress.district} / ` : ''}{o.deliveryAddress.city} - {o.deliveryAddress.country}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="card">
+          <h2 className="card__title">{t('orders.messagesTitle')}</h2>
+          <MessagePanel orderId={o.id} />
+        </div>
       </div>
     </div>
   );

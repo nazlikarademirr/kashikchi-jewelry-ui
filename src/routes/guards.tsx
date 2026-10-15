@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/State';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { getPostLoginRedirect } from '@/utils/navigation';
 import type { UserRole } from '@/types';
 
 
@@ -43,9 +44,11 @@ export function RequireRole({ role }: { role: UserRole }) {
 
 export function GuestOnly() {
   const { user, loading } = useAuth();
+  const location = useLocation();
   if (loading) return <Spinner />;
   if (user) {
-    return <Navigate to={ROUTES.home} replace />;
+    const target = getPostLoginRedirect(location.state, user.role);
+    return <Navigate to={target} replace />;
   }
   return <Outlet />;
 }

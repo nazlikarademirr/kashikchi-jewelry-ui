@@ -34,7 +34,7 @@
   --info-soft: #e5e4ee;
 
   --shadow-pop: 0 18px 48px rgba(58, 10, 26, 0.22);
-  --focus: #1f5fbf;
+  --focus: var(--primary);
 }
 
 :root[data-theme='dark'] {
@@ -72,7 +72,7 @@
   --info-soft: #232a3d;
 
   --shadow-pop: 0 18px 48px rgba(0, 0, 0, 0.55);
-  --focus: #8fb8ff;
+  --focus: var(--primary-text);
 }
 
 :root {

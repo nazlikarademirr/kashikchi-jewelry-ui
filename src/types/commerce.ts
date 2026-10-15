@@ -1,5 +1,5 @@
 import type { LocalizedText } from './common';
-import type { Product, User } from './catalog';
+import type { Product, User, UserAddress } from './catalog';
 
 export type OrderStatus = 'ORDER_RECEIVED' | 'IN_PRODUCTION' | 'READY';
 
@@ -47,6 +47,7 @@ export interface Order {
   deletedAt: string | null;
   deletionReason: string | null;
   deletionNote: string | null;
+  deliveryAddress?: UserAddress | null;
 }
 
 export type DeleteOrderReason = 'ORDER_CANCELLED' | 'WRONG_ORDER' | 'TEST_ORDER' | 'OTHER';
@@ -59,6 +60,8 @@ export interface DeleteOrderInput {
 export interface CreateOrderInput {
   contactPhone: string;
   customerNote?: string;
+  deliveryAddress?: UserAddress | null;
+  saveDeliveryAddress?: boolean;
 }
 
 export interface OrderFilter {

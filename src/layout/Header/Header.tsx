@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { AUTH_ROUTES } from '@/utils/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useCategories } from '@/contexts/CategoriesContext';
@@ -226,8 +227,15 @@ function UserMenu() {
   }, [open]);
 
   if (!user) {
+    const isAuth = AUTH_ROUTES.some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`));
+    const returnTarget = isAuth ? undefined : location.pathname + location.search;
     return (
-      <Link to={ROUTES.login} className="icon-btn" aria-label={t('header.login')}>
+      <Link
+        to={ROUTES.login}
+        state={returnTarget ? { from: returnTarget } : undefined}
+        className="icon-btn"
+        aria-label={t('header.login')}
+      >
         <Icon name="user" />
       </Link>
     );

@@ -2,6 +2,15 @@ import type { LocalizedText } from './common';
 
 export type UserRole = 0 | 1;
 
+export interface UserAddress {
+  id: string;
+  title: string;
+  country: string;
+  city: string;
+  district: string;
+  fullAddress: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -9,6 +18,7 @@ export interface User {
   email: string | null;
   phone?: string;
   role: UserRole;
+  addresses?: UserAddress[];
 }
 
 export interface LoginInput {
@@ -30,6 +40,7 @@ export interface UpdateProfileInput {
   email?: string | null;
   phone?: string | null;
   password?: string | null;
+  addresses?: UserAddress[] | null;
 }
 
 export interface Category {
@@ -80,6 +91,7 @@ export interface Product {
   images: ProductImage[];
   isActive: boolean;
   featured: boolean;
+  featuredOrder?: number;
   createdAt: string;
   updatedAt: string;
 }
