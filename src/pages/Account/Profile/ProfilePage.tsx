@@ -45,6 +45,7 @@ export default function ProfilePage() {
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((f) => ({ ...f, [key]: e.target.value }));
     setServerFields((s) => (s[key] ? { ...s, [key]: '' } : s));
+    setServerError(null);
   };
 
   const emailVal = form.email.trim();
@@ -108,8 +109,12 @@ export default function ProfilePage() {
       setServerFields({});
       toast.success('account.profileSaved');
     } catch (err) {
-      if (isAppError(err) && err.fieldErrors) setServerFields(err.fieldErrors);
-      setServerError(errorMessage(err));
+      if (isAppError(err) && err.fieldErrors && Object.values(err.fieldErrors).some(Boolean)) {
+        setServerFields(err.fieldErrors);
+        setServerError(null);
+      } else {
+        setServerError(errorMessage(err));
+      }
     } finally {
       setBusy(false);
     }
@@ -166,6 +171,7 @@ export default function ProfilePage() {
               onChange={(e) => {
                 setForm((f) => ({ ...f, email: e.target.value.toLowerCase() }));
                 setServerFields((s) => (s.email ? { ...s, email: '' } : s));
+                setServerError(null);
               }}
               onBlur={() => setForm((f) => ({ ...f, email: f.email.trim().toLowerCase() }))}
               error={fieldError('email')}
