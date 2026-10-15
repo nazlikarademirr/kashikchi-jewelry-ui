@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthShell } from '@/components/AuthShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
@@ -122,14 +123,15 @@ export default function RegisterPage() {
           onBlur={() => setForm((f) => ({ ...f, email: f.email.trim().toLowerCase() }))}
           error={fieldError('email')}
         />
-        <Input
+        <PhoneInput
           label={t('auth.phone')}
-          type="tel"
-          autoComplete="tel"
           reserveMessageSpace
-          maxLength={INPUT_LIMITS.phone}
           value={form.phone}
-          onChange={set('phone')}
+          onChange={(val) => {
+            setForm((f) => ({ ...f, phone: val }));
+            setServerFields((s) => (s.phone ? { ...s, phone: '' } : s));
+            setServerError(null);
+          }}
           error={fieldError('phone')}
         />
         <Input

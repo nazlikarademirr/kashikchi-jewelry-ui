@@ -12,7 +12,7 @@ import {
 import { useI18n } from '@/contexts/I18nContext';
 import { Icon } from './Icon';
 
-interface FieldProps {
+export interface FieldProps {
   label: string;
   error?: string | null;
   hint?: string;
@@ -71,7 +71,7 @@ export function ComboBox({ label, value, onChange, options, error, placeholder, 
   );
 }
 
-function Field({
+export function Field({
   id,
   label,
   error,

@@ -4,6 +4,7 @@ import { AuthShell } from '@/components/AuthShell';
 import { GoogleSignIn } from '@/components/GoogleSignIn';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Alert } from '@/components/ui/State';
 import { INPUT_LIMITS } from '@/constants';
 import { ROUTES } from '@/constants/routes';
@@ -19,7 +20,9 @@ export default function LoginPage() {
   const { t, tDynamic, errorMessage } = useI18n();
   const { login } = useAuth();
   const toast = useToast();
-  const [identifier, setIdentifier] = useState('');
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -41,12 +44,12 @@ export default function LoginPage() {
     return () => window.clearInterval(interval);
   }, [isLockedOut]);
 
-  const identifierVal = identifier.trim();
-  const identifierError = !identifierVal
-    ? 'validation.required'
-    : identifierVal.includes('@')
-    ? v.email(identifierVal)
-    : null;
+  const emailVal = email.trim();
+  const phoneVal = phone.trim();
+  const emailError = v.email(emailVal);
+  const phoneError = v.phone(phoneVal);
+  const identifierError = loginMethod === 'email' ? emailError : phoneError;
+  const identifier = loginMethod === 'email' ? emailVal.toLowerCase() : phoneVal;
   const passwordError = v.required(password);
 
   const clearErrors = () => {
@@ -62,7 +65,7 @@ export default function LoginPage() {
     if (identifierError || passwordError) return;
     setBusy(true);
     try {
-      await login({ email: identifierVal.toLowerCase(), password });
+      await login({ email: identifier, password });
       toast.success('auth.loggedIn');
     } catch (err) {
       const failure = isAppError(err) ? err : new AppError('UNKNOWN');
@@ -79,27 +82,76 @@ export default function LoginPage() {
       <h1 style={{ marginBottom: 24 }}>{t('auth.loginTitle')}</h1>
       {location.state?.sessionExpired && <Alert kind="warning">{t('auth.sessionExpired')}</Alert>}
       <form className="form-grid" onSubmit={submit} noValidate style={{ display: 'grid', gap: 0 }}>
-        <Input
-          label={t('auth.emailOrPhone')}
-          type="text"
-          autoComplete="username"
-          required
-          reserveMessageSpace={2}
-          maxLength={INPUT_LIMITS.email}
-          value={identifier}
-          style={{ textTransform: 'lowercase' }}
-          onChange={(e) => {
-            setIdentifier(e.target.value.toLowerCase());
-            clearErrors();
-          }}
-          error={
-            submitted && identifierError
-              ? tDynamic(identifierError)
-              : serverErrorCode === 'USER_NOT_FOUND'
-              ? serverErrorText
-              : null
-          }
-        />
+        <div className="login-method-group" role="radiogroup" aria-label={t('auth.loginMethod')}>
+          <label className="login-method-option">
+            <input
+              type="radio"
+              name="loginMethod"
+              value="email"
+              checked={loginMethod === 'email'}
+              onChange={() => {
+                setLoginMethod('email');
+                clearErrors();
+              }}
+            />
+            <span>{t('auth.loginWithEmail')}</span>
+          </label>
+          <label className="login-method-option">
+            <input
+              type="radio"
+              name="loginMethod"
+              value="phone"
+              checked={loginMethod === 'phone'}
+              onChange={() => {
+                setLoginMethod('phone');
+                clearErrors();
+              }}
+            />
+            <span>{t('auth.loginWithPhone')}</span>
+          </label>
+        </div>
+
+        {loginMethod === 'email' ? (
+          <Input
+            label={t('auth.email')}
+            type="email"
+            autoComplete="username"
+            required
+            reserveMessageSpace={2}
+            maxLength={INPUT_LIMITS.email}
+            value={email}
+            style={{ textTransform: 'lowercase' }}
+            onChange={(e) => {
+              setEmail(e.target.value.toLowerCase());
+              clearErrors();
+            }}
+            error={
+              submitted && emailError
+                ? tDynamic(emailError)
+                : serverErrorCode === 'USER_NOT_FOUND'
+                ? serverErrorText
+                : null
+            }
+          />
+        ) : (
+          <PhoneInput
+            label={t('auth.phone')}
+            required
+            reserveMessageSpace={2}
+            value={phone}
+            onChange={(val) => {
+              setPhone(val);
+              clearErrors();
+            }}
+            error={
+              submitted && phoneError
+                ? tDynamic(phoneError)
+                : serverErrorCode === 'USER_NOT_FOUND'
+                ? serverErrorText
+                : null
+            }
+          />
+        )}
         <Input
           label={t('auth.password')}
           type="password"

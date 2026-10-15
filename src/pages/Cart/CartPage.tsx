@@ -4,6 +4,7 @@ import { QuantityStepper } from '@/components/ImageGallery';
 import { PriceTag } from '@/components/product';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { Alert, EmptyState, Skeleton } from '@/components/ui/State';
 import { INPUT_LIMITS, MAX_CART_QUANTITY } from '@/constants';
@@ -262,15 +263,12 @@ export default function CartPage() {
                     />
                   </div>
                   <div className="form-grid" style={{ marginTop: 'var(--space-4)' }}>
-                    <Input
+                    <PhoneInput
                       label={t('checkout.phone')}
-                      type="tel"
                       required
-                      maxLength={INPUT_LIMITS.phone}
                       value={phone}
-                      onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+                      onChange={(val) => setPhone(val)}
                       error={submitted && phoneError ? tDynamic(phoneError) : null}
-                      placeholder="+90 532 123 45 67"
                     />
                   </div>
                   <div className="form-grid" style={{ marginTop: 'var(--space-4)' }}>
