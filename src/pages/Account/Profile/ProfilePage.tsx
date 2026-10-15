@@ -15,7 +15,7 @@ import { sanitizeText, toTitleCase, v } from '@/utils/validation';
 
 export default function ProfilePage() {
   const { t, tDynamic, errorMessage } = useI18n();
-  const { user, updateProfile } = useAuth();
+  const { user, isCustomer, updateProfile } = useAuth();
   const toast = useToast();
 
   const [form, setForm] = useState({
@@ -87,7 +87,7 @@ export default function ProfilePage() {
   const phoneVal = form.phone.trim();
 
   const isChangingPassword = Boolean(form.newPassword || form.confirmPassword);
-  const addressesChanged = JSON.stringify(addresses) !== JSON.stringify(user?.addresses ?? []);
+  const addressesChanged = isCustomer && JSON.stringify(addresses) !== JSON.stringify(user?.addresses ?? []);
   const isDirty = Boolean(user && (
     toTitleCase(sanitizeText(form.name, INPUT_LIMITS.name)) !== toTitleCase(user.name ?? '')
     || toTitleCase(sanitizeText(form.surname, INPUT_LIMITS.surname)) !== toTitleCase(user.surname ?? '')
@@ -114,7 +114,7 @@ export default function ProfilePage() {
     confirmPassword: confirmPasswordError,
   };
 
-  const addressErrors = addresses.map((addr, index) => ({
+  const addressErrors = (isCustomer ? addresses : []).map((addr, index) => ({
     title: !addr.title?.trim() ? 'validation.required'
       : addresses.some((other, otherIndex) => otherIndex !== index && normalizeAddressTitle(other.title) === normalizeAddressTitle(addr.title))
         ? 'validation.addressTitleTaken' : serverFields[`addresses[${index}].title`] || null,
@@ -153,7 +153,7 @@ export default function ProfilePage() {
         email: emailVal.toLowerCase(),
         phone: phoneVal || null,
         password: isChangingPassword ? form.newPassword : null,
-        addresses,
+        ...(isCustomer ? { addresses } : {}),
       });
       setForm({ name: updated.name ?? '', surname: updated.surname ?? '', email: updated.email ?? '',
         phone: updated.phone ?? '', newPassword: '', confirmPassword: '' });
@@ -242,53 +242,55 @@ export default function ProfilePage() {
             />
           </div>
 
-          <div style={{ margin: '16px 0 20px', borderTop: '1px solid var(--border)', paddingTop: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-              <div>
-                <h2 style={{ fontSize: '1.2rem', marginBottom: 4, color: 'var(--text)' }}>
-                  {t('address.myAddresses')}
-                </h2>
-                <p className="muted" style={{ fontSize: '0.86rem', margin: 0 }}>
-                  {t('address.myAddressesSubtitle')}
-                </p>
+          {isCustomer && (
+            <div style={{ margin: '16px 0 20px', borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+                <div>
+                  <h2 style={{ fontSize: '1.2rem', marginBottom: 4, color: 'var(--text)' }}>
+                    {t('address.myAddresses')}
+                  </h2>
+                  <p className="muted" style={{ fontSize: '0.86rem', margin: 0 }}>
+                    {t('address.myAddressesSubtitle')}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={addAddress}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Icon name="plus" size={16} />
+                  <span>{t('address.addAddress')}</span>
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={addAddress}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-              >
-                <Icon name="plus" size={16} />
-                <span>{t('address.addAddress')}</span>
-              </Button>
-            </div>
 
-            {addresses.length === 0 ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 144, padding: '24px 16px', textAlign: 'center', background: 'var(--surface-2)', borderRadius: 'var(--r-control)', border: '1px dashed var(--border)', margin: '8px 0 16px' }}>
-                <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
-                  {t('address.noAddressesYet')}
-                </p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', margin: '12px 0 16px' }}>
-                {addresses.map((addr, index) => (
-                  <div key={addr.id || index} className="address-card">
-                    <AddressFields
-                      value={addr}
-                      onChange={(updated) => updateAddress(index, updated)}
-                      onDelete={() => removeAddress(index)}
-                      error={submitted ? addressErrors[index] : undefined}
-                      required
-                      showTitle
-                      reserveMessageSpace
-                      titleMessageLines={3}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+              {addresses.length === 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 144, padding: '24px 16px', textAlign: 'center', background: 'var(--surface-2)', borderRadius: 'var(--r-control)', border: '1px dashed var(--border)', margin: '8px 0 16px' }}>
+                  <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
+                    {t('address.noAddressesYet')}
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', margin: '12px 0 16px' }}>
+                  {addresses.map((addr, index) => (
+                    <div key={addr.id || index} className="address-card">
+                      <AddressFields
+                        value={addr}
+                        onChange={(updated) => updateAddress(index, updated)}
+                        onDelete={() => removeAddress(index)}
+                        error={submitted ? addressErrors[index] : undefined}
+                        required
+                        showTitle
+                        reserveMessageSpace
+                        titleMessageLines={3}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ margin: '8px 0 20px', borderTop: '1px solid var(--border)', paddingTop: 20 }}>
             <h2 style={{ fontSize: '1.2rem', marginBottom: 4, color: 'var(--text)' }}>
