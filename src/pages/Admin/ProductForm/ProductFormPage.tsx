@@ -433,21 +433,23 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
                 </option>
               ))}
             </Select>
-            <div className="form-grid form-grid--3 product-form__material-fields" style={{ gridColumn: '1 / -1' }}>
+            <div className="form-grid form-grid--2" style={{ gridColumn: '1 / -1' }}>
               <Select label={t('admin.form.goldKarat')} required value={form.goldKarat} onChange={onText('goldKarat')} error={err('goldKarat')}>
                 {GOLD_KARAT_OPTIONS.map((k) => <option key={k} value={k}>{k}</option>)}
               </Select>
               <ComboBox label={t('product.metal')} value={form.metal} onChange={set('metal')}
                 options={[t('product.metals.whiteGold'), t('product.metals.yellowGold'), t('product.metals.greenGold'), t('product.metals.roseGold')]}
                 placeholder={t('admin.form.selectOrType')} error={err('metal')} />
+            </div>
+            <div className="form-grid form-grid--3" style={{ gridColumn: '1 / -1' }}>
               <Input label={t('admin.form.carat')} type="text" inputMode="decimal" placeholder="0,00"
                 value={form.carat} onKeyDown={handleDecimalKeyDown} onPaste={handleDecimalPaste}
                 onChange={handleCaratChange} onBlur={handleCaratBlur} error={err('carat')} />
+              <ComboBox label={t('product.diamondColor')} value={form.diamondColor} onChange={set('diamondColor')}
+                options={DIAMOND_COLOR_OPTIONS} placeholder={t('admin.form.selectOrType')} error={err('diamondColor')} />
+              <ComboBox label={t('product.diamondClarity')} value={form.diamondClarity} onChange={set('diamondClarity')}
+                options={DIAMOND_CLARITY_OPTIONS} placeholder={t('admin.form.selectOrType')} error={err('diamondClarity')} />
             </div>
-            <ComboBox label={t('product.diamondColor')} value={form.diamondColor} onChange={set('diamondColor')}
-              options={DIAMOND_COLOR_OPTIONS} placeholder={t('admin.form.selectOrType')} error={err('diamondColor')} />
-            <ComboBox label={t('product.diamondClarity')} value={form.diamondClarity} onChange={set('diamondClarity')}
-              options={DIAMOND_CLARITY_OPTIONS} placeholder={t('admin.form.selectOrType')} error={err('diamondClarity')} />
           </div>
           <div className="product-feature-editor">
             {form.extraFeatures.map((feature, index) => (
