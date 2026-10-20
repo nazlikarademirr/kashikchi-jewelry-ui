@@ -185,7 +185,9 @@
 
 .form-grid { display: grid; gap: var(--space-4); }
 .form-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.form-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 640px) { .form-grid--2 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .form-grid--3 { grid-template-columns: 1fr; } }
 
 .address-fields {
   --field-message-lines: 1;

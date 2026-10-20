@@ -15,8 +15,6 @@ const FavoritesPage = lazy(() => import('@/pages/Favorites/FavoritesPage'));
 const CartPage = lazy(() => import('@/pages/Cart/CartPage'));
 const LoginPage = lazy(() => import('@/pages/Login/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/Register/RegisterPage'));
-const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPassword/ForgotPasswordPage'));
-const ResetPasswordPage = lazy(() => import('@/pages/ResetPassword/ResetPasswordPage'));
 const LegalPage = lazy(() => import('@/pages/Legal/LegalPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFound/NotFoundPage'));
 
@@ -51,8 +49,6 @@ export function AppRoutes() {
           <Route element={<GuestOnly />}>
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
-            <Route path="forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="reset-password" element={<ResetPasswordPage />} />
           </Route>
 
           <Route element={<RequireRole role={0} />}>

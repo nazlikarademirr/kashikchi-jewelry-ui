@@ -22,7 +22,6 @@ interface FormState {
   description: string;
   features: string;
   extraFeatures: { id: string; name: string; detail: string }[];
-  weightGrams: string;
   metal: string;
   diamondColor: string;
   diamondClarity: string;
@@ -43,7 +42,6 @@ const EMPTY: FormState = {
   description: '',
   features: '',
   extraFeatures: [],
-  weightGrams: '',
   metal: '',
   diamondColor: '',
   diamondClarity: '',
@@ -94,7 +92,6 @@ function fromProduct(p: Product): FormState {
       detail: (feature.detail ?? '').replace(/\./g, ','),
       id: uid(),
     })),
-    weightGrams: p.weightGrams != null ? String(p.weightGrams).replace('.', ',') : '',
     metal: p.metal ?? '',
     diamondColor: p.diamondColor ?? '',
     diamondClarity: p.diamondClarity ?? '',
@@ -113,7 +110,6 @@ function fromProduct(p: Product): FormState {
 
 function isFormEqual(a: FormState, b: FormState): boolean {
   if (a.name.trim() !== b.name.trim()) return false;
-  if (a.weightGrams.trim().replace(',', '.') !== b.weightGrams.trim().replace(',', '.')) return false;
   if (a.metal.trim() !== b.metal.trim() || a.diamondColor.trim() !== b.diamondColor.trim() || a.diamondClarity.trim() !== b.diamondClarity.trim()) return false;
   const normalizedFeatures = (form: FormState) => form.extraFeatures
     .filter((feature) => feature.name.trim() || feature.detail.trim())
@@ -202,13 +198,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
     set('price')(val.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
   };
 
-  const handleWeightChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (!/^\d*(,\d{0,3})?$/.test(value)) return;
-    set('weightGrams')(value.startsWith(',') ? `0${value}` : value);
-  };
-
-  const handleWeightKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleDecimalKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.ctrlKey || e.metaKey || e.key.length !== 1) return;
     if (!/^[0-9,]$/.test(e.key)) {
       e.preventDefault();
@@ -221,7 +211,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
     }
   };
 
-  const handleWeightPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+  const handleDecimalPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
     const next = input.value.slice(0, input.selectionStart ?? 0)
       + e.clipboardData.getData('text') + input.value.slice(input.selectionEnd ?? 0);
@@ -271,7 +261,6 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
   const subCategories = topCategory?.children ?? [];
 
   const errors: Record<string, Validation> = {
-    weightGrams: isCaratValid(form.weightGrams.replace(',', '.')) ? null : 'validation.positive',
     metal: v.maxLength(form.metal, 80),
     diamondColor: v.maxLength(form.diamondColor, 80),
     diamondClarity: v.maxLength(form.diamondClarity, 80),
@@ -341,7 +330,6 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
       features: sanitizeText(form.features, INPUT_LIMITS.productDescription),
       extraFeatures: form.extraFeatures.filter((feature) => feature.name.trim() || feature.detail.trim())
         .map((feature) => ({ name: toTitleCase(sanitizeText(feature.name, 80)), detail: sanitizeText(feature.detail, 1000).replace(/\./g, ',') })),
-      weightGrams: form.weightGrams.trim() ? Number(form.weightGrams.replace(',', '.')) : null,
       metal: sanitizeText(form.metal, 80),
       diamondColor: sanitizeText(form.diamondColor, 80),
       diamondClarity: sanitizeText(form.diamondClarity, 80),
@@ -445,37 +433,17 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
                 </option>
               ))}
             </Select>
-            <Select
-              label={t('admin.form.goldKarat')}
-              required
-              value={form.goldKarat}
-              onChange={onText('goldKarat')}
-              error={err('goldKarat')}
-            >
-              {GOLD_KARAT_OPTIONS.map((k) => (
-                <option key={k} value={k}>
-                  {k}
-                </option>
-              ))}
-            </Select>
-            <Input
-              label={t('admin.form.carat')}
-              type="text"
-              inputMode="decimal"
-              placeholder="0,00"
-              value={form.carat}
-              onKeyDown={handleWeightKeyDown}
-              onPaste={handleWeightPaste}
-              onChange={handleCaratChange}
-              onBlur={handleCaratBlur}
-              error={err('carat')}
-            />
-            <Input label={t('product.weightGrams')} inputMode="decimal" placeholder="5,13"
-              value={form.weightGrams} onChange={handleWeightChange} onKeyDown={handleWeightKeyDown} onPaste={handleWeightPaste}
-              onBlur={() => set('weightGrams')(form.weightGrams.replace(/,$/, ''))} maxLength={18} error={err('weightGrams')} />
-            <ComboBox label={t('product.metal')} value={form.metal} onChange={set('metal')}
-              options={[t('product.metals.whiteGold'), t('product.metals.yellowGold'), t('product.metals.greenGold'), t('product.metals.roseGold'), t('product.metals.platinum'), t('product.metals.silver')]}
-              placeholder={t('admin.form.selectOrType')} error={err('metal')} />
+            <div className="form-grid form-grid--3 product-form__material-fields" style={{ gridColumn: '1 / -1' }}>
+              <Select label={t('admin.form.goldKarat')} required value={form.goldKarat} onChange={onText('goldKarat')} error={err('goldKarat')}>
+                {GOLD_KARAT_OPTIONS.map((k) => <option key={k} value={k}>{k}</option>)}
+              </Select>
+              <ComboBox label={t('product.metal')} value={form.metal} onChange={set('metal')}
+                options={[t('product.metals.whiteGold'), t('product.metals.yellowGold'), t('product.metals.greenGold'), t('product.metals.roseGold')]}
+                placeholder={t('admin.form.selectOrType')} error={err('metal')} />
+              <Input label={t('admin.form.carat')} type="text" inputMode="decimal" placeholder="0,00"
+                value={form.carat} onKeyDown={handleDecimalKeyDown} onPaste={handleDecimalPaste}
+                onChange={handleCaratChange} onBlur={handleCaratBlur} error={err('carat')} />
+            </div>
             <ComboBox label={t('product.diamondColor')} value={form.diamondColor} onChange={set('diamondColor')}
               options={DIAMOND_COLOR_OPTIONS} placeholder={t('admin.form.selectOrType')} error={err('diamondColor')} />
             <ComboBox label={t('product.diamondClarity')} value={form.diamondClarity} onChange={set('diamondClarity')}

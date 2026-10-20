@@ -8,8 +8,6 @@ export const ROUTES = {
   cart: '/cart',
   login: '/login',
   register: '/register',
-  forgotPassword: '/forgot-password',
-  resetPassword: '/reset-password',
   account: '/account',
   accountOrders: '/account/orders',
   accountOrder: (id: string) => `/account/orders/${id}`,

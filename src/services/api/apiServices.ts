@@ -45,12 +45,6 @@ export const apiServices: Services = {
       const user = await http<User>('/auth/profile', { method: 'PUT', body: input });
       return user;
     },
-    forgotPassword: async (email: string) => {
-      await http('/auth/forgot-password', { method: 'POST', body: { email } });
-    },
-    resetPassword: async (input: { email: string; token: string; newPassword: string }) => {
-      await http('/auth/reset-password', { method: 'POST', body: input });
-    },
   },
   categories: {
     getTree: () => http<Category[]>('/categories'),

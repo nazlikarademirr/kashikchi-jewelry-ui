@@ -1,6 +1,6 @@
 import { ROUTES } from '@/constants/routes';
 
-export const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'] as const;
+export const AUTH_ROUTES = ['/login', '/register'] as const;
 export const LAST_VISITED_PAGE_KEY = 'kj:last-visited-page';
 
 export function recordLastVisitedPage(pathname: string, search = '') {

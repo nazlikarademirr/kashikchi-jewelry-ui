@@ -78,7 +78,6 @@ export interface Product {
   description: LocalizedText;
   features?: string;
   extraFeatures?: ProductFeature[];
-  weightGrams?: number | null;
   metal?: string;
   diamondColor?: string;
   diamondClarity?: string;
@@ -102,7 +101,6 @@ export interface ProductInput {
   description: LocalizedText;
   features?: string;
   extraFeatures?: ProductFeature[];
-  weightGrams?: number | null;
   metal?: string;
   diamondColor?: string;
   diamondClarity?: string;

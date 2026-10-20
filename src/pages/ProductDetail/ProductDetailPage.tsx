@@ -184,9 +184,6 @@ export default function ProductDetailPage() {
                 <strong>{carat(product.carat)} {t('product.caratUnit')}</strong>
               </span>
             )}
-            {product.weightGrams != null && (
-              <span className="product-info__detail"><span className="muted">{t('product.weight')}</span><strong>{new Intl.NumberFormat(locale, { maximumFractionDigits: 3 }).format(product.weightGrams)} g</strong></span>
-            )}
             {product.metal && (
               <span className="product-info__detail"><span className="muted">{t('product.metal')}</span><strong>{product.metal}</strong></span>
             )}
