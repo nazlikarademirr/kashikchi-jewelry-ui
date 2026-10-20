@@ -29,7 +29,7 @@ describe('English translations stay consistent with Turkish', () => {
   });
 
   it('uses English messages and title capitalization for key actions', () => {
-    expect(en.auth.resetSuccessToast).toBe('Your password has been updated. Please sign in.');
+    expect(en.auth.forgotSoon).toBe('This feature will be available soon. If you are having trouble signing in, please contact us by email. We will get back to you as soon as possible.');
     expect(en.messages.openOrder).toBe('View Order');
     expect(en.orders.customization).toBe('Special Request');
     expect(en.orderStatus.READY).toBe('Your Order Is Ready');

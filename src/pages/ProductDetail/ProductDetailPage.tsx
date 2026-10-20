@@ -26,7 +26,7 @@ const NOTE_MAX = INPUT_LIMITS.note;
 
 export default function ProductDetailPage() {
   const { id = '' } = useParams();
-  const { t, loc, locale, carat, errorMessage } = useI18n();
+  const { t, loc, carat, errorMessage } = useI18n();
   const { findTop, findSub } = useCategories();
   const { isAdmin } = useAuth();
   const cart = useCart();
