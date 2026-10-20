@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useDocumentMeta } from '@/hooks/useDocumentMeta';
+import { ForgotPasswordModal } from '@/components/ForgotPasswordModal';
 import { AppError, isAppError } from '@/types';
 import { getPostLoginRedirect } from '@/utils/navigation';
 import { v } from '@/utils/validation';
@@ -30,6 +31,7 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<AppError | null>(null);
   const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   useDocumentMeta({ title: t('auth.loginMeta'), noindex: true });
 
   const isLockedOut = Boolean(lockoutSeconds !== null && lockoutSeconds > 0);
@@ -179,15 +181,7 @@ export default function LoginPage() {
           }
         />
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, marginBottom: 12 }}>
-          <Button
-            type="button"
-            onClick={() => {
-              toast.show('info', t('auth.forgotSoon'));
-            }}
-            variant="ghost"
-            size="sm"
-            style={{ padding: '4px 8px', height: 'auto' }}
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={() => setForgotPasswordOpen(true)} style={{ padding: '4px 8px', height: 'auto' }}>
             {t('auth.forgot')}
           </Button>
         </div>
@@ -199,6 +193,7 @@ export default function LoginPage() {
       <p className="auth__foot">
         {t('auth.noAccount')} <Link to={ROUTES.register} state={location.state}>{t('auth.registerLink')}</Link>
       </p>
+      <ForgotPasswordModal open={forgotPasswordOpen} onClose={() => setForgotPasswordOpen(false)} />
     </AuthShell>
   );
 }

@@ -293,7 +293,7 @@ export const tr = {
     googleOr: "veya",
     googleSignIn: "Google ile oturum açın",
     forgot: "Şifremi Unuttum",
-    forgotSoon: "Şifre sıfırlama özelliği yakında kullanıma sunulacak.",
+    forgotSoon: "Bu özellik yakında kullanıma açılacaktır. Sisteme giriş yapmakla ilgili bir sorun yaşıyorsanız, lütfen e-posta adresimiz üzerinden bizimle iletişime geçin. En kısa sürede dönüş sağlayacağız.",
     forgotMeta: "Şifremi Unuttum",
     forgotTitle: "Şifrenizi mi unuttunuz?",
     forgotSubtitle: "Kayıtlı e-posta adresinizi girin; size şifrenizi sıfırlayabileceğiniz bir bağlantı gönderelim.",

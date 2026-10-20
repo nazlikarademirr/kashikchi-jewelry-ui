@@ -295,7 +295,7 @@ export const en: Dictionary = {
     googleOr: "or",
     googleSignIn: "Sign in with Google",
     forgot: "Forgot Password",
-    forgotSoon: "The password reset feature will be available soon.",
+    forgotSoon: "This feature will be available soon. If you are having trouble signing in, please contact us by email. We will get back to you as soon as possible.",
     forgotMeta: "Forgot Password",
     forgotTitle: "Forgot your password?",
     forgotSubtitle: "Enter your registered email address and we will send you a reset link.",
