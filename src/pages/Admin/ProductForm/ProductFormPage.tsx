@@ -457,7 +457,6 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
                   onBlur={() => set('extraFeatures')(form.extraFeatures.map((row) => row.id === feature.id ? { ...row, name: toTitleCase(row.name) } : row))}
                   error={err(`extraFeatures[${index}].name`)} />
                 <Input label={t('admin.form.featureDetail')} value={feature.detail} maxLength={1000}
-                  placeholder="0,20 ct"
                   onKeyDown={handleDetailKeyDown}
                   onPaste={(e) => handleDetailPaste(e, feature.id)}
                   onChange={(e) => handleDetailChange(feature.id, e.target.value)}
