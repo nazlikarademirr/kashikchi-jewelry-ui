@@ -740,6 +740,7 @@ export default function AdminCategoriesPage() {
                         <Button
                           size="sm"
                           variant="ghost"
+                          className="cat-action-button"
                           style={{ width: 76, textAlign: 'center' }}
                           onClick={() => startEditing(cat)}
                         >
@@ -748,7 +749,8 @@ export default function AdminCategoriesPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          style={{ width: 56, textAlign: 'center', color: 'var(--color-error)' }}
+                          className="cat-action-button cat-action-button--delete"
+                          style={{ width: 56, textAlign: 'center', color: 'var(--danger)' }}
                           onClick={() => del(cat.id)}
                         >
                           Sil
@@ -758,7 +760,7 @@ export default function AdminCategoriesPage() {
                   </div>
                   {(cat.children.length > 0 || addingSubParentId === cat.id) && (
                     <ul
-                      className="stack"
+                      className="stack cat-list"
                       style={{ listStyle: 'none', margin: 0, padding: 0, marginTop: 'var(--space-3)', gap: 'var(--space-2)' }}
                       onDragOver={(e) => {
                         if (draggedCatId) {
@@ -886,6 +888,7 @@ export default function AdminCategoriesPage() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
+                                  className="cat-action-button"
                                   style={{ width: 76, textAlign: 'center' }}
                                   onClick={() => startEditing(sub)}
                                 >
@@ -894,7 +897,8 @@ export default function AdminCategoriesPage() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  style={{ width: 56, textAlign: 'center', color: 'var(--color-error)' }}
+                                  className="cat-action-button cat-action-button--delete"
+                                  style={{ width: 56, textAlign: 'center', color: 'var(--danger)' }}
                                   onClick={() => del(sub.id)}
                                 >
                                   Sil

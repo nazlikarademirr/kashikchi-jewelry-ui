@@ -986,6 +986,7 @@ a.list-card:hover { text-decoration: none; border-color: var(--primary-text); ba
   flex-wrap: nowrap;
   gap: var(--space-2);
 }
+.cat-list > * + * { margin-top: 0; }
 .cat-title-area {
   display: flex;
   align-items: center;
@@ -1008,6 +1009,8 @@ a.list-card:hover { text-decoration: none; border-color: var(--primary-text); ba
   flex-shrink: 0;
   cursor: default;
 }
+.cat-action-button { --btn-border: var(--primary-text); }
+.cat-action-button--delete { --btn-border: var(--danger); }
 .cat-spacer {
   width: 165px;
 }
