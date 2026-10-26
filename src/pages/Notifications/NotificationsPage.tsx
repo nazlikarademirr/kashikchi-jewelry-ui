@@ -15,7 +15,7 @@ import type { TranslationKey } from '@/locales';
 import { orderCode } from '@/utils/format';
 
 export default function NotificationsPage() {
-  const { t, tDynamic, date, errorMessage } = useI18n();
+  const { t, tDynamic, date, errorMessage, loc, price } = useI18n();
   const { isAdmin } = useAuth();
   const { refresh, revision } = useNotificationsBadge();
   const toast = useToast();
@@ -35,6 +35,10 @@ export default function NotificationsPage() {
         });
       case 'NEW_MESSAGE':
         return t('notifications.templates.NEW_MESSAGE', { sender: n.params.sender ?? '' });
+      case 'FAVORITE_PRICE_DROP':
+        return t('notifications.templates.FAVORITE_PRICE_DROP', { name: loc({ tr: n.params.nameTr ?? '', en: n.params.nameEn ?? '' }), price: price(Number(n.params.newPrice ?? 0)) });
+      case 'FAVORITE_BACK_IN_STOCK':
+        return t('notifications.templates.FAVORITE_BACK_IN_STOCK', { name: loc({ tr: n.params.nameTr ?? '', en: n.params.nameEn ?? '' }) });
     }
   };
 
@@ -54,6 +58,8 @@ export default function NotificationsPage() {
       navigate(`${messagesPath}${query}`);
     } else if (n.orderId) {
       navigate(isAdmin ? ROUTES.adminOrder(n.orderId) : ROUTES.accountOrder(n.orderId));
+    } else if ((n.type === 'FAVORITE_PRICE_DROP' || n.type === 'FAVORITE_BACK_IN_STOCK') && n.params.slug) {
+      navigate(ROUTES.product(n.params.slug));
     } else {
       list.reload();
     }

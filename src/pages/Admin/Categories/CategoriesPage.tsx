@@ -708,16 +708,16 @@ export default function AdminCategoriesPage() {
                           variant="primary"
                           loading={savingId === cat.id}
                           disabled={!editingName.trim() || !editingNameEn.trim() || savingId === cat.id}
-                          style={{ width: 76, textAlign: 'center' }}
+                          className="cat-action-button cat-action-button--save"
                           onClick={() => void saveInline(cat)}
                         >
                           {t('admin.form.save') || 'Kaydet'}
                         </Button>
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="secondary"
                           disabled={savingId === cat.id}
-                          style={{ width: 76, textAlign: 'center' }}
+                          className="cat-action-button cat-action-button--cancel"
                           onClick={cancelEditing}
                         >
                           {t('common.cancel') || 'Vazgeç'}
@@ -741,7 +741,6 @@ export default function AdminCategoriesPage() {
                           size="sm"
                           variant="ghost"
                           className="cat-action-button"
-                          style={{ width: 76, textAlign: 'center' }}
                           onClick={() => startEditing(cat)}
                         >
                           {t('common.edit') || 'Düzenle'}
@@ -750,7 +749,7 @@ export default function AdminCategoriesPage() {
                           size="sm"
                           variant="ghost"
                           className="cat-action-button cat-action-button--delete"
-                          style={{ width: 56, textAlign: 'center', color: 'var(--danger)' }}
+                          style={{ color: 'var(--danger)' }}
                           onClick={() => del(cat.id)}
                         >
                           Sil
@@ -863,16 +862,16 @@ export default function AdminCategoriesPage() {
                                   variant="primary"
                                   loading={savingId === sub.id}
                                   disabled={!editingName.trim() || !editingNameEn.trim() || savingId === sub.id}
-                                  style={{ width: 76, textAlign: 'center' }}
+                                  className="cat-action-button cat-action-button--save"
                                   onClick={() => void saveInline(sub)}
                                 >
                                   {t('admin.form.save') || 'Kaydet'}
                                 </Button>
                                 <Button
                                   size="sm"
-                                  variant="ghost"
+                                  variant="secondary"
                                   disabled={savingId === sub.id}
-                                  style={{ width: 76, textAlign: 'center' }}
+                                  className="cat-action-button cat-action-button--cancel"
                                   onClick={cancelEditing}
                                 >
                                   {t('common.cancel') || 'Vazgeç'}
@@ -889,7 +888,6 @@ export default function AdminCategoriesPage() {
                                   size="sm"
                                   variant="ghost"
                                   className="cat-action-button"
-                                  style={{ width: 76, textAlign: 'center' }}
                                   onClick={() => startEditing(sub)}
                                 >
                                   {t('common.edit') || 'Düzenle'}
@@ -898,7 +896,7 @@ export default function AdminCategoriesPage() {
                                   size="sm"
                                   variant="ghost"
                                   className="cat-action-button cat-action-button--delete"
-                                  style={{ width: 56, textAlign: 'center', color: 'var(--danger)' }}
+                                  style={{ color: 'var(--danger)' }}
                                   onClick={() => del(sub.id)}
                                 >
                                   Sil
@@ -962,16 +960,16 @@ export default function AdminCategoriesPage() {
                               variant="primary"
                               loading={savingNewSub}
                               disabled={!newSubName.trim() || !newSubNameEn.trim() || savingNewSub}
-                              style={{ width: 76, textAlign: 'center' }}
+                              className="cat-action-button cat-action-button--save"
                               onClick={() => void saveNewSub(cat.id)}
                             >
                               {t('admin.form.save') || 'Kaydet'}
                             </Button>
                             <Button
                               size="sm"
-                              variant="ghost"
+                              variant="secondary"
                               disabled={savingNewSub}
-                              style={{ width: 76, textAlign: 'center' }}
+                              className="cat-action-button cat-action-button--cancel"
                               onClick={cancelAddSub}
                             >
                               {t('common.cancel') || 'Vazgeç'}

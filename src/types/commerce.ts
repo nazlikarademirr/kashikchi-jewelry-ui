@@ -48,6 +48,8 @@ export interface Order {
   deletionReason: string | null;
   deletionNote: string | null;
   deliveryAddress?: UserAddress | null;
+  isGift?: boolean;
+  giftNote?: string | null;
 }
 
 export type DeleteOrderReason = 'ORDER_CANCELLED' | 'WRONG_ORDER' | 'TEST_ORDER' | 'OTHER';
@@ -62,6 +64,8 @@ export interface CreateOrderInput {
   customerNote?: string;
   deliveryAddress?: UserAddress | null;
   saveDeliveryAddress?: boolean;
+  isGift?: boolean;
+  giftNote?: string;
 }
 
 export interface OrderFilter {
@@ -69,7 +73,7 @@ export interface OrderFilter {
   isDeleted?: boolean;
 }
 
-export type NotificationType = 'ORDER_CREATED' | 'ORDER_STATUS_CHANGED' | 'NEW_MESSAGE';
+export type NotificationType = 'ORDER_CREATED' | 'ORDER_STATUS_CHANGED' | 'NEW_MESSAGE' | 'FAVORITE_PRICE_DROP' | 'FAVORITE_BACK_IN_STOCK';
 
 export interface Notification {
   id: string;

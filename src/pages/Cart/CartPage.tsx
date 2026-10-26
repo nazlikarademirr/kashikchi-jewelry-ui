@@ -152,6 +152,8 @@ export default function CartPage() {
   const [email, setEmail] = useState(() => user?.email ?? '');
   const [phone, setPhone] = useState(() => formatPhoneNumber(user?.phone ?? ''));
   const [orderNote, setOrderNote] = useState('');
+  const [isGift, setIsGift] = useState(false);
+  const [giftNote, setGiftNote] = useState('');
   const orderNoteRef = useRef<HTMLTextAreaElement>(null);
 
   useLayoutEffect(() => {
@@ -244,6 +246,8 @@ export default function CartPage() {
         customerNote: orderNote,
         deliveryAddress: needsDeliveryAddress ? address : null,
         saveDeliveryAddress: isNewAddress && saveAddress,
+        isGift,
+        giftNote: isGift ? giftNote : '',
       });
       if (isNewAddress && saveAddress) {
         await reloadUser().catch(() => { /* The order and address were saved; a refresh must not retry the order. */ });
@@ -343,6 +347,14 @@ export default function CartPage() {
                       onChange={(e) => setOrderNote(e.target.value.slice(0, 500))}
                       hint={t('checkout.noteHint')}
                     />
+                  </div>
+                  <div className="stack" style={{ marginTop: 'var(--space-4)', gap: 'var(--space-3)' }}>
+                    <label className="checkbox">
+                      <input type="checkbox" checked={isGift} disabled={busy} onChange={(e) => setIsGift(e.target.checked)} />
+                      <span>{t('checkout.giftOption')}</span>
+                    </label>
+                    {isGift && <Textarea label={t('checkout.giftNote')} value={giftNote} maxLength={500} rows={2}
+                      hint={t('checkout.giftNoteOptional')} onChange={(e) => setGiftNote(e.target.value.slice(0, 500))} disabled={busy} />}
                   </div>
 
                   <div style={{ margin: 'var(--space-6) 0 var(--space-2)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-4)' }}>

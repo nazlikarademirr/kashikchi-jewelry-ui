@@ -113,7 +113,7 @@ export default function AdminProductsPage() {
                       <LinkButton to={ROUTES.adminProductEdit(p.id)} variant="secondary" size="sm">
                         {t('admin.products.edit')}
                       </LinkButton>
-                      <Button variant="ghost" size="sm" onClick={() => setTarget(p)}>
+                      <Button variant="secondary" size="sm" onClick={() => setTarget(p)}>
                         {p.isActive ? t('admin.products.deactivate') : t('admin.products.activate')}
                       </Button>
                     </div>

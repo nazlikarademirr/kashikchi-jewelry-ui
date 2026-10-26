@@ -46,7 +46,8 @@ export default function AccountOrderDetailPage() {
         <div>
           <h1 className="order-detail__title">
             <span>{orderCode(o.id)}</span>
-            <span className="order-detail__date muted">- {date(o.createdAt, true)}</span>
+            <span className="order-detail__separator" aria-hidden="true" />
+            <span className="order-detail__date muted">{date(o.createdAt, true)}</span>
           </h1>
         </div>
         {o.isDeleted ? (

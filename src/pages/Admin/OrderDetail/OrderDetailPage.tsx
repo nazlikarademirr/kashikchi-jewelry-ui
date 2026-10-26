@@ -61,7 +61,8 @@ export default function AdminOrderDetailPage() {
         <div>
           <h1 className="order-detail__title">
             <span>{orderCode(o.id)}</span>
-            <span className="order-detail__date muted">- {date(o.createdAt, true)}</span>
+            <span className="order-detail__separator" aria-hidden="true" />
+            <span className="order-detail__date muted">{date(o.createdAt, true)}</span>
           </h1>
         </div>
         <div className="row" style={{ alignItems: 'center', gap: 'var(--space-2)' }}>

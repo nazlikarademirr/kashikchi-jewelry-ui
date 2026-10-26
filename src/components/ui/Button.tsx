@@ -29,7 +29,7 @@ export const Button = forwardRef<HTMLButtonElement, CommonProps & ButtonHTMLAttr
         aria-busy={loading || undefined}
         {...rest}
       >
-        {loading && <span className="btn__spinner" aria-hidden="true" />}
+        {loading && <span className="btn__spinner-overlay" aria-hidden="true"><span className="btn__spinner" /></span>}
         {children}
       </button>
     );

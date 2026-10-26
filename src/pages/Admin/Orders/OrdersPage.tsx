@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DeleteOrderModal } from '@/components/DeleteOrderModal';
 import { OrderStatusBadge } from '@/components/product';
@@ -14,12 +14,51 @@ import { services } from '@/services';
 import type { Order, OrderStatus } from '@/types';
 import { orderCode } from '@/utils/format';
 
+type SortColumn = 'customer' | 'date' | 'total';
+type SortState = { column: SortColumn; direction: 'asc' | 'desc' } | null;
+
 export default function AdminOrdersPage() {
   const { t, price, date } = useI18n();
   const [status, setStatus] = useState<OrderStatus | ''>('');
+  const [sort, setSort] = useState<SortState>(null);
   const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
   const orders = useAsync(() => services.orders.list(status ? { status } : undefined), [status]);
+  const sortedOrders = useMemo(() => {
+    if (!orders.data || !sort) return orders.data ?? [];
+    const direction = sort.direction === 'asc' ? 1 : -1;
+    return [...orders.data].sort((a, b) => {
+      let result = 0;
+      switch (sort.column) {
+        case 'customer':
+          result = `${a.customer.name} ${a.customer.surname}`.localeCompare(`${b.customer.name} ${b.customer.surname}`, undefined, { sensitivity: 'base' });
+          break;
+        case 'date':
+          result = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case 'total':
+          result = a.totalPrice - b.totalPrice;
+          break;
+      }
+      return result * direction;
+    });
+  }, [orders.data, sort, t]);
   useDocumentMeta({ title: t('admin.orders.title'), noindex: true });
+
+  const sortHeader = (column: SortColumn, label: string) => (
+    <button
+      type="button"
+      className="admin-orders-sort"
+      aria-label={label}
+      onClick={() => setSort((current) => current?.column === column
+        ? { column, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+        : { column, direction: 'asc' })}
+    >
+      <span>{label}</span>
+      <span className="admin-orders-sort__arrow" aria-hidden="true">
+        {sort?.column === column ? (sort.direction === 'asc' ? '↑' : '↓') : '↕'}
+      </span>
+    </button>
+  );
 
   return (
     <>
@@ -56,13 +95,17 @@ export default function AdminOrdersPage() {
         <EmptyState icon="package" title={t('admin.orders.emptyTitle')} />
       ) : (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table admin-orders-table">
+            <colgroup>
+              <col span={5} style={{ width: '16%' }} />
+              <col style={{ width: '20%' }} />
+            </colgroup>
             <thead>
               <tr>
                 <th scope="col">{t('admin.orders.colOrder')}</th>
-                <th scope="col">{t('admin.orders.colCustomer')}</th>
-                <th scope="col">{t('admin.orders.colDate')}</th>
-                <th scope="col">{t('admin.orders.colTotal')}</th>
+                <th scope="col" aria-sort={sort?.column === 'customer' ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}>{sortHeader('customer', t('admin.orders.colCustomer'))}</th>
+                <th scope="col" aria-sort={sort?.column === 'date' ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}>{sortHeader('date', t('admin.orders.colDate'))}</th>
+                <th scope="col" aria-sort={sort?.column === 'total' ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}>{sortHeader('total', t('admin.orders.colTotal'))}</th>
                 <th scope="col">{t('admin.orders.colStatus')}</th>
                 <th scope="col" style={{ textAlign: 'right' }}>
                   <span className="sr-only">{t('admin.orders.view')}</span>
@@ -70,7 +113,7 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {orders.data.map((o) => (
+              {sortedOrders.map((o) => (
                 <tr key={o.id}>
                   <td className="nowrap">
                     <strong>{orderCode(o.id)}</strong>
@@ -85,12 +128,13 @@ export default function AdminOrdersPage() {
                   </td>
                   <td className="nowrap" style={{ textAlign: 'right' }}>
                     <div className="row" style={{ justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-                      <Link to={ROUTES.adminOrder(o.id)} className="btn btn--sm btn--ghost">
+                      <Link to={ROUTES.adminOrder(o.id)} className="btn btn--sm btn--secondary admin-order-action">
                         {t('admin.orders.view')}
                       </Link>
                       <Button
-                        variant="ghost"
+                        variant="secondary"
                         size="sm"
+                        className="admin-order-action admin-order-action--delete"
                         style={{ color: 'var(--danger)' }}
                         onClick={() => setDeleteTarget(o)}
                       >

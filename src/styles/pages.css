@@ -806,7 +806,8 @@
 }
 .order-detail__head { align-items: center; }
 .order-detail__title { display: flex; align-items: center; flex-wrap: wrap; column-gap: 12px; }
-.order-detail__date { font-family: var(--font-sans); font-size: 1rem; font-weight: 400; }
+.order-detail__separator { display: inline-block; width: 10px; height: 1px; background: currentColor; }
+.order-detail__date { align-self: center; font-family: var(--font-sans); font-size: 1rem; font-weight: 400; line-height: 1.2; }
 .order-detail__overview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); align-items: start; }
 .order-detail__overview > .card { min-width: 0; }
 @media (max-width: 960px) { .order-detail__overview { grid-template-columns: 1fr; } }
@@ -1009,7 +1010,15 @@ a.list-card:hover { text-decoration: none; border-color: var(--primary-text); ba
   flex-shrink: 0;
   cursor: default;
 }
-.cat-action-button { --btn-border: var(--primary-text); }
+.cat-action-button {
+  --btn-border: var(--primary-text);
+  width: 104px;
+  min-width: 104px;
+  flex: 0 0 104px;
+  box-sizing: border-box;
+  padding-inline: 8px;
+  justify-content: center;
+}
 .cat-action-button--delete { --btn-border: var(--danger); }
 .cat-spacer {
   width: 165px;
