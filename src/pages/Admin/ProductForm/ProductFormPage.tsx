@@ -140,7 +140,7 @@ function isFormEqual(a: FormState, b: FormState): boolean {
 }
 
 function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: (updated: Product) => void }) {
-  const { t, tDynamic, errorMessage } = useI18n();
+  const { t, tDynamic, errorMessage, loc } = useI18n();
   const { tree } = useCategories();
   const toast = useToast();
   const navigate = useNavigate();
@@ -421,7 +421,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
               <option value=""></option>
               {tree.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name.tr}
+                  {loc(c.name, `category:${c.id}`)}
                 </option>
               ))}
             </Select>
@@ -429,7 +429,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved?: 
               <option value=""></option>
               {subCategories.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name.tr}
+                  {loc(c.name, `category:${c.id}`)}
                 </option>
               ))}
             </Select>

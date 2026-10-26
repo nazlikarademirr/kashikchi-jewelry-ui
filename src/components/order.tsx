@@ -77,7 +77,7 @@ export function OrderItemsList({ order }: { order: Order }) {
             <span />
           )}
           <div>
-            <strong>{loc(i.productName)}</strong>
+            <strong>{loc(i.productName, `product:${i.productCode}`)}</strong>
             <div className="muted" style={{ fontSize: '0.85rem' }}>{i.productCode}</div>
             <div className="muted" style={{ fontSize: '0.85rem' }}>
               {t('orders.quantityPrice', { qty: i.quantity, price: price(i.unitPrice) })}

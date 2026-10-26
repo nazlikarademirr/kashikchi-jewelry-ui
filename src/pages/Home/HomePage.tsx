@@ -173,9 +173,9 @@ export default function HomePage() {
                 return (
                   <Link key={c.id} to={ROUTES.category(c.id)} className="category-tile">
                     <div className="category-tile__arch">
-                      <img src={mediaUrl(imgPath)} alt={loc(c.name)} loading="lazy" width={600} height={800} />
+                      <img src={mediaUrl(imgPath)} alt={loc(c.name, `category:${c.id}`)} loading="lazy" width={600} height={800} />
                     </div>
-                    <span className="category-tile__name">{loc(c.name)}</span>
+                    <span className="category-tile__name">{loc(c.name, `category:${c.id}`)}</span>
                   </Link>
                 );
               })}

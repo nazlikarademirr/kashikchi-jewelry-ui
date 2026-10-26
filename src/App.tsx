@@ -4,6 +4,7 @@ import { CategoriesProvider } from '@/contexts/CategoriesContext';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { I18nProvider } from '@/contexts/I18nContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
+import { ProductCompareProvider } from '@/contexts/ProductCompareContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { AppRoutes } from '@/AppRouter';
@@ -17,9 +18,11 @@ export default function App() {
             <CategoriesProvider>
               <NotificationsProvider>
                 <FavoritesProvider>
-                  <CartProvider>
-                    <AppRoutes />
-                  </CartProvider>
+                  <ProductCompareProvider>
+                    <CartProvider>
+                      <AppRoutes />
+                    </CartProvider>
+                  </ProductCompareProvider>
                 </FavoritesProvider>
               </NotificationsProvider>
             </CategoriesProvider>

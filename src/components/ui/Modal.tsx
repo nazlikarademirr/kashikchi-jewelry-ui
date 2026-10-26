@@ -6,6 +6,7 @@ import { Icon } from './Icon';
 
 interface ModalProps {
   className?: string;
+  backdropClassName?: string;
   open: boolean;
   title?: string;
   onClose: () => void;
@@ -16,7 +17,7 @@ interface ModalProps {
 const FOCUSABLE =
   'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-export function Modal({ open, title, onClose, children, footer, className }: ModalProps) {
+export function Modal({ open, title, onClose, children, footer, className, backdropClassName }: ModalProps) {
   const { t } = useI18n();
   const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
@@ -62,7 +63,7 @@ export function Modal({ open, title, onClose, children, footer, className }: Mod
   if (!open) return null;
   return createPortal(
     <div
-      className="modal-backdrop"
+      className={`modal-backdrop ${backdropClassName ?? ''}`.trim()}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

@@ -4,6 +4,7 @@ import { en } from './en';
 
 function flatten(value: object, prefix = ''): Record<string, string> {
   return Object.fromEntries(Object.entries(value).flatMap(([key, entry]) => {
+    if (key === 'catalog') return [];
     const path = prefix ? `${prefix}.${key}` : key;
     return typeof entry === 'string' ? [[path, entry]] : Object.entries(flatten(entry, path));
   }));

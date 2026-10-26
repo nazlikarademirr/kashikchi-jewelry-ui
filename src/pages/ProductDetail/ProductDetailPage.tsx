@@ -12,6 +12,7 @@ import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useCategories } from '@/contexts/CategoriesContext';
+import { useProductCompare } from '@/contexts/ProductCompareContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useAsync } from '@/hooks/useAsync';
@@ -21,6 +22,7 @@ import { services } from '@/services';
 import { isAppError } from '@/types';
 import { finalPrice } from '@/utils/format';
 import { mediaUrl } from '@/utils/media';
+import { Icon } from '@/components/ui/Icon';
 
 const NOTE_MAX = INPUT_LIMITS.note;
 
@@ -29,6 +31,7 @@ export default function ProductDetailPage() {
   const { t, loc, carat, errorMessage } = useI18n();
   const { findTop, findSub } = useCategories();
   const { isAdmin } = useAuth();
+  const compare = useProductCompare();
   const cart = useCart();
   const toast = useToast();
   const requireCustomer = useRequireCustomer();
@@ -61,8 +64,8 @@ export default function ProductDetailPage() {
     return () => window.removeEventListener('resize', adjustNoteHeight);
   }, [note, adjustNoteHeight]);
 
-  const name = product ? loc(product.name) : '';
-  const description = product ? loc(product.description) : '';
+  const name = product ? loc(product.name, `product:${product.code}`) : '';
+  const description = product ? loc(product.description, `description:${product.code}`) : '';
   const extraFeatures = product?.extraFeatures ?? [];
   useDocumentMeta({
     title: product ? name : t('product.metaFallback'),
@@ -112,6 +115,7 @@ export default function ProductDetailPage() {
   const sub = product.subCategory ? findSub(product.category, product.subCategory) : undefined;
   const maxQty = MAX_CART_QUANTITY;
   const isRing = product.category === 'yuzuk';
+  const isCompared = compare.isSelected(product.id);
 
   const isNoteOverLimit = note.length > NOTE_MAX;
   const noteError = isNoteOverLimit ? t('validation.maxLength', { max: NOTE_MAX }) : null;
@@ -147,8 +151,8 @@ export default function ProductDetailPage() {
       <Breadcrumb
         items={[
           { label: t('nav.home'), to: ROUTES.home },
-          ...(top ? [{ label: loc(top.name), to: ROUTES.category(top.id) }] : []),
-          ...(top && sub ? [{ label: loc(sub.name), to: ROUTES.category(top.id, sub.id) }] : []),
+          ...(top ? [{ label: loc(top.name, `category:${top.id}`), to: ROUTES.category(top.id) }] : []),
+          ...(top && sub ? [{ label: loc(sub.name, `category:${sub.id}`), to: ROUTES.category(top.id, sub.id) }] : []),
           { label: name },
         ]}
       />
@@ -160,7 +164,23 @@ export default function ProductDetailPage() {
             <div style={{ minWidth: 0, flex: 1, paddingRight: 'var(--space-3)' }}>
               <h1>{name}</h1>
             </div>
-            <FavoriteButton productId={product.id} large />
+            <div className="product-info__top-actions">
+              <button
+                type="button"
+                className="product-compare-icon"
+                aria-pressed={isCompared}
+                aria-label={t(isCompared ? 'listing.compareRemove' : 'listing.compareLabel')}
+                title={t(isCompared ? 'listing.compareRemove' : 'listing.compareLabel')}
+                disabled={!isCompared && compare.products.length >= 3}
+                onClick={() => compare.toggle(product)}
+              >
+                <Icon name={isCompared ? 'check' : 'plus'} size={22} />
+                <span className="product-compare-icon__tooltip" role="tooltip">
+                  {t(isCompared ? 'listing.compareRemove' : 'listing.compareLabel')}
+                </span>
+              </button>
+              <FavoriteButton productId={product.id} large />
+            </div>
           </div>
 
           <p className="product-info__code">

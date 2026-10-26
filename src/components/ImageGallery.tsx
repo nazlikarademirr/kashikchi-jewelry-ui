@@ -56,7 +56,7 @@ export function ImageGallery({ product }: { product: Product }) {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   const images = product.images;
-  const name = loc(product.name);
+  const name = loc(product.name, `product:${product.code}`);
   if (images.length === 0) {
     return (
       <div className="gallery" role="group" aria-label={t('product.gallery')}>

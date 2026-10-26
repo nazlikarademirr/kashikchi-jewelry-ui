@@ -86,7 +86,7 @@ export default function AdminProductsPage() {
                     <div className="row" style={{ flexWrap: 'nowrap' }}>
                       {p.images[0] && <img className="table__thumb" src={mediaUrl(p.images[0].storageKey)} alt="" loading="lazy" />}
                       <Link to={ROUTES.product(p.slug)}>
-                        <strong>{loc(p.name)}{p.carat != null && p.carat > 0 ? ` · ${carat(p.carat)} ct` : null}</strong>
+                        <strong>{loc(p.name, `product:${p.code}`)}{p.carat != null && p.carat > 0 ? ` · ${carat(p.carat)} ct` : null}</strong>
                       </Link>
                     </div>
                   </td>
@@ -137,7 +137,7 @@ export default function AdminProductsPage() {
         message={
           target
             ? t(target.isActive ? 'admin.products.deactivateMessage' : 'admin.products.activateMessage', {
-                name: loc(target.name),
+                name: loc(target.name, `product:${target.code}`),
               })
             : ''
         }

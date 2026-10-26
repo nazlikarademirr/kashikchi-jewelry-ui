@@ -34,7 +34,7 @@ function CartLine({ item }: { item: CartItem }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const p = item.product;
   const maxQty = MAX_CART_QUANTITY;
-  const name = loc(p.name);
+  const name = loc(p.name, `product:${p.code}`);
 
   const adjustTextareaHeight = () => {
     const el = textareaRef.current;

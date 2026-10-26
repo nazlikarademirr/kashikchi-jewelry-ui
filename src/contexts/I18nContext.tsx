@@ -13,7 +13,7 @@ interface I18nValue {
   t: (key: TranslationKey, params?: Params) => string;
   tDynamic: (key: string, params?: Params) => string;
   tError: (code: string, params?: Params) => string;
-  loc: (text: LocalizedText | undefined) => string;
+  loc: (text: LocalizedText | undefined, catalogKey?: string) => string;
   price: (n: number) => string;
   date: (iso: string, withTime?: boolean) => string;
   carat: (n: number) => string;
@@ -63,7 +63,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       t: (key, params) => tDynamic(key, params),
       tDynamic,
       tError,
-      loc: (text) => localized(text, locale),
+      loc: (text, catalogKey) => {
+        if (locale !== 'en' || !text) return localized(text, locale);
+        if (text.en && text.en !== text.tr) return text.en;
+        const nameKey = catalogKey?.startsWith('category:') ? `category-name:${text.tr}`
+          : catalogKey?.startsWith('product:') ? `product-name:${text.tr}` : undefined;
+        const descriptionKey = catalogKey?.startsWith('description:') ? `product-description:${text.tr}` : undefined;
+        return (catalogKey ? dict.catalog[catalogKey] : undefined)
+          ?? (nameKey ? dict.catalog[nameKey] : undefined)
+          ?? (descriptionKey ? dict.catalog[descriptionKey] : undefined)
+          ?? localized(text, locale);
+      },
       price: (n) => formatPrice(n, locale),
       date: (iso, withTime) => formatDate(iso, locale, withTime),
       carat: (n) => formatCarat(n),

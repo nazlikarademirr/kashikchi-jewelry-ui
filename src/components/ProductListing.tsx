@@ -15,12 +15,14 @@ import { Button } from './ui/Button';
 import { Icon } from './ui/Icon';
 import { MultiComboBox } from './ui/MultiComboBox';
 import { useCategories } from '@/contexts/CategoriesContext';
+import { useProductCompare } from '@/contexts/ProductCompareContext';
 
 const SORTS: ProductSort[] = ['newest', 'priceAsc', 'priceDesc', 'caratAsc', 'caratDesc'];
 
 export function ProductListing({ category, subCategory, categoryFilter = false }: { category?: string; subCategory?: string; categoryFilter?: boolean }) {
   const { t, loc } = useI18n();
   const { tree, loading: categoriesLoading } = useCategories();
+  const { products: compareProducts, toggle } = useProductCompare();
   const [params, setParams] = useSearchParams();
   const paramsRef = useRef(params);
   useLayoutEffect(() => { paramsRef.current = params; }, [params]);
@@ -144,8 +146,8 @@ export function ProductListing({ category, subCategory, categoryFilter = false }
           {categoryFilter && <MultiComboBox label={t('listing.categories')} placeholder={t('listing.categoriesPlaceholder')}
             emptyText={t('listing.categoriesEmpty')} disabled={categoriesLoading}
             options={tree.flatMap(item => [
-              { value: item.id, label: loc(item.name), depth: 0, children: item.children.map(child => child.id) },
-              ...item.children.map(child => ({ value: child.id, label: loc(child.name), depth: 1, parentId: item.id })),
+              { value: item.id, label: loc(item.name, `category:${item.id}`), depth: 0, children: item.children.map(child => child.id) },
+              ...item.children.map(child => ({ value: child.id, label: loc(child.name, `category:${child.id}`), depth: 1, parentId: item.id })),
             ])}
             value={selectedCategories} onChange={updateCategories} />}
           <Select label={t('listing.sort')} value={sort} onChange={(e) => update('sort', e.target.value === 'newest' ? '' : e.target.value)}>
@@ -190,7 +192,7 @@ export function ProductListing({ category, subCategory, categoryFilter = false }
         <EmptyState icon="search" title={t('listing.emptyTitle')} description={t('listing.emptyText')} />
       ) : data ? (
         <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity .2s' }}>
-          <ProductGrid products={data.items} />
+          <ProductGrid products={data.items} compareIds={compareProducts.map((product) => product.id)} onToggleCompare={toggle} />
           <Pagination page={data.page} pageSize={data.pageSize} total={data.total} onChange={(p) => update('page', String(p))} />
         </div>
       ) : null}

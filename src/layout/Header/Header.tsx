@@ -106,17 +106,17 @@ export function CategoryNav() {
         {tree.map((c) => (
           <li className="nav-item" key={c.id}>
             <NavLink to={ROUTES.category(c.id)} className={navCls} onClick={(e) => e.currentTarget.blur()}>
-              {loc(c.name)}
+              {loc(c.name, `category:${c.id}`)}
               {c.children.length > 0 && <Icon name="chevronDown" size={12} />}
             </NavLink>
             {c.children.length > 0 && (
               <div className="nav-dropdown">
                 <NavLink to={ROUTES.category(c.id)} end onClick={(e) => e.currentTarget.blur()}>
-                  {t('nav.all', { name: loc(c.name) })}
+                  {t('nav.all', { name: loc(c.name, `category:${c.id}`) })}
                 </NavLink>
                 {c.children.map((s) => (
                   <NavLink key={s.id} to={ROUTES.category(c.id, s.id)} onClick={(e) => e.currentTarget.blur()}>
-                    {loc(s.name)}
+                    {loc(s.name, `category:${s.id}`)}
                   </NavLink>
                 ))}
               </div>
@@ -181,12 +181,12 @@ function MobileNav({ onClose }: { onClose: () => void }) {
           {tree.map((c) => (
             <div key={c.id}>
               <NavLink to={ROUTES.category(c.id)} end className={cls} onClick={onClose}>
-                {loc(c.name)}
+                {loc(c.name, `category:${c.id}`)}
               </NavLink>
               <div className="sub">
                 {c.children.map((s) => (
                   <NavLink key={s.id} to={ROUTES.category(c.id, s.id)} className={cls} onClick={onClose}>
-                    {loc(s.name)}
+                    {loc(s.name, `category:${s.id}`)}
                   </NavLink>
                 ))}
               </div>

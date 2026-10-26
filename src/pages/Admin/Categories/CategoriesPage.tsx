@@ -194,16 +194,19 @@ export default function AdminCategoriesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState('');
+  const [nameEn, setNameEn] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
 
   // Inline editing state for existing categories/subcategories
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>('');
+  const [editingNameEn, setEditingNameEn] = useState<string>('');
   const [savingId, setSavingId] = useState<string | null>(null);
 
   // Inline adding state for new subcategories
   const [addingSubParentId, setAddingSubParentId] = useState<string | null>(null);
   const [newSubName, setNewSubName] = useState<string>('');
+  const [newSubNameEn, setNewSubNameEn] = useState<string>('');
   const [savingNewSub, setSavingNewSub] = useState(false);
 
   // Drag and drop state for main categories
@@ -218,6 +221,7 @@ export default function AdminCategoriesPage() {
     cancelEditing();
     cancelAddSub();
     setName('');
+    setNameEn('');
     setNameError(null);
     setFormOpen(true);
   };
@@ -225,37 +229,44 @@ export default function AdminCategoriesPage() {
   const closeForm = () => {
     setFormOpen(false);
     setNameError(null);
+    setName('');
+    setNameEn('');
   };
 
   const startEditing = (cat: Category) => {
     cancelAddSub();
     setEditingId(cat.id);
     setEditingName(cat.name.tr || cat.name.en || '');
+    setEditingNameEn(cat.name.en || cat.name.tr || '');
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditingName('');
+    setEditingNameEn('');
   };
 
   const startAddSub = (pId: string) => {
     cancelEditing();
     setAddingSubParentId(pId);
     setNewSubName('');
+    setNewSubNameEn('');
   };
 
   const cancelAddSub = () => {
     setAddingSubParentId(null);
     setNewSubName('');
+    setNewSubNameEn('');
   };
 
   const saveInline = async (cat: Category) => {
     const trimmed = editingName.trim();
-    if (!trimmed) {
+    const trimmedEn = editingNameEn.trim();
+    if (!trimmed || !trimmedEn) {
       toast.error(t('validation.required'));
       return;
     }
-    if (trimmed === (cat.name.tr || cat.name.en || '')) {
+    if (trimmed === (cat.name.tr || '') && trimmedEn === (cat.name.en || '')) {
       cancelEditing();
       return;
     }
@@ -267,7 +278,7 @@ export default function AdminCategoriesPage() {
         const tr = (c.name.tr || '').trim().toLocaleLowerCase('tr');
         const en = (c.name.en || '').trim().toLocaleLowerCase('tr');
         const target = trimmed.toLocaleLowerCase('tr');
-        return tr === target || en === target;
+        return tr === target && en === trimmedEn.toLocaleLowerCase('tr');
       });
       if (exists) {
         toast.error(t('validation.categoryNameTaken'));
@@ -280,7 +291,7 @@ export default function AdminCategoriesPage() {
         const tr = (s.name.tr || '').trim().toLocaleLowerCase('tr');
         const en = (s.name.en || '').trim().toLocaleLowerCase('tr');
         const target = trimmed.toLocaleLowerCase('tr');
-        return tr === target || en === target;
+        return tr === target && en === trimmedEn.toLocaleLowerCase('tr');
       });
       if (exists) {
         toast.error(t('validation.subCategoryNameTaken'));
@@ -291,7 +302,7 @@ export default function AdminCategoriesPage() {
     setSavingId(cat.id);
     try {
       const input: CategoryInput = {
-        name: { tr: trimmed, en: trimmed },
+        name: { tr: trimmed, en: trimmedEn },
         parentId: cat.parentId || null,
         sortOrder: cat.sortOrder,
       };
@@ -300,12 +311,12 @@ export default function AdminCategoriesPage() {
       setCategoriesList((prev) =>
         prev.map((c) => {
           if (c.id === cat.id) {
-            return { ...c, name: { tr: trimmed, en: trimmed } };
+            return { ...c, name: { tr: trimmed, en: trimmedEn } };
           }
           if (c.children?.some((s) => s.id === cat.id)) {
             return {
               ...c,
-              children: c.children.map((s) => (s.id === cat.id ? { ...s, name: { tr: trimmed, en: trimmed } } : s)),
+              children: c.children.map((s) => (s.id === cat.id ? { ...s, name: { tr: trimmed, en: trimmedEn } } : s)),
             };
           }
           return c;
@@ -330,7 +341,8 @@ export default function AdminCategoriesPage() {
 
   const saveNewSub = async (parentCatId: string) => {
     const trimmed = newSubName.trim();
-    if (!trimmed) {
+    const trimmedEn = newSubNameEn.trim();
+    if (!trimmed || !trimmedEn) {
       toast.error(t('validation.required'));
       return;
     }
@@ -340,7 +352,7 @@ export default function AdminCategoriesPage() {
       const tr = (s.name.tr || '').trim().toLocaleLowerCase('tr');
       const en = (s.name.en || '').trim().toLocaleLowerCase('tr');
       const target = trimmed.toLocaleLowerCase('tr');
-      return tr === target || en === target;
+      return tr === target && en === trimmedEn.toLocaleLowerCase('tr');
     });
     if (exists) {
       toast.error(t('validation.subCategoryNameTaken'));
@@ -353,7 +365,7 @@ export default function AdminCategoriesPage() {
       const finalSortOrder = maxSort + 1;
 
       const input: CategoryInput = {
-        name: { tr: trimmed, en: trimmed },
+        name: { tr: trimmed, en: trimmedEn },
         parentId: parentCatId,
         sortOrder: finalSortOrder,
       };
@@ -375,7 +387,8 @@ export default function AdminCategoriesPage() {
 
   const saveNew = async () => {
     const trimmed = name.trim();
-    if (!trimmed) {
+    const trimmedEn = nameEn.trim();
+    if (!trimmed || !trimmedEn) {
       setNameError(t('validation.required'));
       return;
     }
@@ -385,7 +398,7 @@ export default function AdminCategoriesPage() {
       const tr = (c.name.tr || '').trim().toLocaleLowerCase('tr');
       const en = (c.name.en || '').trim().toLocaleLowerCase('tr');
       const target = trimmed.toLocaleLowerCase('tr');
-      return tr === target || en === target;
+      return tr === target && en === trimmedEn.toLocaleLowerCase('tr');
     });
     if (exists) {
       setNameError(t('validation.categoryNameTaken'));
@@ -398,7 +411,7 @@ export default function AdminCategoriesPage() {
       const finalSortOrder = maxSort + 1;
 
       const input: CategoryInput = {
-        name: { tr: trimmed, en: trimmed },
+        name: { tr: trimmed, en: trimmedEn },
         parentId: null,
         sortOrder: finalSortOrder,
       };
@@ -647,35 +660,40 @@ export default function AdminCategoriesPage() {
                         disabled={editingId !== null || addingSubParentId !== null}
                       />
                       {isEditingCat ? (
-                        <input
-                          type="text"
-                          maxLength={INPUT_LIMITS.categoryName}
-                          autoFocus
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') void saveInline(cat);
-                            if (e.key === 'Escape') cancelEditing();
-                          }}
-                          onFocus={(e) => e.target.select()}
-                          style={{
-                            fontSize: '1.15rem',
-                            fontWeight: 600,
-                            fontFamily: 'inherit',
-                            height: '36px',
-                            padding: '0 10px',
-                            width: '100%',
-                            maxWidth: '360px',
-                            border: '1.5px solid var(--primary)',
-                            borderRadius: 'var(--r-control)',
-                            background: 'var(--surface)',
-                            color: 'var(--text)',
-                            outline: 'none',
-                            boxShadow: '0 0 0 2px var(--primary-soft, rgba(90, 15, 30, 0.15))',
-                          }}
-                        />
+                        <div className="cat-edit-fields">
+                          <input
+                            type="text"
+                            required
+                            aria-label={t('admin.categories.nameTr')}
+                            placeholder={t('admin.categories.nameTr')}
+                            maxLength={INPUT_LIMITS.categoryName}
+                            autoFocus
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') void saveInline(cat);
+                              if (e.key === 'Escape') cancelEditing();
+                            }}
+                            onFocus={(e) => e.target.select()}
+                            className="cat-edit-field"
+                          />
+                          <input
+                            type="text"
+                            required
+                            aria-label={t('admin.categories.nameEn')}
+                            placeholder={t('admin.categories.nameEn')}
+                            maxLength={INPUT_LIMITS.categoryName}
+                            value={editingNameEn}
+                            onChange={(e) => setEditingNameEn(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') void saveInline(cat);
+                              if (e.key === 'Escape') cancelEditing();
+                            }}
+                            className="cat-edit-field"
+                          />
+                        </div>
                       ) : (
-                        <strong style={{ fontSize: '1.15rem' }}>{loc(cat.name)}</strong>
+                        <strong style={{ fontSize: '1.15rem' }}>{loc(cat.name, `category:${cat.id}`)}</strong>
                       )}
                     </div>
                     {isEditingCat ? (
@@ -689,7 +707,7 @@ export default function AdminCategoriesPage() {
                           size="sm"
                           variant="primary"
                           loading={savingId === cat.id}
-                          disabled={!editingName.trim() || savingId === cat.id}
+                          disabled={!editingName.trim() || !editingNameEn.trim() || savingId === cat.id}
                           style={{ width: 76, textAlign: 'center' }}
                           onClick={() => void saveInline(cat)}
                         >
@@ -795,34 +813,40 @@ export default function AdminCategoriesPage() {
                                 disabled={editingId !== null || addingSubParentId !== null}
                               />
                               {isEditingSub ? (
-                                <input
-                                  type="text"
-                                  maxLength={INPUT_LIMITS.categoryName}
-                                  autoFocus
-                                  value={editingName}
-                                  onChange={(e) => setEditingName(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') void saveInline(sub);
-                                    if (e.key === 'Escape') cancelEditing();
-                                  }}
-                                  onFocus={(e) => e.target.select()}
-                                  style={{
-                                    fontSize: '0.98rem',
-                                    fontFamily: 'inherit',
-                                    height: '32px',
-                                    padding: '0 10px',
-                                    width: '100%',
-                                    maxWidth: '320px',
-                                    border: '1.5px solid var(--primary)',
-                                    borderRadius: 'var(--r-control)',
-                                    background: 'var(--surface)',
-                                    color: 'var(--text)',
-                                    outline: 'none',
-                                    boxShadow: '0 0 0 2px var(--primary-soft, rgba(90, 15, 30, 0.15))',
-                                  }}
-                                />
+                                <div className="cat-edit-fields">
+                                  <input
+                                    type="text"
+                                    required
+                                    aria-label={t('admin.categories.nameTr')}
+                                    placeholder={t('admin.categories.nameTr')}
+                                    maxLength={INPUT_LIMITS.categoryName}
+                                    autoFocus
+                                    value={editingName}
+                                    onChange={(e) => setEditingName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') void saveInline(sub);
+                                      if (e.key === 'Escape') cancelEditing();
+                                    }}
+                                    onFocus={(e) => e.target.select()}
+                                    className="cat-edit-field"
+                                  />
+                                  <input
+                                    type="text"
+                                    required
+                                    aria-label={t('admin.categories.nameEn')}
+                                    placeholder={t('admin.categories.nameEn')}
+                                    maxLength={INPUT_LIMITS.categoryName}
+                                    value={editingNameEn}
+                                    onChange={(e) => setEditingNameEn(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') void saveInline(sub);
+                                      if (e.key === 'Escape') cancelEditing();
+                                    }}
+                                    className="cat-edit-field"
+                                  />
+                                </div>
                               ) : (
-                                <span>{loc(sub.name)}</span>
+                                <span>{loc(sub.name, `category:${sub.id}`)}</span>
                               )}
                             </div>
                             {isEditingSub ? (
@@ -836,7 +860,7 @@ export default function AdminCategoriesPage() {
                                   size="sm"
                                   variant="primary"
                                   loading={savingId === sub.id}
-                                  disabled={!editingName.trim() || savingId === sub.id}
+                                  disabled={!editingName.trim() || !editingNameEn.trim() || savingId === sub.id}
                                   style={{ width: 76, textAlign: 'center' }}
                                   onClick={() => void saveInline(sub)}
                                 >
@@ -891,32 +915,37 @@ export default function AdminCategoriesPage() {
                         >
                           <div className="cat-title-area">
                             <div style={{ width: '18px', marginRight: '10px', flexShrink: 0 }} />
-                            <input
-                              type="text"
-                              maxLength={INPUT_LIMITS.categoryName}
-                              autoFocus
-                              placeholder={t('admin.categories.subName') || 'Alt Kategori Adı'}
-                              value={newSubName}
-                              onChange={(e) => setNewSubName(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') void saveNewSub(cat.id);
-                                if (e.key === 'Escape') cancelAddSub();
-                              }}
-                              style={{
-                                fontSize: '0.98rem',
-                                fontFamily: 'inherit',
-                                height: '32px',
-                                padding: '0 10px',
-                                width: '100%',
-                                maxWidth: '320px',
-                                border: '1.5px solid var(--primary)',
-                                borderRadius: 'var(--r-control)',
-                                background: 'var(--surface)',
-                                color: 'var(--text)',
-                                outline: 'none',
-                                boxShadow: '0 0 0 2px var(--primary-soft, rgba(90, 15, 30, 0.15))',
-                              }}
-                            />
+                            <div className="cat-edit-fields">
+                              <input
+                                type="text"
+                                required
+                                aria-label={t('admin.categories.nameTr')}
+                                placeholder={t('admin.categories.subNameTr')}
+                                maxLength={INPUT_LIMITS.categoryName}
+                                autoFocus
+                                value={newSubName}
+                                onChange={(e) => setNewSubName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') void saveNewSub(cat.id);
+                                  if (e.key === 'Escape') cancelAddSub();
+                                }}
+                                className="cat-edit-field"
+                              />
+                              <input
+                                type="text"
+                                required
+                                aria-label={t('admin.categories.nameEn')}
+                                placeholder={t('admin.categories.subNameEn')}
+                                maxLength={INPUT_LIMITS.categoryName}
+                                value={newSubNameEn}
+                                onChange={(e) => setNewSubNameEn(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') void saveNewSub(cat.id);
+                                  if (e.key === 'Escape') cancelAddSub();
+                                }}
+                                className="cat-edit-field"
+                              />
+                            </div>
                           </div>
                           <div
                             className="cat-actions"
@@ -928,7 +957,7 @@ export default function AdminCategoriesPage() {
                               size="sm"
                               variant="primary"
                               loading={savingNewSub}
-                              disabled={!newSubName.trim() || savingNewSub}
+                              disabled={!newSubName.trim() || !newSubNameEn.trim() || savingNewSub}
                               style={{ width: 76, textAlign: 'center' }}
                               onClick={() => void saveNewSub(cat.id)}
                             >
@@ -962,7 +991,7 @@ export default function AdminCategoriesPage() {
         footer={
           <>
             <Button variant="ghost" onClick={closeForm}>{t('common.cancel')}</Button>
-            <Button loading={busy} disabled={!name.trim() || busy} onClick={saveNew}>
+            <Button loading={busy} disabled={!name.trim() || !nameEn.trim() || busy} onClick={saveNew}>
               {t('admin.form.save')}
             </Button>
           </>
@@ -970,7 +999,7 @@ export default function AdminCategoriesPage() {
       >
         <div className="stack">
           <Input
-            label={t('admin.categories.name') || 'Kategori Adı'}
+            label={t('admin.categories.nameTr')}
             required
             maxLength={INPUT_LIMITS.categoryName}
             value={name}
@@ -980,6 +1009,13 @@ export default function AdminCategoriesPage() {
             }}
             error={nameError}
             autoFocus
+          />
+          <Input
+            label={t('admin.categories.nameEn')}
+            required
+            maxLength={INPUT_LIMITS.categoryName}
+            value={nameEn}
+            onChange={(e) => setNameEn(e.target.value)}
           />
         </div>
       </Modal>

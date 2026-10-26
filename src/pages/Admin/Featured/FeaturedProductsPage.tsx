@@ -241,7 +241,7 @@ export default function FeaturedProductsPage() {
                           <div className="featured-product__image" />
                         )}
                         <div className="featured-product__text">
-                          <span>{loc(p.name)}</span>
+                          <span>{loc(p.name, `product:${p.code}`)}</span>
                           {p.carat != null && p.carat > 0 && <span className="muted">{carat(p.carat)} ct</span>}
                         </div>
                       </div>
@@ -301,7 +301,7 @@ export default function FeaturedProductsPage() {
         title={t('admin.featured.remove')}
         message={
           removeTarget
-            ? `${loc(removeTarget.name)} (${removeTarget.code}) ürününü ana sayfada öne çıkanlar listesinden kaldırmak istiyor musunuz?`
+            ? `${loc(removeTarget.name, `product:${removeTarget.code}`)} (${removeTarget.code}) ürününü ana sayfada öne çıkanlar listesinden kaldırmak istiyor musunuz?`
             : ''
         }
         confirmLabel={t('admin.featured.remove')}
@@ -383,7 +383,7 @@ export default function FeaturedProductsPage() {
                         checked={isSelected}
                         disabled={disabled}
                         onChange={() => toggleSelectCandidate(p.id)}
-                        aria-label={loc(p.name)}
+                        aria-label={loc(p.name, `product:${p.code}`)}
                       />
                       {img ? (
                         <img className="featured-picker__image" src={mediaUrl(img.storageKey)} alt="" width={40} height={50} />
@@ -391,7 +391,7 @@ export default function FeaturedProductsPage() {
                         <div className="featured-picker__image" />
                       )}
                       <span className="featured-picker__text">
-                        <strong>{loc(p.name)}</strong>
+                        <strong>{loc(p.name, `product:${p.code}`)}</strong>
                         <span className="muted">{p.code}</span>
                       </span>
                     </label>

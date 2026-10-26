@@ -60,12 +60,24 @@ export function PriceTag({ product, large }: { product: Pick<Product, 'price' | 
   );
 }
 
-export const ProductCard = memo(function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
+export const ProductCard = memo(function ProductCard({
+  product,
+  priority,
+  compareSelected = false,
+  compareDisabled = false,
+  onToggleCompare,
+}: {
+  product: Product;
+  priority?: boolean;
+  compareSelected?: boolean;
+  compareDisabled?: boolean;
+  onToggleCompare?: (product: Product) => void;
+}) {
   const { loc, carat, t } = useI18n();
   const [imgFailed, setImgFailed] = useState(false);
   const img = product.images[0];
   const [imgSrc, setImgSrc] = useState(() => (img ? mediaUrl(img.storageKey) : ''));
-  const name = loc(product.name);
+  const name = loc(product.name, `product:${product.code}`);
 
   useEffect(() => {
     setImgFailed(false);
@@ -74,6 +86,22 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
 
   return (
     <article className="product-card">
+      {onToggleCompare && (
+        <button
+          type="button"
+          className="product-card__compare"
+          aria-pressed={compareSelected}
+          aria-label={t(compareSelected ? 'listing.compareRemove' : 'listing.compareLabel')}
+          title={t(compareSelected ? 'listing.compareRemove' : 'listing.compareLabel')}
+          disabled={compareDisabled && !compareSelected}
+          onClick={() => onToggleCompare(product)}
+        >
+          <Icon name={compareSelected ? 'check' : 'plus'} size={20} />
+          <span className="product-card__compare-tooltip" role="tooltip">
+            {t(compareSelected ? 'listing.compareRemove' : 'listing.compareLabel')}
+          </span>
+        </button>
+      )}
       <div className="product-card__fav">
         <FavoriteButton productId={product.id} />
       </div>
@@ -121,12 +149,18 @@ export const ProductCard = memo(function ProductCard({ product, priority }: { pr
   );
 });
 
-export function ProductGrid({ products, columns }: { products: Product[]; columns?: 3 | 4 }) {
+export function ProductGrid({ products, columns, compareIds, onToggleCompare }: {
+  products: Product[];
+  columns?: 3 | 4;
+  compareIds?: string[];
+  onToggleCompare?: (product: Product) => void;
+}) {
   const colClass = columns === 3 ? 'product-grid--3' : columns === 4 ? 'product-grid--4' : '';
   return (
     <div className={`product-grid ${colClass}`.trim()}>
       {products.map((p, i) => (
-        <ProductCard key={p.id} product={p} priority={i < 4} />
+        <ProductCard key={p.id} product={p} priority={i < 4} compareSelected={compareIds?.includes(p.id)}
+          compareDisabled={compareIds ? compareIds.length >= 3 : false} onToggleCompare={onToggleCompare} />
       ))}
     </div>
   );

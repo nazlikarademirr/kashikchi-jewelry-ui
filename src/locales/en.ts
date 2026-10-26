@@ -1,6 +1,8 @@
 import type { Dictionary } from './index';
+import { catalogTranslations } from './catalog';
 
 export const en: Dictionary = {
+  catalog: catalogTranslations,
   common: {
     close: "Close",
     required: "required",
@@ -160,6 +162,19 @@ export const en: Dictionary = {
     maxPrice: "Maximum price",
     minCarat: "Minimum carat",
     maxCarat: "Maximum carat",
+    compareSelect: "Add to compare",
+    compareLabel: "Compare",
+    compareSelected: "Selected",
+    compareRemove: "Remove",
+    compareTitle: "Product comparison",
+    compareFeature: "Specification",
+    compareCode: "Product Code",
+    comparePrice: "Price",
+    compareKarat: "Gold Karat",
+    compareFeatures: "Other features",
+    compareSelectionCount: "Selected for comparison: {n}/3 products",
+    compareOpen: "Compare ({n})",
+    compareClear: "Clear selection",
     invalidRange: "The maximum value cannot be less than the minimum.",
     search: "Search",
     searchPlaceholder: "Product name or code",
@@ -528,7 +543,11 @@ export const en: Dictionary = {
       add: "Add New Category",
       addSub: "Add Subcategory",
       name: "Category Name",
+      nameTr: "Category Name (Turkish)",
+      nameEn: "Category Name (English)",
       subName: "Subcategory Name",
+      subNameTr: "Subcategory Name (Turkish)",
+      subNameEn: "Subcategory Name (English)",
       created: "Category created.",
       updated: "Category updated.",
       deleted: "Category deleted.",
